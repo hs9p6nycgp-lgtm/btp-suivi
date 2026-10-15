@@ -154,3 +154,53 @@ body {
 /* ---------- Utilitaires ---------- */
 .text-muted { color: var(--muted); }
 .border-subtle { border-color: var(--border); }
+
+/* ---------- Mobile / tactile ---------- */
+/* Éviter le zoom automatique sur iOS lors du focus d'un input */
+input, select, textarea {
+  font-size: 16px;
+}
+
+/* Boutons plus larges pour le tactile */
+button, a.btn-primary, a.btn-secondary {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+/* Inputs et selects bien dimensionnés mobile */
+input, select {
+  min-height: 48px;
+}
+
+/* Cartes avec padding adapté mobile */
+.card {
+  padding: 1rem;
+}
+
+/* Éviter le overflow sur les tableaux mobile */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Liens de navigation plus faciles à cliquer */
+.nav-link {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+/* Badges plus clairs sur petit écran */
+.badge {
+  white-space: nowrap;
+}
+
+/* Sélecteur de langue mobile plus visible */
+select {
+  background-image: none;
+}
+
+/* Focus visible pour clavier mobile */
+input:focus, select:focus, textarea:focus, button:focus {
+  outline: 2px solid var(--action);
+  outline-offset: 2px;
+}
