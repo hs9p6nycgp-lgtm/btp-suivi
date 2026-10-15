@@ -14,6 +14,8 @@ export default function NouveauChantierPage() {
   const [montant, setMontant] = useState("");
   const [dateDebut, setDateDebut] = useState("");
   const [dateFin, setDateFin] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
   const [seuil, setSeuil] = useState("10");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -32,6 +34,8 @@ export default function NouveauChantierPage() {
         montant_marche: Number(montant) || 0,
         date_debut: dateDebut || null,
         date_fin_prevue: dateFin || null,
+        latitude: latitude ? Number(latitude) : null,
+        longitude: longitude ? Number(longitude) : null,
         seuil_ecart_pct: Number(seuil) || 10,
         statut: "en_preparation",
       })
@@ -49,7 +53,7 @@ export default function NouveauChantierPage() {
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
       <h1 className="mb-6 text-2xl font-semibold">Nouveau chantier</h1>
-      <form onSubmit={handleSubmit} className="space-y-4 rounded bg-white p-6 shadow">
+      <form onSubmit={handleSubmit} className="space-y-4 card p-6">
         <div>
           <label className="block text-sm font-medium">Nom du chantier *</label>
           <input
@@ -71,8 +75,7 @@ export default function NouveauChantierPage() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium">Maitre d'ouvrage</label>
-          <input
+          <label className="block text-sm font-medium">Maitre d&apos;ouvrage</label>          <input
             className="w-full rounded border p-2"
             value={maitreOuvrage}
             onChange={(e) => setMaitreOuvrage(e.target.value)}
@@ -107,9 +110,31 @@ export default function NouveauChantierPage() {
             />
           </div>
         </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium">Latitude (optionnel)</label>
+            <input
+              className="w-full rounded border p-2"
+              type="number"
+              step="0.000001"
+              value={latitude}
+              onChange={(e) => setLatitude(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Longitude (optionnel)</label>
+            <input
+              className="w-full rounded border p-2"
+              type="number"
+              step="0.000001"
+              value={longitude}
+              onChange={(e) => setLongitude(e.target.value)}
+            />
+          </div>
+        </div>
         <div>
           <label className="block text-sm font-medium">
-            Seuil d'alerte ecart de quantite (%)
+            Seuil d&apos;alerte ecart de quantite (%)
           </label>
           <input
             className="w-full rounded border p-2"
