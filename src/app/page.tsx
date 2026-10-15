@@ -6,6 +6,7 @@ import { cacheGet, cacheSet } from "@/lib/offline/storage";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import SignOutButton from "@/components/SignOutButton";
+import { t, getLangue } from "@/lib/i18n";
 
 type Chantier = {
   id: string;
@@ -19,6 +20,7 @@ type Chantier = {
 
 export default function Home() {
   const router = useRouter();
+  const langue = getLangue();
   const [userEmail, setUserEmail] = useState("");
   const [chantiers, setChantiers] = useState<Chantier[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,14 +50,27 @@ export default function Home() {
   const totalMontant = chantiers.reduce((s, c) => s + Number(c.montant_marche || 0), 0);
   const enCours = chantiers.filter((c) => c.statut === "en_cours").length;
 
+  const statutLabel = (s: string) => {
+    const labels: Record<string, string> = {
+      en_preparation: langue === "fr" ? "En préparation" : "Preparation",
+      en_cours: langue === "fr" ? "En cours" : "In Progress",
+      suspendu: langue === "fr" ? "Suspendu" : "Suspended",
+      receptionne_provisoirement: langue === "fr" ? "Réceptionné prov." : "Provisional Acceptance",
+      cloture: langue === "fr" ? "Clôturé" : "Closed",
+    };
+    return labels[s] || s;
+  };
+
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-8">
       {/* Hero */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-primary">Tableau de bord</h1>
-            <p className="text-muted text-sm">{userEmail ? `Connecté en tant que ${userEmail}` : "Chargement..."}</p>
+            <h1 className="text-3xl font-bold text-primary">{t("home.titre")}</h1>
+            <p className="text-muted text-sm">
+              {userEmail ? t("home.connecte", { email: userEmail }) : t("home.connecte", { email: "Chargement..." })}
+            </p>
           </div>
           <SignOutButton />
         </div>
@@ -69,7 +84,7 @@ export default function Home() {
         <div className="card p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-muted text-xs uppercase font-semibold tracking-wider">Chantiers</p>
+              <p className="text-muted text-xs uppercase font-semibold tracking-wider">{t("home.chantiers")}</p>
               <p className="text-3xl font-bold text-primary">{chantiers.length}</p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xl">🏗️</div>
@@ -78,7 +93,7 @@ export default function Home() {
         <div className="card p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-muted text-xs uppercase font-semibold tracking-wider">En cours</p>
+              <p className="text-muted text-xs uppercase font-semibold tracking-wider">{t("home.en_cours")}</p>
               <p className="text-3xl font-bold text-action">{enCours}</p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-action/10 flex items-center justify-center text-action text-xl">🚧</div>
@@ -87,8 +102,8 @@ export default function Home() {
         <div className="card p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-muted text-xs uppercase font-semibold tracking-wider">Montant cumulé</p>
-              <p className="text-3xl font-bold text-primary">{totalMontant.toLocaleString("fr-FR")} FCFA</p>
+              <p className="text-muted text-xs uppercase font-semibold tracking-wider">{t("home.montant_cumule")}</p>
+              <p className="text-3xl font-bold text-primary">{totalMontant.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")} FCFA</p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center text-success text-xl">💰</div>
           </div>
@@ -99,7 +114,7 @@ export default function Home() {
       <div className="mb-8 grid grid-cols-1 gap-3 md:grid-cols-3">
         <Link href="/chantiers" className="card p-6 text-center hover:shadow-lg transition-all border border-slate-200 group">
           <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-4 text-white text-3xl group-hover:scale-110 transition-transform">🏗️</div>
-          <p className="font-semibold text-primary text-lg">Chantiers</p>
+          <p className="font-semibold text-primary text-lg">{t("home.chantiers")}</p>
           <p className="text-xs text-muted mt-1">Créer et suivre un chantier</p>
         </Link>
         <Link href="/bpu" className="card p-6 text-center hover:shadow-lg transition-all border border-slate-200 group">
@@ -117,15 +132,15 @@ export default function Home() {
       {/* Chantiers récents */}
       <section className="card p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="section-title text-xl">Chantiers récents</h2>
-          <Link href="/chantiers" className="text-sm text-action hover:underline font-semibold">Voir tout</Link>
+          <h2 className="section-title text-xl">{t("home.chantiers_recents")}</h2>
+          <Link href="/chantiers" className="text-sm text-action hover:underline font-semibold">{t("home.voir_tout")}</Link>
         </div>
         {loading ? (
-          <p className="text-muted">Chargement...</p>
+          <p className="text-muted">{t("home.chantiers")}...</p>
         ) : chantiers.length === 0 ? (
           <div className="rounded-2xl border-2 border-dashed border-slate-300 p-12 text-center bg-slate-50">
-            <p className="mb-4 text-muted text-sm">Aucun chantier pour le moment.</p>
-            <Link href="/chantiers/nouveau" className="btn-primary inline-block">Créer mon premier chantier</Link>
+            <p className="mb-4 text-muted text-sm">{t("home.aucun_chantier")}</p>
+            <Link href="/chantiers/nouveau" className="btn-primary inline-block">{t("home.creer_chantier")}</Link>
           </div>
         ) : (
           <ul className="space-y-3">
@@ -138,12 +153,12 @@ export default function Home() {
                       <Link href={`/chantiers/${c.id}`} className="font-semibold text-primary text-lg hover:underline">
                         {c.nom}
                       </Link>
-                      <p className="text-xs text-muted">{c.type === "route" ? "Route" : "Bâtiment"} - {c.maitre_ouvrage ?? "sans maître d'ouvrage"}</p>
+                      <p className="text-xs text-muted">{c.type === "route" ? (langue === "fr" ? "Route" : "Road") : (langue === "fr" ? "Bâtiment" : "Building")} - {c.maitre_ouvrage ?? (langue === "fr" ? "sans maître d'ouvrage" : "without project owner")}</p>
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <div className="flex items-baseline gap-1">
                         <span className="text-sm font-bold text-primary">{progress.toFixed(0)}%</span>
-                        <span className="text-xs text-muted">avancement</span>
+                        <span className="text-xs text-muted">{langue === "fr" ? "avancement" : "progress"}</span>
                       </div>
                       <div className="w-24 progress-bar">
                         <div className="progress-fill" style={{ width: `${progress}%` }}></div>

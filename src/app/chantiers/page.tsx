@@ -5,6 +5,7 @@ import Link from "next/link";
 import { cacheGet, cacheSet } from "@/lib/offline/storage";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { t, getLangue } from "@/lib/i18n";
 
 type Chantier = {
   id: string;
@@ -18,6 +19,7 @@ type Chantier = {
 
 export default function ChantiersPage() {
   const router = useRouter();
+  const langue = getLangue();
   const [chantiers, setChantiers] = useState<Chantier[]>([]);
   const [loading, setLoading] = useState(true);
   const [offline, setOffline] = useState(false);
@@ -66,11 +68,11 @@ export default function ChantiersPage() {
 
   const statutLabel = (s: string) => {
     const labels: Record<string, string> = {
-      en_preparation: "En préparation",
-      en_cours: "En cours",
-      suspendu: "Suspendu",
-      receptionne_provisoirement: "Réceptionné prov.",
-      cloture: "Clôturé",
+      en_preparation: langue === "fr" ? "En préparation" : "Preparation",
+      en_cours: langue === "fr" ? "En cours" : "In Progress",
+      suspendu: langue === "fr" ? "Suspendu" : "Suspended",
+      receptionne_provisoirement: langue === "fr" ? "Réceptionné prov." : "Provisional Acceptance",
+      cloture: langue === "fr" ? "Clôturé" : "Closed",
     };
     return labels[s] || s;
   };
@@ -90,10 +92,10 @@ export default function ChantiersPage() {
     <main className="mx-auto w-full max-w-6xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Chantiers</h1>
-          <p className="text-muted text-sm">Gérez tous vos chantiers en cours et terminés.</p>
+          <h1 className="text-2xl font-bold text-primary">{t("chantiers.titre")}</h1>
+          <p className="text-muted text-sm">{t("chantiers.maitre_ouvrage")}</p>
         </div>
-        <Link href="/chantiers/nouveau" className="btn-primary inline-block">Nouveau chantier</Link>
+        <Link href="/chantiers/nouveau" className="btn-primary inline-block">{t("chantiers.nouveau")}</Link>
       </div>
 
       {offline && (
@@ -106,22 +108,22 @@ export default function ChantiersPage() {
         <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-3">
           <input
             className="rounded-xl border p-2.5 text-sm focus:ring-2 focus:ring-primary outline-none"
-            placeholder="Rechercher un chantier..."
+            placeholder={t("chantiers.rechercher")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
           <select className="rounded-xl border p-2.5 text-sm focus:ring-2 focus:ring-primary outline-none bg-white" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
-            <option value="">Tous les types</option>
-            <option value="route">Route</option>
-            <option value="batiment">Bâtiment</option>
+            <option value="">{t("chantiers.tous_types")}</option>
+            <option value="route">{t("chantiers.type_route")}</option>
+            <option value="batiment">{t("chantiers.type_batiment")}</option>
           </select>
           <select className="rounded-xl border p-2.5 text-sm focus:ring-2 focus:ring-primary outline-none bg-white" value={filterStatut} onChange={(e) => setFilterStatut(e.target.value)}>
-            <option value="">Tous les statuts</option>
-            <option value="en_preparation">En préparation</option>
-            <option value="en_cours">En cours</option>
-            <option value="suspendu">Suspendu</option>
-            <option value="receptionne_provisoirement">Réceptionné prov.</option>
-            <option value="cloture">Clôturé</option>
+            <option value="">{t("chantiers.tous_statuts")}</option>
+            <option value="en_preparation">{statutLabel("en_preparation")}</option>
+            <option value="en_cours">{statutLabel("en_cours")}</option>
+            <option value="suspendu">{statutLabel("suspendu")}</option>
+            <option value="receptionne_provisoirement">{statutLabel("receptionne_provisoirement")}</option>
+            <option value="cloture">{statutLabel("cloture")}</option>
           </select>
         </div>
       )}
@@ -132,33 +134,33 @@ export default function ChantiersPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="card p-12 text-center">
-          <p className="mb-4 text-muted text-sm">{chantiers.length === 0 ? "Aucun chantier pour le moment." : "Aucun chantier ne correspond aux filtres."}</p>
-          {chantiers.length === 0 && <Link href="/chantiers/nouveau" className="btn-primary inline-block">Créer mon premier chantier</Link>}
+          <p className="mb-4 text-muted text-sm">{chantiers.length === 0 ? t("home.aucun_chantier") : t("chantiers.aucun")}</p>
+          {chantiers.length === 0 && <Link href="/chantiers/nouveau" className="btn-primary inline-block">{t("home.creer_chantier")}</Link>}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((c, i) => {
-            const progress = Math.min((i + 1) * 17 % 97, 95);
+          {filtered.map((c) => {
+            const progress = Math.min((c.id.split("-")[0]?.length || 5) * 7 % 100, 100);
             return (
               <Link key={c.id} href={`/chantiers/${c.id}`} className="card p-5 transition-all hover:shadow-md border border-slate-100 group">
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div>
                     <h3 className="font-bold text-primary text-lg group-hover:text-action transition-colors">{c.nom}</h3>
                     <p className="text-xs text-muted mt-1">
-                      {c.type === "route" ? "🛣️ Route" : "🏢 Bâtiment"} • {c.maitre_ouvrage ?? "sans maître d'ouvrage"}
+                      {c.type === "route" ? (langue === "fr" ? "🛣️ Route" : "🛣️ Road") : (langue === "fr" ? "🏢 Bâtiment" : "🏢 Building")} • {c.maitre_ouvrage ?? (langue === "fr" ? "sans maître d'ouvrage" : "without project owner")}
                     </p>
                   </div>
                   <span className={`badge ${statutBadge(c.statut)} text-xs`}>{statutLabel(c.statut)}</span>
                 </div>
                 <div className="mb-3">
                   <div className="flex justify-between text-xs text-muted mb-1">
-                    <span>Montant</span>
-                    <span className="font-semibold text-foreground">{Number(c.montant_marche || 0).toLocaleString("fr-FR")} FCFA</span>
+                    <span>{t("chantiers.montant")}</span>
+                    <span className="font-semibold text-foreground">{Number(c.montant_marche || 0).toLocaleString(langue === "fr" ? "fr-FR" : "en-US")} FCFA</span>
                   </div>
                   <div className="w-full progress-bar">
                     <div className="progress-fill" style={{ width: `${progress}%` }}></div>
                   </div>
-                  <p className="text-xs text-muted mt-1">{progress.toFixed(0)}% d&apos;avancement estimé</p>
+                  <p className="text-xs text-muted mt-1">{progress.toFixed(0)}% {langue === "fr" ? "d'avancement estimé" : "estimated progress"}</p>
                 </div>
               </Link>
             );
