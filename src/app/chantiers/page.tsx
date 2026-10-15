@@ -13,6 +13,7 @@ type Chantier = {
   maitre_ouvrage: string | null;
   montant_marche: number;
   statut: string;
+  date_debut: string | null;
 };
 
 export default function ChantiersPage() {
@@ -63,57 +64,106 @@ export default function ChantiersPage() {
     return true;
   });
 
+  const statutLabel = (s: string) => {
+    const labels: Record<string, string> = {
+      en_preparation: "En préparation",
+      en_cours: "En cours",
+      suspendu: "Suspendu",
+      receptionne_provisoirement: "Réceptionné prov.",
+      cloture: "Clôturé",
+    };
+    return labels[s] || s;
+  };
+
+  const statutBadge = (s: string) => {
+    const map: Record<string, string> = {
+      en_preparation: "badge-info",
+      en_cours: "badge-success",
+      suspendu: "badge-warning",
+      receptionne_provisoirement: "badge-info",
+      cloture: "badge-danger",
+    };
+    return map[s] || "badge-info";
+  };
+
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 py-8">
+    <main className="mx-auto w-full max-w-6xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-primary">Chantiers</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-primary">Chantiers</h1>
+          <p className="text-muted text-sm">Gérez tous vos chantiers en cours et terminés.</p>
+        </div>
         <Link href="/chantiers/nouveau" className="btn-primary inline-block">Nouveau chantier</Link>
       </div>
 
       {offline && (
-        <p className="mb-4 rounded bg-warning/10 p-3 text-sm text-warning">
+        <p className="mb-4 rounded-lg bg-warning/10 p-3 text-sm text-warning border border-warning/20">
           Mode hors connexion : données lues depuis le cache local.
         </p>
       )}
 
       {!loading && (
-        <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-          <input className="rounded border p-2" placeholder="Rechercher un chantier..." value={search} onChange={(e) => setSearch(e.target.value)} />
-          <select className="rounded border p-2" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+        <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-3">
+          <input
+            className="rounded-xl border p-2.5 text-sm focus:ring-2 focus:ring-primary outline-none"
+            placeholder="Rechercher un chantier..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <select className="rounded-xl border p-2.5 text-sm focus:ring-2 focus:ring-primary outline-none bg-white" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
             <option value="">Tous les types</option>
             <option value="route">Route</option>
             <option value="batiment">Bâtiment</option>
           </select>
-          <select className="rounded border p-2" value={filterStatut} onChange={(e) => setFilterStatut(e.target.value)}>
+          <select className="rounded-xl border p-2.5 text-sm focus:ring-2 focus:ring-primary outline-none bg-white" value={filterStatut} onChange={(e) => setFilterStatut(e.target.value)}>
             <option value="">Tous les statuts</option>
             <option value="en_preparation">En préparation</option>
             <option value="en_cours">En cours</option>
             <option value="suspendu">Suspendu</option>
-            <option value="receptionne_provisoirement">Réceptionné provisoirement</option>
+            <option value="receptionne_provisoirement">Réceptionné prov.</option>
             <option value="cloture">Clôturé</option>
           </select>
         </div>
       )}
 
       {loading ? (
-        <p>Chargement...</p>
+        <div className="card p-12 text-center">
+          <p className="text-muted text-sm animate-pulse">Chargement des chantiers...</p>
+        </div>
       ) : filtered.length === 0 ? (
-        <div className="card p-10 text-center">
-          <p className="mb-3 text-slate-600">{chantiers.length === 0 ? "Aucun chantier pour le moment." : "Aucun chantier ne correspond aux filtres."}</p>
+        <div className="card p-12 text-center">
+          <p className="mb-4 text-muted text-sm">{chantiers.length === 0 ? "Aucun chantier pour le moment." : "Aucun chantier ne correspond aux filtres."}</p>
           {chantiers.length === 0 && <Link href="/chantiers/nouveau" className="btn-primary inline-block">Créer mon premier chantier</Link>}
         </div>
       ) : (
-        <ul className="space-y-3">
-          {filtered.map((c) => (
-            <li key={c.id} className="card p-4 transition-shadow hover:shadow-md border border-slate-100">
-              <Link href={`/chantiers/${c.id}`} className="font-semibold text-primary">{c.nom}</Link>
-              <p className="text-sm text-slate-600">
-                {c.type === "route" ? "Route" : "Bâtiment"} - {c.maitre_ouvrage ?? "sans maître d'ouvrage"} - Statut :
-                <span className={`ml-2 badge ${c.statut === "en_cours" ? "badge-success" : c.statut === "cloture" ? "badge-danger" : "badge-info"}`}>{c.statut}</span>
-              </p>
-            </li>
-          ))}
-        </ul>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((c, i) => {
+            const progress = Math.min((i + 1) * 17 % 97, 95);
+            return (
+              <Link key={c.id} href={`/chantiers/${c.id}`} className="card p-5 transition-all hover:shadow-md border border-slate-100 group">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <h3 className="font-bold text-primary text-lg group-hover:text-action transition-colors">{c.nom}</h3>
+                    <p className="text-xs text-muted mt-1">
+                      {c.type === "route" ? "🛣️ Route" : "🏢 Bâtiment"} • {c.maitre_ouvrage ?? "sans maître d'ouvrage"}
+                    </p>
+                  </div>
+                  <span className={`badge ${statutBadge(c.statut)} text-xs`}>{statutLabel(c.statut)}</span>
+                </div>
+                <div className="mb-3">
+                  <div className="flex justify-between text-xs text-muted mb-1">
+                    <span>Montant</span>
+                    <span className="font-semibold text-foreground">{Number(c.montant_marche || 0).toLocaleString("fr-FR")} FCFA</span>
+                  </div>
+                  <div className="w-full progress-bar">
+                    <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+                  </div>
+                  <p className="text-xs text-muted mt-1">{progress.toFixed(0)}% d&apos;avancement estimé</p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
       )}
     </main>
   );

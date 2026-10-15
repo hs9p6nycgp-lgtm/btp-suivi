@@ -23,15 +23,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <NetworkStatus />
         <header className="app-header">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-            <Link href="/" className="text-lg font-bold tracking-tight">
-              BTP Suivi Pro
+            <Link href="/" className="flex items-center gap-2">
+              <span className="text-xl font-bold tracking-tight text-white">BTP Suivi Pro</span>
             </Link>
-            <nav className="flex gap-4 text-sm">
+            <nav className="flex gap-4 text-sm hidden md:flex">
               <Link href="/" className="nav-link hover:underline">Accueil</Link>
               <Link href="/chantiers" className="nav-link hover:underline">Chantiers</Link>
               <Link href="/bpu" className="nav-link hover:underline">BPU</Link>
               <Link href="/calculateurs/devis" className="nav-link hover:underline">Devis</Link>
             </nav>
+            <div className="flex items-center gap-3">
+              <Link href="/login" className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/20 bg-white/10 text-sm font-semibold hover:bg-white/20 transition">
+                Se connecter
+              </Link>
+            </div>
           </div>
         </header>
         <main className="flex-1">{children}</main>
