@@ -126,6 +126,65 @@ export interface Livraison {
   created_at: string;
 }
 
+export type StatutTache = "a_faire" | "en_cours" | "termine" | "retarde" | "annule";
+export type TypeDependance = "fin_debut" | "debut_debut" | "fin_fin" | "debut_fin";
+export type CategorieDepense = "materiaux" | "main_doeuvre" | "engins" | "sous_traitance" | "carburant" | "autre";
+
+export interface TachePlanning {
+  id: string;
+  chantier_id: string;
+  nom: string;
+  description: string | null;
+  duree_jours: number;
+  date_prevue_debut: string | null;
+  date_prevue_fin: string | null;
+  date_reelle_debut: string | null;
+  date_reelle_fin: string | null;
+  avancement_pct: number;
+  est_jalon: boolean;
+  statut: StatutTache;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DependancePlanning {
+  id: string;
+  chantier_id: string;
+  tache_predecesseur_id: string;
+  tache_successeur_id: string;
+  type_dependance: TypeDependance;
+  decalage_jours: number;
+  created_at: string;
+}
+
+export interface DepenseReelle {
+  id: string;
+  chantier_id: string;
+  categorie: CategorieDepense;
+  designation: string;
+  quantite: number;
+  unite: string | null;
+  prix_unitaire: number;
+  montant_total: number;
+  date_depense: string;
+  reference: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface CalculPert {
+  tache_id: string;
+  nom: string;
+  duree_jours: number;
+  es: number; // Early Start (date au plus tôt)
+  ef: number; // Early Finish
+  ls: number; // Late Start (date au plus tard)
+  lf: number; // Late Finish
+  marge: number; // Float / marge
+  est_critique: boolean;
+  est_jalon: boolean;
+}
+
 export interface Profil {
   id: string;
   nom: string | null;

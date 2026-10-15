@@ -82,7 +82,7 @@ export default async function ChantierDetailPage({
 
       <ChantierAvancement chantierId={chantier.id} />
 
-      <div className="mb-8 flex gap-3">
+      <div className="mb-8 flex gap-3 flex-wrap">
         <a href={`/chantiers/${chantier.id}/metre`} className="inline-block rounded bg-orange-600 px-4 py-2 text-white">
           Calculateurs de metre
         </a>
@@ -91,6 +91,12 @@ export default async function ChantierDetailPage({
         </a>
         <a href={`/chantiers/${chantier.id}/livraisons`} className="inline-block rounded border px-4 py-2">
           Livraisons
+        </a>
+        <a href={`/chantiers/${chantier.id}/planning`} className="inline-block rounded bg-primary px-4 py-2 text-white">
+          Planning & PERT
+        </a>
+        <a href={`/chantiers/${chantier.id}/couts`} className="inline-block rounded bg-success px-4 py-2 text-white">
+          Coûts & Budget
         </a>
       </div>
 
