@@ -3,8 +3,10 @@
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
-  --primary: #1d4ed8;
+  --primary: #1e3a5f;
+  --primary-dark: #0f2a4a;
   --action: #ea580c;
+  --action-hover: #c2410c;
   --success: #16a34a;
   --warning: #f59e0b;
   --danger: #ef4444;
@@ -37,45 +39,89 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Classes utilitaires reutilisables */
+/* ---------- Cartes ---------- */
 .card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 0.75rem;
-  box-shadow: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+  box-shadow: 0 4px 6px -1px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.04);
 }
 
+/* ---------- Boutons ---------- */
 .btn-primary {
   background: var(--action);
   color: #ffffff;
   border-radius: 0.5rem;
-  padding: 0.5rem 1rem;
-  font-weight: 600;
+  padding: 0.6rem 1.2rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
 .btn-primary:hover {
-  filter: brightness(0.95);
+  background: var(--action-hover);
 }
 
 .btn-secondary {
   background: #ffffff;
   color: var(--primary);
-  border: 1px solid #cbd5e1;
+  border: 1.5px solid var(--primary);
   border-radius: 0.5rem;
-  padding: 0.5rem 1rem;
-  font-weight: 600;
+  padding: 0.6rem 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
+.btn-secondary:hover {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+/* ---------- Badges ---------- */
 .badge {
   display: inline-flex;
   align-items: center;
   border-radius: 9999px;
-  padding: 0.2rem 0.65rem;
+  padding: 0.2rem 0.7rem;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .badge-success { background: #dcfce7; color: #15803d; }
 .badge-warning { background: #fef3c7; color: #b45309; }
 .badge-danger { background: #fee2e2; color: #b91c1c; }
 .badge-info { background: #dbeafe; color: #1d4ed8; }
+.badge-primary { background: #dbeafe; color: #1e3a5f; }
+
+/* ---------- Header ---------- */
+.app-header {
+  background: var(--primary);
+  color: #ffffff;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.app-header a {
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* ---------- Titres de section ---------- */
+.section-title {
+  color: var(--primary);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- Liens de navigation ---------- */
+.nav-link {
+  color: var(--foreground);
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.nav-link:hover {
+  color: var(--action);
+}
