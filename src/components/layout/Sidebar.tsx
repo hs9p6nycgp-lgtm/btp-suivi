@@ -61,6 +61,12 @@ export default function Sidebar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // En mode réduit, la barre latérale devient une fine colonne (64 px) :
+  // la classe "sidebar-reduit" indique au layout le décalage du contenu.
+  useEffect(() => {
+    document.documentElement.classList.toggle("sidebar-reduit", collapsed);
+  }, [collapsed]);
+
   // Id du chantier actuellement ouvert (/chantiers/<id>/...), s'il y en a un
   const segments = chemin.split("/").filter(Boolean);
   const idChantierActif =

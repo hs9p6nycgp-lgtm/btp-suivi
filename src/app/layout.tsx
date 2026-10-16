@@ -35,7 +35,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <NetworkStatus />
           <div className="flex h-screen overflow-hidden">
             <Sidebar />
-            <div className="flex flex-1 flex-col overflow-hidden">
+            {/* md:ml-60 : la barre latérale occupe 240 px dès le md (voir globals.css) */}
+            <div data-contenu className="flex flex-1 flex-col overflow-hidden md:ml-60">
               <TopBar />
               <main className="flex-1 overflow-y-auto bg-background p-4 pb-28 md:p-6 md:pb-6">
                 {children}

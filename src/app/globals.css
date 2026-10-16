@@ -220,3 +220,11 @@ input:focus, select:focus, textarea:focus, button:focus {
   outline: 2px solid var(--action);
   outline-offset: 2px;
 }
+
+/* Décalage du contenu quand la barre latérale est réduite (mode icônes).
+   La barre latérale est fixe : sans cette marge, elle recouvre le contenu. */
+@media (min-width: 768px) {
+  html.sidebar-reduit [data-contenu] {
+    margin-left: 4rem;
+  }
+}
