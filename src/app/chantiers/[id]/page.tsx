@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import DqeImport from "@/components/DqeImport";
 import ChantierEquipe from "@/components/ChantierEquipe";
+import Modele3D from "@/components/visualisation/Modele3D";
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { Badge } from "@/components/ui/Badge";
@@ -22,6 +23,9 @@ type Chantier = {
   date_fin_prevue: string | null;
   latitude: number | null;
   longitude: number | null;
+  longueur: number | null;
+  largeur: number | null;
+  hauteur: number | null;
   seuil_ecart_pct: number;
   statut: string;
   created_at: string;
@@ -167,6 +171,28 @@ export default function ChantierDetailPage() {
           </div>
         </div>
       )}
+
+      <section className="mb-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-4 text-lg font-bold text-slate-900">
+          {langue === "fr" ? "Modèle 3D" : "3D Model"}
+        </h2>
+        <p className="mb-3 text-sm text-slate-500">
+          {langue === "fr"
+            ? "Visualisation 3D du chantier basée sur les dimensions saisies."
+            : "3D visualization of the site based on entered dimensions."}
+        </p>
+        <Modele3D
+          chantier={{
+            id: chantier.id,
+            nom: chantier.nom,
+            type: chantier.type,
+            longueur: chantier.longueur || 20,
+            largeur: chantier.largeur || 10,
+            hauteur: chantier.hauteur || 5,
+          }}
+          sections={[]}
+        />
+      </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">

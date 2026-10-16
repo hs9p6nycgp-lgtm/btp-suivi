@@ -14,6 +14,9 @@ export interface Chantier {
   nom: string;
   proprietaire_id: string | null;
   type: TypeChantier;
+  longueur: number | null;
+  largeur: number | null;
+  hauteur: number | null;
   maitre_ouvrage: string | null;
   montant_marche: number; // en FCFA (sans decimale)
   date_debut: string | null;
