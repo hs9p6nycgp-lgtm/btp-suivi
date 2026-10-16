@@ -1,0 +1,66 @@
+# Base de prix de depart - fichier de donnees (supabase/seed/prix_ci.csv)
+# Format : CSV, separateur point-virgule, encodage UTF-8.
+# Colonnes : code;designation;unite;prix_unitaire;source;date_source;date_validite;statut
+# - code : identifiant unique de la ligne (cle de chargement).
+# - prix_unitaire : montant en FCFA (entier), pour l'unite indiquee.
+# - source, date_source, date_validite : provenance et dates (exigence REF-04).
+# - statut : "valide" ou "a_verifier".
+# Tous les prix sont en FCFA, sans decimale.
+#
+# Les lignes vides ou commencant par '#' sont ignorees par le script de
+# chargement.
+
+code;designation;unite;prix_unitaire;source;date_source;date_validite;statut
+ACIER-12;Acier HA (rails et poutres);t;950000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+ACIER-8;Acier PRF (reglets);t;700000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+ACIER-REBAR;Barres d'acier (kg);kg;3500;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+BETON-C25;Béton C25 (m³);m³;85000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+BETON-C30;Béton C30 (m³);m³;87000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+BETON-ARM;Béton armé (m³);m³;92000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+SABLE-CLASSE;Sable classique (m³);m³;65000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+GRAVIER-10;Gravier 10 (m³);m³;60000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+LATRITE-31;Latrite (m³);m³;40000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+ARGILE-24;Argile (m³);m³;25000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+CIMET-BPU;BPU ciment (sac 50 kg);sac 50 kg;4500;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+BOIS-COFFRT;Coffrage bois (m²);m²;18000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+BOIS-MENU;Bois de menuiserie (m³);m³;160000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+BOIS-BUCHES;Buches et étaifs (u);u;150;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+COF-BOIS;Coffrage général (m²);m²;15000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+COF-HAB;Habillage bois (m²);m²;25000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+COUVERT-TUI;Tuiles d'ardoise (u);u;32000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+COUVERT-MEM;Membrane d'étanchéité (m²);m²;60000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+INST-MAT;Petit matériel (u);u;150000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+INST-ENG;Engins de chantier (u);u;90000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+MOI-JOUR;Jour de main-d'œuvre (jour);jour;150000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+MOI-SEMAINE;Semaine de main-d'œuvre (jour);jour;95000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+MAT-SABLE;Sable classique (m³);m³;65000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+MAT-GRAVAGE;Gravier 10 (m³);m³;60000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+MAT-LATRITE;Latrite (m³);m³;40000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+MAT-ARGILE;Argile (m³);m³;25000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+MAT-PVC;PVC (kg);kg;12000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+MTE-COMPACT;Compacteur (u);u;450000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+MTE-CAMION;Camion (u);u;1200000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+MAO-BAIE;Baies et vitrages (u);u;28000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+MAO-TOILE;Toile armée (m²);m²;45000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+MEN-BOIS;Bois et chêne (m³);m³;160000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+MEN-TUILES;Tuiles de bâtiment (u);u;35000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+MEN-COLLE;Colle à bois (kg);kg;9000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+PLO-BAT;Pièces de plomberie (u);u;18000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+PLO-ASS;Installements d'assainissement (u);u;60000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+REMBLAI-VOL;Remblai (m³);m³;50000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+REMBLAI-COUPE;Coupe de remblai (m³);m³;22000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+RESEAUX-TRA;Traversée (m);m;80000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+RESEAUX-INST;Installation réseaux (u);u;95000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+TERR-COUCHE;Couche de terrassement (m³);m³;45000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+TERR-BOARD;Board (m²);m²;30000;Guide BTP-PRIX;2026-06-01;2027-06-01;valide
+TRA-LIV;Livraison (u);u;150000;Facture transporteur TIA;2026-06-01;2027-06-01;valide
+TRA-ENG;Engin de transport (u);u;350000;Facture transporteur TIA;2026-06-01;2027-06-01;valide
+VIE-SIGNAL;Signalisation (u);u;35000;Devis signalisation SARL;2026-06-01;2027-06-01;valide
+ELEC-CAIS;Caisson électrique (u);u;40000;Facture électricité CI;2026-06-01;2027-06-01;valide
+ELEC-COUR;Courant de construction (m);m;50000;Facture électricité CI;2026-06-01;2027-06-01;valide
+EQUIP-VEST;Veste de sécurité (u);u;12000;Attestation fournisseur;2026-06-01;2027-06-01;valide
+EQUIP-CHAUS;Chaussures de sécurité (paire);paire;25000;Attestation fournisseur;2026-06-01;2027-06-01;valide
+ENDUIT-LISS;Enduit de lissage (m²);m²;35000;Devis finitions ABC;2026-06-01;2027-06-01;valide
+ENDUIT-PRIM;Enduit de préparation des supports (m²);m²;28000;Devis finitions ABC;2026-06-01;2027-06-01;valide
+ENDUIT-FAIN;Finition et rejointissage (m²);m²;22000;Devis finitions ABC;2026-06-01;2027-06-01;valide
+MEN-VER;Menuiserie à vérifier (u);u;15000;Guide BTP-PRIX;2026-06-01;2027-06-01;a_verifier
