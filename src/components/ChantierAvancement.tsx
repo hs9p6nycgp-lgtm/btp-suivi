@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
+import { avancementPoste, avancementPhysiqueGlobal } from "@/lib/calculs/metre";
 
 type Poste = {
   id: string;
@@ -40,15 +41,17 @@ export default function ChantierAvancement({
       let montantRealise = 0;
       const rows = (p ?? []).map(( poste: Poste) => {
         const realise = realMap.get(poste.id) ?? 0;
-        const avancement =
-          poste.quantite_marche > 0 ? (realise / poste.quantite_marche) * 100 : 0;
+        const avancement = avancementPoste(realise, poste.quantite_marche);
         const montant = poste.quantite_marche * poste.prix_unitaire;
         totalMontant += montant;
         montantRealise += montant * (avancement / 100);
         return { ...poste, avancement };
       });
 
-      const g = totalMontant > 0 ? (montantRealise / totalMontant) * 100 : 0;
+      const g = avancementPhysiqueGlobal(
+        rows.map((r) => ({ avancementPct: r.avancement, montant: r.quantite_marche * r.prix_unitaire })),
+        totalMontant,
+      );
       setGlobal(Math.round(g * 10) / 10);
       setPostes(rows.sort((a, b) => b.avancement - a.avancement));
     }
