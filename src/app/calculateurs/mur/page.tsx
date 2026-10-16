@@ -1,11 +1,18 @@
 "use client";
 
+import { Calculator } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { getLangue } from "@/lib/i18n";
 
 type Bpu = { id: string; designation: string; unite: string; prix_unitaire: number };
 
 export default function MurCalculatorPage() {
+  const langue = getLangue();
+
   const [l, setL] = useState("10");
   const [h, setH] = useState("2.8");
   const [e, setE] = useState("0.15");
@@ -77,150 +84,231 @@ export default function MurCalculatorPage() {
     { nom: "Finition et cure", jours: Math.max(1, Math.ceil(surfaceNette / 25)) },
   ];
 
+  const fcfa = (montant: number) =>
+    montant.toLocaleString(langue === "fr" ? "fr-FR" : "en-US");
+
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8">
-      <h1 className="mb-6 text-2xl font-semibold text-primary">
-        Assistant devis - Mur en agglos
-      </h1>
+      <div className="mb-6">
+        <Link href="/bpu" className="text-sm font-medium text-primary hover:underline">
+          &larr; Retour BPU
+        </Link>
+        <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold text-foreground md:text-3xl">
+          <Calculator className="h-8 w-8 text-primary" />
+          Assistant devis - Mur en agglos
+        </h1>
+      </div>
 
-      <section className="card p-4">
-        <h2 className="mb-3 text-lg font-medium">Dimensions et hypothèses</h2>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <input className="rounded border p-2" placeholder="Longueur (m)" value={l} onChange={(e) => setL(e.target.value)} />
-          <input className="rounded border p-2" placeholder="Hauteur (m)" value={h} onChange={(e) => setH(e.target.value)} />
-          <input className="rounded border p-2" placeholder="Epaisseur (m)" value={e} onChange={(e) => setE(e.target.value)} />
-          <input className="rounded border p-2" placeholder="Ouvertures (%)" value={ouvertures} onChange={(e) => setOuvertures(e.target.value)} />
-          <input className="rounded border p-2" placeholder="Pertes blocs (%)" value={pertes} onChange={(e) => setPertes(e.target.value)} />
-        </div>
+      <section className="mb-6">
+        <Card padding="lg">
+          <h2 className="mb-4 text-lg font-bold text-foreground">Dimensions et hypothèses</h2>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <label className="block text-sm font-medium text-foreground">
+              Longueur (m)
+              <input
+                className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                value={l}
+                onChange={(e) => setL(e.target.value)}
+              />
+            </label>
+            <label className="block text-sm font-medium text-foreground">
+              Hauteur (m)
+              <input
+                className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                value={h}
+                onChange={(e) => setH(e.target.value)}
+              />
+            </label>
+            <label className="block text-sm font-medium text-foreground">
+              Épaisseur (m)
+              <input
+                className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                value={e}
+                onChange={(e) => setE(e.target.value)}
+              />
+            </label>
+            <label className="block text-sm font-medium text-foreground">
+              Ouvertures (%)
+              <input
+                className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                value={ouvertures}
+                onChange={(e) => setOuvertures(e.target.value)}
+              />
+            </label>
+            <label className="block text-sm font-medium text-foreground">
+              Pertes de blocs (%)
+              <input
+                className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                value={pertes}
+                onChange={(e) => setPertes(e.target.value)}
+              />
+            </label>
+          </div>
+        </Card>
       </section>
 
-      <section className="mt-6 card p-4">
-        <h2 className="mb-3 text-lg font-medium text-primary">Choix des matériaux (recommandations)</h2>
-        <p className="mb-3 text-sm text-slate-600">
-          Choisissez parmi les postes du BPU. Les prix se mettent à jour automatiquement.
-        </p>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <label className="text-sm">
-            Agglo / bloc
-            <select className="mt-1 w-full rounded border p-2" value={aggloId} onChange={(e) => setAggloId(e.target.value)}>
-              <option value="">(aucun)</option>
-              {optionsAgglo.map((b) => (
-                <option key={b.id} value={b.id}>{b.designation}</option>
-              ))}
-            </select>
-          </label>
-          <label className="text-sm">
-            Ciment
-            <select className="mt-1 w-full rounded border p-2" value={cimentId} onChange={(e) => setCimentId(e.target.value)}>
-              <option value="">(aucun)</option>
-              {optionsCiment.map((b) => (
-                <option key={b.id} value={b.id}>{b.designation}</option>
-              ))}
-            </select>
-          </label>
-          <label className="text-sm">
-            Sable
-            <select className="mt-1 w-full rounded border p-2" value={sableId} onChange={(e) => setSableId(e.target.value)}>
-              <option value="">(aucun)</option>
-              {optionsSable.map((b) => (
-                <option key={b.id} value={b.id}>{b.designation}</option>
-              ))}
-            </select>
-          </label>
-          <label className="text-sm">
-            Enduit (optionnel)
-            <select className="mt-1 w-full rounded border p-2" value={enduitId} onChange={(e) => setEnduitId(e.target.value)}>
-              <option value="">(aucun)</option>
-              {optionsEnduit.map((b) => (
-                <option key={b.id} value={b.id}>{b.designation}</option>
-              ))}
-            </select>
-          </label>
-        </div>
+      <section className="mb-6">
+        <Card padding="lg">
+          <h2 className="mb-4 text-lg font-bold text-foreground">Choix des matériaux (recommandations)</h2>
+          <p className="mb-4 text-sm text-muted">
+            Choisissez parmi les postes du BPU. Les prix se mettent à jour automatiquement.
+          </p>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <label className="block text-sm font-medium text-foreground">
+              Agglo / bloc
+              <select
+                className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                value={aggloId}
+                onChange={(e) => setAggloId(e.target.value)}
+              >
+                <option value="">(aucun)</option>
+                {optionsAgglo.map((b) => (
+                  <option key={b.id} value={b.id}>{b.designation}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm font-medium text-foreground">
+              Ciment
+              <select
+                className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                value={cimentId}
+                onChange={(e) => setCimentId(e.target.value)}
+              >
+                <option value="">(aucun)</option>
+                {optionsCiment.map((b) => (
+                  <option key={b.id} value={b.id}>{b.designation}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm font-medium text-foreground">
+              Sable
+              <select
+                className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                value={sableId}
+                onChange={(e) => setSableId(e.target.value)}
+              >
+                <option value="">(aucun)</option>
+                {optionsSable.map((b) => (
+                  <option key={b.id} value={b.id}>{b.designation}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm font-medium text-foreground">
+              Enduit (optionnel)
+              <select
+                className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                value={enduitId}
+                onChange={(e) => setEnduitId(e.target.value)}
+              >
+                <option value="">(aucun)</option>
+                {optionsEnduit.map((b) => (
+                  <option key={b.id} value={b.id}>{b.designation}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </Card>
       </section>
 
-      <section className="mt-6 card p-4">
-        <h2 className="mb-3 text-lg font-medium text-primary">Quantités estimées</h2>
-        <div className="grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
-          <p>Surface brute : {surfaceBrute.toFixed(2)} m²</p>
-          <p>Surface nette : {surfaceNette.toFixed(2)} m²</p>
-          <p>Volume du mur : {volumeMur.toFixed(3)} m³</p>
-          <p>Blocs agglos : {nbBlocs} u</p>
-          <p>Volume mortier : {volumeMortier.toFixed(3)} m³</p>
-          <p>Ciment : {cimentKg.toFixed(0)} kg</p>
-          <p>Sable : {sableM3.toFixed(3)} m³</p>
-        </div>
+      <section className="mb-6">
+        <Card padding="lg">
+          <h2 className="mb-4 text-lg font-bold text-foreground">Quantités estimées</h2>
+          <div className="grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
+            <p>Surface brute : {surfaceBrute.toFixed(2)} m²</p>
+            <p>Surface nette : {surfaceNette.toFixed(2)} m²</p>
+            <p>Volume du mur : {volumeMur.toFixed(3)} m³</p>
+            <p>Blocs agglos : {nbBlocs} u</p>
+            <p>Volume mortier : {volumeMortier.toFixed(3)} m³</p>
+            <p>Ciment : {cimentKg.toFixed(0)} kg</p>
+            <p>Sable : {sableM3.toFixed(3)} m³</p>
+          </div>
+        </Card>
       </section>
 
-      <section className="mt-6 card p-4">
-        <h2 className="mb-3 text-lg font-medium text-primary">Prix (depuis le BPU)</h2>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b text-left">
-              <th className="p-2">Poste</th>
-              <th className="p-2">Quantité</th>
-              <th className="p-2">Prix unit. (FCFA)</th>
-              <th className="p-2">Total (FCFA)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-b">
-              <td className="p-2">Agglos {agglo ? `(${agglo.designation})` : "(non trouvé dans BPU)"}</td>
-              <td className="p-2">{nbBlocs}</td>
-              <td className="p-2">{agglo ? Number(agglo.prix_unitaire).toLocaleString("fr-FR") : "-"}</td>
-              <td className="p-2">{coutAgglo !== null ? Math.round(coutAgglo).toLocaleString("fr-FR") : "-"}</td>
-            </tr>
-            <tr className="border-b">
-              <td className="p-2">Ciment {ciment ? `(${ciment.designation})` : "(non trouvé dans BPU)"}</td>
-              <td className="p-2">{cimentKg.toFixed(0)} kg</td>
-              <td className="p-2">{ciment ? Number(ciment.prix_unitaire).toLocaleString("fr-FR") : "-"}</td>
-              <td className="p-2">{coutCiment !== null ? Math.round(coutCiment).toLocaleString("fr-FR") : "-"}</td>
-            </tr>
-            <tr className="border-b">
-              <td className="p-2">Sable {sable ? `(${sable.designation})` : "(non trouvé dans BPU)"}</td>
-              <td className="p-2">{sableM3.toFixed(3)} m3</td>
-              <td className="p-2">{sable ? Number(sable.prix_unitaire).toLocaleString("fr-FR") : "-"}</td>
-              <td className="p-2">{coutSable !== null ? Math.round(coutSable).toLocaleString("fr-FR") : "-"}</td>
-            </tr>
-            <tr className="border-b">
-              <td className="p-2">Enduit {enduit ? `(${enduit.designation})` : "(non sélectionné)"}</td>
-              <td className="p-2">{surfaceNette.toFixed(2)} m2</td>
-              <td className="p-2">{enduit ? Number(enduit.prix_unitaire).toLocaleString("fr-FR") : "-"}</td>
-              <td className="p-2">{coutEnduit !== null ? Math.round(coutEnduit).toLocaleString("fr-FR") : "-"}</td>
-            </tr>
-          </tbody>
-        </table>
-        <div className="mt-3 text-right font-bold text-primary">
-          Total matériaux estimé : {Math.round(totalMateriaux).toLocaleString("fr-FR")} FCFA
-        </div>
-        <p className="mt-2 text-xs text-slate-500">
-          Les prix sont pris depuis le BPU (premier poste correspondant). Ajustez si le prix est par sac/m3. Enduit :
-          {enduit ? ` ${enduit.designation}` : " non trouvé dans le BPU"}.
-        </p>
-      </section>
+      <section>
+        <Card padding="lg">
+          <h2 className="mb-4 text-lg font-bold text-foreground">Prix (depuis le BPU)</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left">
+                  <th className="p-2 font-semibold text-muted">Poste</th>
+                  <th className="p-2 font-semibold text-muted text-center">Quantité</th>
+                  <th className="p-2 font-semibold text-muted text-right">Prix unit. (FCFA)</th>
+                  <th className="p-2 font-semibold text-muted text-right">Total (FCFA)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-border">
+                  <td className="p-2">
+                    Agglos {agglo ? `(${agglo.designation})` : "(non trouvé dans BPU)"}
+                  </td>
+                  <td className="p-2 text-center">{nbBlocs}</td>
+                  <td className="p-2 text-right">{agglo ? agglo.prix_unitaire.toLocaleString(langue === "fr" ? "fr-FR" : "en-US") : "-"}</td>
+                  <td className="p-2 text-right">{coutAgglo !== null ? Math.round(coutAgglo).toLocaleString(langue === "fr" ? "fr-FR" : "en-US") : "-"}</td>
+                </tr>
+                <tr className="border-b border-border">
+                  <td className="p-2">
+                    Ciment {ciment ? `(${ciment.designation})` : "(non trouvé dans BPU)"}
+                  </td>
+                  <td className="p-2 text-center">{cimentKg.toFixed(0)} kg</td>
+                  <td className="p-2 text-right">{ciment ? ciment.prix_unitaire.toLocaleString(langue === "fr" ? "fr-FR" : "en-US") : "-"}</td>
+                  <td className="p-2 text-right">{coutCiment !== null ? Math.round(coutCiment).toLocaleString(langue === "fr" ? "fr-FR" : "en-US") : "-"}</td>
+                </tr>
+                <tr className="border-b border-border">
+                  <td className="p-2">
+                    Sable {sable ? `(${sable.designation})` : "(non trouvé dans BPU)"}
+                  </td>
+                  <td className="p-2 text-center">{sableM3.toFixed(3)} m3</td>
+                  <td className="p-2 text-right">{sable ? sable.prix_unitaire.toLocaleString(langue === "fr" ? "fr-FR" : "en-US") : "-"}</td>
+                  <td className="p-2 text-right">{coutSable !== null ? Math.round(coutSable).toLocaleString(langue === "fr" ? "fr-FR" : "en-US") : "-"}</td>
+                </tr>
+                <tr className="border-b border-border">
+                  <td className="p-2">
+                    Enduit {enduit ? `(${enduit.designation})` : "(non sélectionné)"}
+                  </td>
+                  <td className="p-2 text-center">{surfaceNette.toFixed(2)} m2</td>
+                  <td className="p-2 text-right">{enduit ? enduit.prix_unitaire.toLocaleString(langue === "fr" ? "fr-FR" : "en-US") : "-"}</td>
+                  <td className="p-2 text-right">{coutEnduit !== null ? Math.round(coutEnduit).toLocaleString(langue === "fr" ? "fr-FR" : "en-US") : "-"}</td>
+                </tr>
+              </tbody>
+            </table>
+            </div>
+            <div className="mt-3 text-right font-bold text-foreground">
+              Total matériaux estimé : {fcfa(totalMateriaux)} FCFA
+            </div>
+            <p className="mt-2 text-xs text-muted">
+              Les prix sont pris depuis le BPU (premier poste correspondant). Ajustez si le prix est par sac/m3. Enduit : {enduit ? enduit.designation : " non trouvé dans le BPU"}.
+            </p>
+          </Card>
+        </section>
 
-      <section className="mt-6 card p-4">
-        <h2 className="mb-3 text-lg font-medium text-primary">Planning suggéré (estimation)</h2>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b text-left">
-              <th className="p-2">Tâche</th>
-              <th className="p-2">Durée indicative (j)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {taches.map((t) => (
-              <tr key={t.nom} className="border-b">
-                <td className="p-2">{t.nom}</td>
-                <td className="p-2">{t.jours}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <p className="mt-2 text-xs text-slate-500">
-          Durées indicatives basées sur des rendements moyens (mason unique). A affiner en phase planing.
-        </p>
-      </section>
+        <section className="mt-6">
+          <Card padding="lg">
+            <h2 className="mb-4 text-lg font-bold text-foreground">Planning suggéré (estimation)</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left">
+                    <th className="p-2 font-semibold text-muted">Tâche</th>
+                    <th className="p-2 font-semibold text-muted text-center">Durée indicative (j)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {taches.map((t) => (
+                    <tr key={t.nom} className="border-b border-border">
+                      <td className="p-2">{t.nom}</td>
+                      <td className="p-2 text-center">{t.jours}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="mt-2 text-xs text-muted">
+                Durées indicatives basées sur des rendements moyens (mason unique). A affiner en phase planing.
+              </p>
+            </div>
+          </Card>
+        </section>
     </main>
   );
 }
