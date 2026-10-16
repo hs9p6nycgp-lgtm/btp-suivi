@@ -62,9 +62,9 @@ export function avancementPhysiqueGlobal(
 }
 
 /** Indicateur 5.3 - Avancement financier (%). Formule : Montant réalisé / montant du marché × 100. */
-export function avancementFinancier(montantRealise: number, montantMarché: number): number {
-  if (montantMarché <= 0) return 0;
-  return (montantRealise / montantMarché) * 100;
+export function avancementFinancier(montantRealise: number, montantMarche: number): number {
+  if (montantMarche <= 0) return 0;
+  return (montantRealise / montantMarche) * 100;
 }
 
 /** Indicateur 5.4 - Écart de délai (jours). Formule : fin prévue - fin contractuelle. */
@@ -80,8 +80,8 @@ export function joursEcartDelai(
 }
 
 /** Indicateur 5.5 - Écart budgétaire (FCFA). Formule : coût réel - coût prévu à date. */
-export function ecartBudgetaire(coûtRéel: number, coûtPrévu: number): number {
-  return coûtRéel - coûtPrévu;
+export function ecartBudgetaire(coutReel: number, coutPrevu: number): number {
+  return coutReel - coutPrevu;
 }
 
 /** Indicateur 5.6 - Rendement d'un engin (m³/h ou ml/h). Formule : quantité produite / heures de marche. */
@@ -98,32 +98,63 @@ export function tauxDisponiteEngin(heuresMarchees: number, heuresPrevues: number
   return (heuresMarchees / heuresPrevues) * 100;
 }
 
-/** Indicateur 5.8 - Taux de conformité qualité (%). Formule : contrôles conformes / contrôles réalisés × 100. */
-export function tauxConformite(conformes: number, réalisés: number): number {
-  if (réalisés <= 0) return 0;
-  return (conformes / réalisés) * 100;
+/** Indicateur 5.8 - Taux de conformité qualité (%). Formule : contrôles conformes / contrôles realises × 100. */
+export function tauxConformite(conformes: number, realises: number): number {
+  if (realises <= 0) return 0;
+  return (conformes / realises) * 100;
 }
 
 /** Indicateur 5.9 - Marge totale d'une tâche (PERT) (jours). Formule : fin au plus tard - fin au plus tôt. */
 export function margeTotaleTache(
   dateFinAuPlusTard: string | null,
-  dateFinAuPlusTôt: string | null,
+  dateFinAuPlusTot: string | null,
 ): number {
-  if (!dateFinAuPlusTard || !dateFinAuPlusTôt) return 0;
+  if (!dateFinAuPlusTard || !dateFinAuPlusTot) return 0;
   const auPlusTard = new Date(`${dateFinAuPlusTard}T00:00:00`).getTime();
-  const auPlusTôt = new Date(`${dateFinAuPlusTôt}T00:00:00}`).getTime();
-  if (Number.isNaN(auPlusTard) || Number.isNaN(auPlusTôt)) return 0;
-  return Math.round((auPlusTard - auPlusTôt) / 86400000);
+  const auPlusTot = new Date(`${dateFinAuPlusTot}T00:00:00}`).getTime();
+  if (Number.isNaN(auPlusTard) || Number.isNaN(auPlusTot)) return 0;
+  return Math.round((auPlusTard - auPlusTot) / 86400000);
 }
 
 /** Indicateur 5.10 - Indice de performance coût. Formule : valeur acquise / coût réel. */
-export function indicePerformanceCoût(valeurAcquise: number, coûtRéel: number): number {
-  if (coûtRéel <= 0) return 0;
-  return valeurAcquise / coûtRéel;
+export function indicePerformanceCoût(valeurAcquise: number, coutReel: number): number {
+  if (coutReel <= 0) return 0;
+  return valeurAcquise / coutReel;
 }
 
 /** Indicateur 5.11 - Indice de performance du délai. Formule : valeur acquise / valeur planifiée. */
-export function indicePerformanceDelai(valeurAcquise: number, valeurPlanifiée: number): number {
-  if (valeurPlanifiée <= 0) return 0;
-  return valeurAcquise / valeurPlanifiée;
+export function indicePerformanceDelai(valeurAcquise: number, valeurPlanifiee: number): number {
+  if (valeurPlanifiee <= 0) return 0;
+  return valeurAcquise / valeurPlanifiee;
+}
+
+// ---------------------------------------------------------------------------
+// Ameliorations (priorite S) - fonctions complementaires.
+// ---------------------------------------------------------------------------
+
+/** MET-05 (S) : nombre de rotations d'un engin pour evacuer un volume foisonne. */
+export function nombreRotations(volumeFoisonne: number, capaciteBenne: number): number {
+  if (capaciteBenne <= 0) throw new Error("La capacite d'une benne doit etre > 0.");
+  return Math.ceil(volumeFoisonne / capaciteBenne);
+}
+
+/** PLA-05 (S) : serie cumulative d'une liste de valeurs (courbe en S). */
+export function serieCumulative(valeurs: number[]): number[] {
+  const resultat: number[] = [];
+  let cumul = 0;
+  for (const v of valeurs) {
+    cumul += v;
+    resultat.push(cumul);
+  }
+  return resultat;
+}
+
+/** COU-05 (S) : projection du cout final (EAC = AC + (BAC - EV)). */
+export function projectionCoutFinal(budgetTotal: number, valeurAcquise: number, coutActuel: number): number {
+  return coutActuel + (budgetTotal - valeurAcquise);
+}
+
+/** APP-03 (S) : stock theorique d'un materiau (entrees - sorties). */
+export function stockTheorique(entrees: number, sorties: number): number {
+  return entrees - sorties;
 }

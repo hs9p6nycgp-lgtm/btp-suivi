@@ -71,3 +71,23 @@ export function lignesAffecteesParMiseAJour(
     return ld === desigNorm;
   });
 }
+
+/** REF-05 (S) : exporte le referentiel en CSV (separateur point-virgule, UTF-8). */
+export function exporterReferentielCSV(lignes: LigneReferentiel[]): string {
+  const entete = "code;designation;categorie;unite;prix_unitaire;source;date_source;date_validite;statut;zone";
+  const lignesCsv = lignes.map((l) =>
+    [
+      l.code ?? "",
+      l.designation,
+      l.categorie ?? "",
+      l.unite,
+      String(l.prix_unitaire),
+      l.source ?? "",
+      l.date_source ?? "",
+      l.date_validite ?? "",
+      l.statut,
+      l.zone ?? "",
+    ].join(";"),
+  );
+  return [entete, ...lignesCsv].join("\n");
+}
