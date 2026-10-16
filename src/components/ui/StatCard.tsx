@@ -2,7 +2,11 @@
 
 import * as React from "react";
 import { BarChart3 } from "lucide-react";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from "recharts";
 import { Card } from "./Card";
+
+// Point d'une mini-courbe (seulement affichée, pas de règle de calcul)
+export type PointeMini = { x: string; y: number };
 
 type StatCardProps = {
   title: string;
@@ -11,6 +15,7 @@ type StatCardProps = {
   icon?: React.ReactNode;
   trend?: { value: string; label: string; positive: boolean };
   color?: "blue" | "orange" | "emerald" | "rose" | "amber" | "slate";
+  miniPoints?: PointeMini[];
 };
 
 const colorMap = {
@@ -29,6 +34,7 @@ export function StatCard({
   icon,
   trend,
   color = "slate",
+  miniPoints,
 }: StatCardProps) {
   const c = colorMap[color];
   return (
@@ -51,6 +57,19 @@ export function StatCard({
           {trend.value} {trend.label}
         </p>
       )}
+      {/* Mini-courbe descriptive, purement visuelle */}
+      {miniPoints && miniPoints.length > 0 && (
+        <div className="mt-3 h-16 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={miniPoints} margin={{ top: 4, left: 0, right: 0, bottom: 0 }}>
+              <XAxis dataKey="x" tick={{ fontSize: 10 }} stroke="var(--border)" />
+              <YAxis hide domain={[0, "auto"]} />
+              <Line type="monotone" dataKey="y" stroke="var(--action)" strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </Card>
   );
 }
+

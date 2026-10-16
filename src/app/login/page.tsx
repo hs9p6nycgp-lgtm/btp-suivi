@@ -1,14 +1,66 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Construction } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { getLangue, traduireErreur } from "@/lib/i18n";
 
 type Mode = "email" | "telephone";
+
+// Illustration décorative d'un chantier (monochrome, fond bleu nuit)
+function IllustrationChantier() {
+  return (
+    <svg viewBox="0 0 480 320" className="h-full w-full" role="img" aria-label="Chantier">
+      <defs>
+        <linearGradient id="theme-gradient" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#3b6ea5" />
+          <stop offset="100%" stopColor="#0f2a4a" />
+        </linearGradient>
+      </defs>
+      <rect width="480" height="320" fill="url(#theme-gradient)" />
+      {/* Sol */}
+      <rect y="230" width="480" height="90" fill="#0f2a4a" opacity="0.55" />
+      {/* Bâtiment en construction */}
+      <g stroke="#ffffff" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="60" y="120" width="90" height="120" />
+        <rect x="165" y="70" width="110" height="170" />
+        <rect x="290" y="140" width="80" height="100" />
+        <line x1="60" y1="180" x2="150" y2="180" />
+        <line x1="60" y1="220" x2="150" y2="220" />
+        <line x1="180" y1="120" x2="180" y2="290" />
+        <line x1="235" y1="120" x2="235" y2="290" />
+        <line x1="295" y1="170" x2="375" y2="170" />
+        <line x1="295" y1="210" x2="375" y2="210" />
+        <path d="M60 290 L150 290 L150 240 L60 240 Z" fill="#ffffff" opacity="0.15" />
+        <path d="M290 240 L375 240 L375 290 L290 290 Z" fill="#ffffff" opacity="0.15" />
+      </g>
+      {/* Tours de chantier */}
+      <g stroke="#f97316" strokeWidth="4" fill="none" strokeLinecap="round">
+        <line x1="400" y1="40" x2="400" y2="90" />
+        <line x1="415" y1="40" x2="415" y2="90" />
+        <line x1="400" y1="40" x2="415" y2="40" />
+        <line x1="400" y1="90" x2="415" y2="90" />
+        <path d="M395 100 L415 100 L415 130" />
+      </g>
+      {/* Engins */}
+      <g fill="#f97316" opacity="0.9">
+        <rect x="40" y="180" width="26" height="16" rx="3" />
+        <circle cx="48" cy="196" r="5" />
+        <circle cx="48" cy="196" r="2" fill="#0f2a4a" />
+      </g>
+      {/* Sols et axes */}
+      <g stroke="#ffffff" strokeOpacity="0.35" strokeWidth="2" strokeDasharray="8 8">
+        <line x1="20" y1="250" x2="460" y2="250" />
+        <line x1="20" y1="280" x2="460" y2="280" />
+        <line x1="20" y1="310" x2="460" y2="310" />
+      </g>
+    </svg>
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -92,158 +144,204 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <span className="text-2xl">🏗️</span>
-            <span className="text-2xl font-bold text-slate-900">BTP Suivi Pro</span>
-          </div>
-          <p className="text-sm text-slate-500">
-            {langue === "fr" ? "Gestion et suivi de chantiers" : "Site management and tracking"}
+    // Écran partagé : image de chantier à gauche, formulaire à droite
+    <div className="flex min-h-screen bg-background">
+      {/* Partie visuelle : bleu nuit avec dégradé */}
+      <div className="relative hidden flex-1 flex-col items-center justify-center overflow-hidden bg-primary md:flex">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-light/40 via-primary/60 to-primary" />
+        <IllustrationChantier />
+        <div className="absolute bottom-8 left-8 max-w-sm text-white">
+          <h2 className="text-2xl font-bold md:text-3xl">
+            {langue === "fr" ? "Le chantier, suivi en temps réel" : "Site management in real time"}
+          </h2>
+          <p className="mt-3 text-sm text-white/80">
+            {langue === "fr"
+              ? "Suivez planning, coûts, qualité et livraisons de vos chantiers."
+              : "Track planning, costs, quality and deliveries of your sites."}
           </p>
         </div>
+      </div>
 
-        <Card variant="elevated" padding="lg">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-slate-900">{signup ? t("title_signup") : t("title_signin")}</h2>
-              <p className="text-sm text-slate-500">{signup ? t("subtitle_signup") : t("subtitle_signin")}</p>
+      {/* Formulaire */}
+      <div className="flex w-full items-center justify-center px-4 py-10 md:w-1/2">
+        <div className="w-full max-w-md">
+          <div className="mb-8 text-center">
+            <div className="mb-4 flex items-center justify-center gap-2">
+              <span className="text-2xl">
+                <Construction className="h-8 w-8 text-primary" />
+              </span>
+              <span className="text-2xl font-bold text-foreground">BTP Suivi Pro</span>
             </div>
-            {!signup && (
-              <div className="flex gap-1">
-                <button
-                  onClick={() => {
-                    setMode("email");
-                    setMessage(null);
-                  }}
-                  className={`text-sm font-medium rounded-lg px-3 py-1.5 transition-colors ${mode === "email" ? "bg-orange-500 text-white" : "text-slate-600 hover:bg-slate-100"}`}
-                >
-                  {t("email")}
-                </button>
-                <button
-                  onClick={() => {
-                    setMode("telephone");
-                    setMessage(null);
-                  }}
-                  className={`text-sm font-medium rounded-lg px-3 py-1.5 transition-colors ${mode === "telephone" ? "bg-orange-500 text-white" : "text-slate-600 hover:bg-slate-100"}`}
-                >
-                  {t("telephone")}
-                </button>
-              </div>
-            )}
+            <p className="text-sm text-muted">
+              {langue === "fr" ? "Gestion et suivi de chantiers" : "Site management and tracking"}
+            </p>
           </div>
 
-          <form onSubmit={signup ? handleSignUp : handleSignIn} className="space-y-4">
-            {signup ? (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">{t("full_name")}</label>
-                  <input
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
-                    type="text"
-                    value={nom}
-                    onChange={(e) => setNom(e.target.value)}
-                  />
+          <Card variant="elevated" padding="lg">
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-foreground md:text-2xl">
+                  {signup ? t("title_signup") : t("title_signin")}
+                </h2>
+                <p className="text-sm text-muted">{signup ? t("subtitle_signup") : t("subtitle_signin")}</p>
+              </div>
+              {!signup && (
+                <div className="flex gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("email");
+                      setMessage(null);
+                    }}
+                    className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                      mode === "email"
+                        ? "bg-primary text-white shadow-sm"
+                        : "text-muted hover:bg-slate-200 dark:hover:bg-slate-700"
+                    }`}
+                  >
+                    {t("email")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("telephone");
+                      setMessage(null);
+                    }}
+                    className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                      mode === "telephone"
+                        ? "bg-primary text-white shadow-sm"
+                        : "text-muted hover:bg-slate-200 dark:hover:bg-slate-700"
+                    }`}
+                  >
+                    {t("telephone")}
+                  </button>
                 </div>
+              )}
+            </div>
+
+            <form onSubmit={signup ? handleSignUp : handleSignIn} className="space-y-4">
+              {signup ? (
+                <>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground">{t("full_name")}</label>
+                    <input
+                      className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                      type="text"
+                      value={nom}
+                      onChange={(e) => setNom(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground">{t("email")} *</label>
+                    <input
+                      className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground">{t("telephone")}</label>
+                    <input
+                      className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                      type="tel"
+                      value={telInscription}
+                      onChange={(e) => setTelInscription(e.target.value)}
+                    />
+                  </div>
+                </>
+              ) : mode === "email" ? (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">{t("email")} *</label>
+                  <label className="mb-1 block text-sm font-medium text-foreground">{t("email")}</label>
                   <input
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                    className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
+              ) : (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">{t("telephone")}</label>
+                  <label className="mb-1 block text-sm font-medium text-foreground">{t("telephone")}</label>
                   <input
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
-                    value={telInscription}
-                    onChange={(e) => setTelInscription(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                    type="tel"
+                    value={telephone}
+                    onChange={(e) => setTelephone(e.target.value)}
+                    required
                   />
                 </div>
-              </>
-            ) : mode === "email" ? (
+              )}
+
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t("email")}</label>
+                <label className="mb-1 block text-sm font-medium text-foreground">{t("password")}</label>
                 <input
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
+                  minLength={6}
                 />
               </div>
-            ) : (
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t("telephone")}</label>
-                <input
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
-                  value={telephone}
-                  onChange={(e) => setTelephone(e.target.value)}
-                  required
-                />
+
+              {!signup && mode === "email" && (
+                <div className="text-right">
+                  <Link href="/mot-de-passe-oublie" className="text-sm font-medium text-primary hover:underline">
+                    {t("forgot_password")}
+                  </Link>
+                </div>
+              )}
+
+              {message && (
+                <div className="rounded-xl border border-rose-300 bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-950/30 dark:text-rose-300">
+                  {message}
+                </div>
+              )}
+
+              <Button type="submit" size="lg" disabled={loading} className="w-full">
+                {loading ? t("waiting") : signup ? t("signup_btn") : t("signin")}
+              </Button>
+            </form>
+
+            {!signup && (
+              <div className="mt-6 border-t border-border pt-6">
+                <p className="text-center text-sm text-muted">
+                  {t("no_account")} &nbsp;
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSignup(true);
+                      setMessage(null);
+                    }}
+                    className="font-semibold text-primary hover:underline"
+                  >
+                    {t("create_account")}
+                  </button>
+                </p>
               </div>
             )}
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">{t("password")}</label>
-              <input
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-              />
-            </div>
-
-            {!signup && mode === "email" && (
-              <div className="text-right">
-                <Link href="/mot-de-passe-oublie" className="text-sm text-orange-600 hover:underline font-medium">
-                  {t("forgot_password")}
-                </Link>
+            {signup && (
+              <div className="mt-6 border-t border-border pt-6">
+                <p className="text-center text-sm text-muted">
+                  {t("has_account")} &nbsp;
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSignup(false);
+                      setMessage(null);
+                    }}
+                    className="font-semibold text-primary hover:underline"
+                  >
+                    {t("signin")}
+                  </button>
+                </p>
               </div>
             )}
-
-            {message && (
-              <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-sm text-rose-700">
-                {message}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-xl bg-orange-600 px-4 py-3 text-white font-semibold hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
-            >
-              {loading ? t("waiting") : signup ? t("signup_btn") : t("signin")}
-            </button>
-          </form>
-
-          {!signup && (
-            <div className="mt-6 pt-6 border-t border-slate-200">
-              <p className="text-sm text-slate-600 text-center">
-                {t("no_account")} &nbsp;
-                <button onClick={() => { setSignup(true); setMessage(null); }} className="text-orange-600 font-semibold hover:underline">
-                  {t("create_account")}
-                </button>
-              </p>
-            </div>
-          )}
-          {signup && (
-            <div className="mt-6 pt-6 border-t border-slate-200">
-              <p className="text-sm text-slate-600 text-center">
-                {t("has_account")} &nbsp;
-                <button onClick={() => { setSignup(false); setMessage(null); }} className="text-orange-600 font-semibold hover:underline">
-                  {t("signin")}
-                </button>
-              </p>
-            </div>
-          )}
-        </Card>
+          </Card>
+        </div>
       </div>
     </div>
   );
