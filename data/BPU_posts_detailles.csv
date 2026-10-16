@@ -1,5 +1,4 @@
 code;designation;unite;quantite_reference;prix_ht_fcfa;materiaux_fcfa;main_oeuvre_fcfa;materiel_fcfa;categorie;sous_categorie;zone;source;date_source;date_validite;statut
-INS-01;"Levés topographiques";ha;1;229594;114797;68878;45919;Installation de chantier;Début de chantier;Abidjan;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
 INS-02;"Implantation des ouvrages";ml;1;2488;1244;746;498;Installation de chantier;Début de chantier;Abidjan;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
 INS-03;"Clôture en tôle ondulée, h = 2 m";ml;1;23801;11901;7140;4760;Installation de chantier;Clôture;Abidjan;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
 INS-04;"Clôture en planche, h = 2 m";ml;1;36256;18128;10877;7251;Installation de chantier;Clôture;Abidjan;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
@@ -258,3 +257,23 @@ EPI-04;"Gilet haute visibilité (u)";u;1;3000;3000;0;0;Équipement de sécurité
 EPI-05;"Lunettes de protection (u)";u;1;4000;4000;0;0;Équipement de sécurité;EPI;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
 EPI-06;"Harnais de sécurité (u)";u;1;35000;35000;0;0;Équipement de sécurité;EPI;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
 EPI-07;"Extincteur (u)";u;1;25000;25000;0;0;Équipement de sécurité;Sécurité incendie;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
+ACI-12;"Bloc agglomere (u)";u;1;15000;9000;3750;2250;Maçonnerie;Agglos;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+BET-99;"Betonne (concrete) (m3)";m3;1;87000;60900;13050;13050;Béton;Béton prêt;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+LTR-01;"Laterite (m3)";m3;1;40000;40000;0;0;Matériaux de base;Sols;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+GRN-01;"Granulat (m3)";m3;1;55000;55000;0;0;Matériaux de base;Granulats;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+TER-99;"Terrassement (m3)";m3;1;45000;9000;9000;27000;Terrassement;Terrassement;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+EXC-01;"Excavation (m3)";m3;1;50000;10000;10000;30000;Terrassement;Excavation;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+ENR-01;"Enrobe bitumineux (t)";t;1;95000;47500;14250;33250;Bitume et routes;Enrobés;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+ASP-01;"Asphalte (t)";t;1;98000;49000;14700;34300;Bitume et routes;Enrobés;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+COU-01;"Couverture (m2)";m2;1;9000;5400;2250;1350;Couverture;Toiture;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+ETN-01;"Etancheite (m2)";m2;1;6000;3600;1500;900;Couverture;Étanchéité;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+MEM-01;"Membrane etancheite (m2)";m2;1;6000;3600;1500;900;Couverture;Étanchéité;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+SOT-01;"Sous-toiture (m2)";m2;1;7500;4500;1875;1125;Couverture;Toiture;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+BRD-01;"Bardage (m2)";m2;1;8000;4800;2000;1200;Bois et coffrage;Charpente;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+CAR-01;"Carrelage (m2)";m2;1;12000;8400;2400;1200;Finitions;Revêtement sol;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+CRU-01;"Carreau (u)";u;1;800;560;160;80;Finitions;Revêtement sol;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+FAI-01;"Faience (m2)";m2;1;11000;7700;2200;1100;Finitions;Revêtement mural;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+COL-01;"Colle a carrelage (kg)";kg;1;5000;3500;1000;500;Finitions;Colles;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+MTC-01;"Mortier colle (kg)";kg;1;4500;3150;900;450;Finitions;Colles;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+CHP-01;"Chape (m3)";m3;1;95000;66500;19000;9500;Finitions;Chape;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+RGR-01;"Ragreage (m2)";m2;1;8000;5600;1600;800;Finitions;Ragréage;Abidjan;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier

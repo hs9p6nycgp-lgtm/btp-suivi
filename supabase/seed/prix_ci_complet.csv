@@ -1,260 +1,280 @@
 code;designation;unite;prix_unitaire;source;date_source;date_validite;statut
-INS-01;"Levés topographiques";ha;229594;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-INS-02;"Implantation des ouvrages";ml;2488;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-INS-03;"Clôture en tôle ondulée, h = 2 m";ml;23801;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-INS-04;"Clôture en planche, h = 2 m";ml;36256;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-INS-05;"Location conteneur aménagé 20 pieds (3 mois min., hors transport)";mois;300000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-INS-06;"Location conteneur aménagé 40 pieds (3 mois min., hors transport)";mois;350000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-INS-07;"Achat conteneur aménagé 20 pieds";u;3300000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-INS-08;"Achat conteneur aménagé 40 pieds";u;5500000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-INS-09;"Location sanitaire de chantier (1 WC, 1 douche, lavabo)";mois;100000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-INS-10;"Branchement électricité (CIE), forfait";forfait;125000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-INS-11;"Branchement eau (SODECI), forfait";forfait;250780;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-INS-12;"Branchement téléphone (Orange), forfait";forfait;47104;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-INS-13;"Ponceau planche pour véhicule léger";u;38488;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-INS-14;"Voie d'accès en tout-venant, épaisseur 10 cm";m2;1797;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-MAT-01;"Location camion-benne (Abidjan)";jour;100000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-MAT-02;"Location camion-benne (hors Abidjan)";jour;120000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-MAT-03;"Location chargeuse";jour;150000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-MAT-04;"Location niveleuse (grader 12G)";jour;160000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-MAT-05;"Location compacteur à rouleau vibrant, guidage manuel";jour;50000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-MAT-06;"Location compacteur à rouleau vibrant";jour;160000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-MAT-07;"Location mini-pelle à chenille (avec godet)";jour;120000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-MAT-08;"Location pelle hydraulique à chenille 320";jour;300000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-MAT-09;"Location plaque vibrante";jour;50000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-MAT-10;"Location tractopelle à chenille (avec godet)";jour;120000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-MAT-11;"Location bétonnière 350 L";mois;50000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-MAT-12;"Location compresseur";jour;25000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-MAT-13;"Location motopompe";jour;10000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-MAT-14;"Location aiguille vibrante, électrique";jour;5000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-MAT-15;"Location aiguille vibrante, avec compresseur";jour;5000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-MAT-16;"Location nacelle traditionnelle (hors montage)";jour;35000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-MAT-17;"Achat nacelle traditionnelle";u;1500000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-01;"Location simple banche métallique (coffrage)";m2;5500;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-02;"Location banche métallique (travaux)";m2;12000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-03;"Étai métallique neuf 5,00 m";u;18000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-04;"Étai métallique neuf 4,00 m";u;14000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-05;"Étai métallique neuf 3,60 m";u;11000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-06;"Location étai métallique d'occasion 4,00 m";jour;150;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-07;"Location étai métallique d'occasion 3,60 m";jour;100;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-08;"Étai métallique d'occasion 4,00 m";u;12000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-09;"Étai métallique d'occasion 3,60 m";u;8500;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-10;"Panneau de coffrage jaune 3000 x 500 x 21 mm";u;30000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-11;"Panneau de coffrage jaune 3000 x 500 x 27 mm";u;35000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-12;"Ensemble de cravates pour poteau 15/45 cm";u;20000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-13;"Clavette de fixation";u;800;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-14;"Poutrelle H20, longueur 3,90 m";ml;8000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-15;"Fourche à 4 voies H20";u;7000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-16;"Vérin de réglage peint, neuf";u;20000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-17;"Vérin de réglage, occasion";u;15000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-18;"Trépied d'étai métallique 6 kg";u;15000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-19;"Contreplaqué bakélisé 2440 x 1220 x 1800 mm";u;30000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-20;"Contreplaqué bakélisé 2500 x 1250 x 1800 mm";u;35000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-21;"Contreplaqué bakélisé 2500 x 1250 x 2100 mm";u;50000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-22;"Pince de dalle";u;22500;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-23;"Collier galvanisé forgé";u;2500;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-24;"Collier fixe en tôle";u;1750;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-25;"Collier mobile en tôle";u;2000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-26;"Tige de coffrage Artéon, neuve";u;4000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-27;"Serre-joint français neuf";u;10000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-COF-28;"Serre-joint français occasion";u;5000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-ECH-01;"Échafaudage léger importé neuf";m2;20000;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-ECH-02;"Location échafaudage léger importé";m2/jour;1500;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-01;"Abattage et dessouchage d'arbre, circonférence 1 à 3 m";u;111743;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-02;"Abattage et dessouchage d'arbre, circonférence > 3 m";u;217229;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-03;"Décapage à la pioche (terre végétale)";m2;748;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-04;"Décapage à la pelle (terre végétale)";m2;467;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-05;"Débalis mis en dépôt";m3;2280;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-06;"Évacuation de la terre végétale à la décharge";m3;653;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-07;"Transport à la décharge publique";m3.km;218;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-08;"Fouilles mécaniques en excavation, 1re catégorie";m3;1392;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-09;"Fouilles mécaniques en excavation, 2e catégorie";m3;1537;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-10;"Fouilles mécaniques en excavation, 3e catégorie";m3;1687;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-11;"Fouilles mécaniques en excavation, 4e catégorie";m3;1905;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-12;"Fouilles mécaniques en puits, 1re catégorie";m3;2738;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-13;"Fouilles mécaniques en puits, 2e catégorie";m3;2987;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-14;"Fouilles mécaniques en puits, 3e catégorie";m3;3356;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-15;"Fouilles mécaniques en puits, 4e catégorie";m3;3850;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-16;"Fouilles mécaniques en tranchée, 1re catégorie";m3;977;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-17;"Fouilles mécaniques en tranchée, 2e catégorie";m3;1189;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-18;"Fouilles mécaniques en tranchée, 3e catégorie";m3;1586;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-19;"Fouilles mécaniques en tranchée, 4e catégorie";m3;2281;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-20;"Fouilles manuelles en excavation, 1re catégorie";m3;2466;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-21;"Fouilles manuelles en excavation, 2e catégorie";m3;2868;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-22;"Fouilles manuelles en excavation, 3e catégorie";m3;3212;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;à vérifier
-TER-23;"Fouilles manuelles en excavation, 4e catégorie";m3;8604;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-24;"Fouilles manuelles en puits, 1re catégorie";m3;2849;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-25;"Fouilles manuelles en puits, 2e catégorie";m3;3275;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-26;"Fouilles manuelles en puits, 3e catégorie";m3;3822;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-27;"Fouilles manuelles en puits, 4e catégorie";m3;10116;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-28;"Fouilles manuelles en tranchée, 1re catégorie";m3;2744;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-29;"Fouilles manuelles en tranchée, 2e catégorie";m3;3143;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-30;"Fouilles manuelles en tranchée, 3e catégorie";m3;3656;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-TER-31;"Fouilles manuelles en tranchée, 4e catégorie";m3;9747;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-REM-01;"Remblai de terre, épaisseur 15 cm";m3;4947;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-REM-02;"Apport de terre graveleuse";m3;4617;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-REM-03;"Apport de terre argilo-sableuse";m3;862;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;à vérifier
-REM-04;"Remblai manuel des fouilles";m3;1121;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;à vérifier
-REM-05;"Remblai compacté sous dallage";m3;2789;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;à vérifier
-REM-06;"Épandage des terres";m3;774;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;à vérifier
-REM-07;"Nivellement définitif sous dallage";m2;740;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-REM-08;"Exécution de talus droit";m;1052;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;à vérifier
-REM-09;"Exécution de talus courbe";m3;3025;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-REM-10;"Évacuation des déblais excédentaires";m;680;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;à vérifier
-BET-01;"Béton de propreté C16/20 (BPE)";m3;89261;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-02;"Béton C30/37 en fondation, radier (BPE)";m3;108104;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-03;"Béton C30/37 en infrastructure, amorces de poteaux (BPE)";m3;108975;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-04;"Béton C30/37 en infrastructure, voiles banchés (BPE)";m3;108265;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-05;"Béton C30/37 en infrastructure, poteaux et raidisseurs (BPE)";m3;108824;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-06;"Béton C30/37 en infrastructure, poutres chaînages linteaux (BPE)";m3;110644;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-07;"Béton C30/37 en infrastructure, dalle pleine (BPE)";m3;107562;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-08;"Béton C30/37 en infrastructure, escaliers (BPE)";m3;108088;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-09;"Béton C30/37 en élévation, poteaux (BPE)";m3;108824;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-10;"Béton C30/37 en élévation, poutres chaînages linteaux (BPE)";m3;110644;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-11;"Béton C30/37 en élévation, dalle pleine (BPE)";m3;107562;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-12;"Béton C30/37 en élévation, escaliers (BPE)";m3;108088;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-13;"Béton C30/37 en élévation, voiles (BPE)";m3;108265;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-150CPA;"Béton fabriqué chantier dosé 150 kg/m3, CPA 42,5 (semelle ou propreté)";m3;63972;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-200CPA;"Béton fabriqué chantier dosé 200 kg/m3, CPA 42,5 (semelle ou propreté)";m3;71606;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-250CPA;"Béton fabriqué chantier dosé 250 kg/m3, CPA 42,5 (semelle ou propreté)";m3;79194;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-300CPA;"Béton fabriqué chantier dosé 300 kg/m3, CPA 42,5 (semelle ou propreté)";m3;86782;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-350CPA;"Béton fabriqué chantier dosé 350 kg/m3, CPA 42,5 (semelle ou propreté)";m3;94369;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-400CPA;"Béton fabriqué chantier dosé 400 kg/m3, CPA 42,5 (semelle ou propreté)";m3;101958;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-450CPA;"Béton fabriqué chantier dosé 450 kg/m3, CPA 42,5 (semelle ou propreté)";m3;109545;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-500CPA;"Béton fabriqué chantier dosé 500 kg/m3, CPA 42,5 (semelle ou propreté)";m3;117133;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-150CPJ;"Béton fabriqué chantier dosé 150 kg/m3, CPJ 42,5";m3;60804;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-200CPJ;"Béton fabriqué chantier dosé 200 kg/m3, CPJ 42,5";m3;67382;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-250CPJ;"Béton fabriqué chantier dosé 250 kg/m3, CPJ 42,5";m3;73914;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-300CPJ;"Béton fabriqué chantier dosé 300 kg/m3, CPJ 42,5";m3;80445;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-350CPJ;"Béton fabriqué chantier dosé 350 kg/m3, CPJ 42,5";m3;86977;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-400CPJ;"Béton fabriqué chantier dosé 400 kg/m3, CPJ 42,5";m3;93509;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-450CPJ;"Béton fabriqué chantier dosé 450 kg/m3, CPJ 42,5";m3;100042;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-500CPJ;"Béton fabriqué chantier dosé 500 kg/m3, CPJ 42,5";m3;106572;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-150CPJ32;"Béton fabriqué chantier dosé 150 kg/m3, CPJ 32,5";m3;60335;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-350CPJ32;"Béton fabriqué chantier dosé 350 kg/m3, CPJ 32,5";m3;85882;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-500CPJ32;"Béton fabriqué chantier dosé 500 kg/m3, CPJ 32,5";m3;105008;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-E1;"Béton dosé 350 kg/m3 CPA 42,5, élévation poteaux";m3;99148;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-E2;"Béton dosé 350 kg/m3 CPA 42,5, élévation poutres";m3;98425;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-E3;"Béton dosé 350 kg/m3 CPA 42,5, élévation dalle pleine";m3;97109;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-E4;"Béton dosé 350 kg/m3 CPA 42,5, élévation escaliers";m3;100562;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-E5;"Béton dosé 350 kg/m3 CPA 42,5, élévation voiles";m3;96781;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-E6;"Béton dosé 350 kg/m3 CPJ 42,5, élévation poteaux";m3;91754;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-E7;"Béton dosé 350 kg/m3 CPJ 42,5, élévation poutres";m3;91033;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-E8;"Béton dosé 350 kg/m3 CPJ 42,5, élévation dalle pleine";m3;89717;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-BET-E9;"Béton dosé 350 kg/m3 CPJ 42,5, élévation voiles";m3;89390;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-AGG-01;"Agglo plein 20 cm CPA 42,5";m2;19428;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-AGG-02;"Agglo plein 15 cm CPA 42,5";m2;14754;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-AGG-03;"Agglo plein 10 cm CPA 42,5";m2;10516;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-AGG-04;"Agglo plein 7 cm CPA 42,5";m2;7103;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-AGG-05;"Agglo creux 20 cm CPA 42,5";m2;11919;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-AGG-06;"Agglo creux 15 cm CPA 42,5";m2;9402;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-AGG-07;"Agglo creux 12 cm CPA 42,5";m2;8813;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-AGG-08;"Agglo creux 10 cm CPA 42,5";m2;8274;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-AGG-09;"Agglo creux 7 cm CPA 42,5";m2;6085;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-AGG-10;"Agglo plein 20 cm CPJ 42,5";m2;18293;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-AGG-11;"Agglo plein 15 cm CPJ 42,5";m2;13911;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-AGG-12;"Agglo plein 10 cm CPJ 42,5";m2;9952;"BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd";14/10/2026;;valide
-ACI-01;"Barre HA Ø8 (acier à béton)";kg;3200;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ACI-02;"Barre HA Ø10 (acier à béton)";kg;3300;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ACI-03;"Barre HA Ø12 (acier à béton)";kg;3400;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ACI-04;"Barre HA Ø14 (acier à béton)";kg;3500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ACI-05;"Barre HA Ø16 (acier à béton)";kg;3600;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ACI-06;"Barre HA Ø20 (acier à béton)";kg;3700;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ACI-07;"Barre HA Ø25 (acier à béton)";kg;3800;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ACI-08;"Treillis soudé (panneau)";m2;4500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ACI-09;"Fil d'attache recuit (kg)";kg;1200;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ACI-10;"Acier pour fondations (kg)";kg;3500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ACI-11;"Acier pour poutres et poteaux (kg)";kg;3600;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-BIT-01;"Bitume 60/70 (vrac)";t;420000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-BIT-02;"Enrobé bitumineux à chaud (EB)";t;95000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-BIT-03;"Grave bitume (GB) 0/20";m3;48000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-BIT-04;"Enduit superficiel (couche d'accrochage)";m2;3500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-BIT-05;"Couche de base (latérite améliorée)";m3;28000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-BIT-06;"Couche de fondation (matériau sélectionné)";m3;22000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-BIT-07;"Bordure en béton (ml)";ml;12000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-BIT-08;"Caniveau préfabriqué (ml)";ml;18000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-BIT-09;"Marquage routier (peinture thermoplastique)";m2;2500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-BIT-10;"Panneau de signalisation (u)";u;85000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-BOI-01;"Bois de coffrage (sapin)";m3;180000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-BOI-02;"Bois de charpente (chêne/iroko)";m3;220000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-BOI-03;"Planche de coffrage 27 mm";m3;175000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-BOI-04;"Chevrons (bois)";ml;2500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-BOI-05;"Volige (bois)";m2;8000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-BOI-06;"Contreplaqué marine (m²)";m2;12000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-BOI-07;"Tasseaux et liteaux (ml)";ml;800;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-CLIM-01;"Climatiseur split 12000 BTU (u)";u;320000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-CLIM-02;"Gaines et accessoires ventilation (ml)";ml;3500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-COUV-01;"Tôle ondulée galvanisée (m²)";m2;7500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-COUV-02;"Tôle bac acier (m²)";m2;9000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-COUV-03;"Tuile béton (u)";u;800;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-COUV-04;"Charpente métallique (kg)";kg;1200;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-COUV-05;"Gouttière PVC (ml)";ml;4500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MO-01;"Maçon (journée)";jour;15000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MO-02;"Aide-maçon (journée)";jour;8000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MO-03;"Ferrailleur (journée)";jour;18000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MO-04;"Coffreur (journée)";jour;18000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MO-05;"Peintre (journée)";jour;12000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MO-06;"Carreleur (journée)";jour;15000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MO-07;"Plombier (journée)";jour;18000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MO-08;"Électricien (journée)";jour;18000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MO-09;"Menuisier (journée)";jour;15000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MO-10;"Chef d'équipe (journée)";jour;25000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MB-01;"Ciment CPA 42,5 (sac 50 kg)";sac 50 kg;5500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MB-02;"Ciment CPJ 42,5 (sac 50 kg)";sac 50 kg;4800;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MB-03;"Sable de rivière (m³)";m3;65000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MB-04;"Gravier 5/15 (m³)";m3;60000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MB-05;"Gravier 15/25 (m³)";m3;58000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MB-06;"Latérite (m³)";m3;40000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MB-07;"Argile (m³)";m3;25000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MB-08;"Eau (m³)";m3;1500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MB-09;"Additif béton (kg)";kg;2500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MB-10;"Treillis soudé (m²)";m2;4500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MB-11;"Barre acier HA (kg)";kg;3500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MB-12;"Fil d'attache (kg)";kg;1200;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MB-13;"Clous (kg)";kg;1800;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MB-14;"Vis (kg)";kg;3000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MB-15;"Mortier prêt à l'emploi (m³)";m3;95000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MB-16;"Enduit de façade (m²)";m2;3500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MB-17;"Peinture (L)";L;4500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MENU-01;"Porte bois pleine (u)";u;120000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MENU-02;"Fenêtre bois (u)";u;95000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MENU-03;"Porte métallique (u)";u;180000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MENU-04;"Fenêtre aluminium (u)";u;110000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MENU-05;"Placard / armoire (m²)";m2;45000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-MENU-06;"Plinthe (ml)";ml;3500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-PLO-01;"Tube PVC Ø100 (ml)";ml;3500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-PLO-02;"Coude PVC (u)";u;1200;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-PLO-03;"Té PVC (u)";u;1500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-PLO-04;"Vanne à boisseau (u)";u;8000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-PLO-05;"Robinet (u)";u;6000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-PLO-06;"WC complet (u)";u;45000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-PLO-07;"Lavabo (u)";u;35000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-PLO-08;"Douche (u)";u;40000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-PLO-09;"Chauffe-eau (u)";u;120000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-PLO-10;"Fosse septique (u)";u;250000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-PLO-11;"Regard béton (u)";u;35000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-PLO-12;"Canalisation (ml)";ml;8000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-PLO-13;"Pompage / essai (forfait)";forfait;60000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-TRA-01;"Transport matériaux (voyage camion)";voyage;150000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-TRA-02;"Location camion (jour)";jour;350000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-TRA-03;"Carburant (L)";L;650;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-TRA-04;"Manutention (forfait)";forfait;45000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ELEC-01;"Câble électrique (ml)";ml;1200;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ELEC-02;"Disjoncteur (u)";u;8000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ELEC-03;"Tableau électrique (u)";u;65000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ELEC-04;"Prise (u)";u;3500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ELEC-05;"Interrupteur (u)";u;3000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ELEC-06;"Luminaire (u)";u;15000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ELEC-07;"Gaine (ml)";ml;400;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ELEC-08;"Mise à la terre (forfait)";forfait;80000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ELEC-09;"Groupe électrogène (jour)";jour;75000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ELEC-10;"Installation électrique (m²)";m2;12000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ELEC-11;"Armoire électrique (u)";u;95000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-ELEC-12;"Paratonnerre (u)";u;250000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-EPI-01;"Casque de chantier (u)";u;8000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-EPI-02;"Gants de protection (paire)";paire;2500;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-EPI-03;"Chaussures de sécurité (paire)";paire;25000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-EPI-04;"Gilet haute visibilité (u)";u;3000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-EPI-05;"Lunettes de protection (u)";u;4000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-EPI-06;"Harnais de sécurité (u)";u;35000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
-EPI-07;"Extincteur (u)";u;25000;"Marché ivoirien 2026 (estimation) - à vérifier";2026-10-16;2027-04-16;a_verifier
+INS-01;"""Levés topographiques""";ha;229594;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+INS-02;"""Implantation des ouvrages""";ml;2488;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+INS-03;"""Clôture en tôle ondulée, h = 2 m""";ml;23801;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+INS-04;"""Clôture en planche, h = 2 m""";ml;36256;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+INS-05;"""Location conteneur aménagé 20 pieds (3 mois min., hors transport)""";mois;300000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+INS-06;"""Location conteneur aménagé 40 pieds (3 mois min., hors transport)""";mois;350000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+INS-07;"""Achat conteneur aménagé 20 pieds""";u;3300000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+INS-08;"""Achat conteneur aménagé 40 pieds""";u;5500000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+INS-09;"""Location sanitaire de chantier (1 WC, 1 douche, lavabo)""";mois;100000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+INS-10;"""Branchement électricité (CIE), forfait""";forfait;125000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+INS-11;"""Branchement eau (SODECI), forfait""";forfait;250780;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+INS-12;"""Branchement téléphone (Orange), forfait""";forfait;47104;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+INS-13;"""Ponceau planche pour véhicule léger""";u;38488;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+INS-14;"""Voie d'accès en tout-venant, épaisseur 10 cm""";m2;1797;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+MAT-01;"""Location camion-benne (Abidjan)""";jour;100000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+MAT-02;"""Location camion-benne (hors Abidjan)""";jour;120000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+MAT-03;"""Location chargeuse""";jour;150000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+MAT-04;"""Location niveleuse (grader 12G)""";jour;160000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+MAT-05;"""Location compacteur à rouleau vibrant, guidage manuel""";jour;50000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+MAT-06;"""Location compacteur à rouleau vibrant""";jour;160000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+MAT-07;"""Location mini-pelle à chenille (avec godet)""";jour;120000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+MAT-08;"""Location pelle hydraulique à chenille 320""";jour;300000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+MAT-09;"""Location plaque vibrante""";jour;50000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+MAT-10;"""Location tractopelle à chenille (avec godet)""";jour;120000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+MAT-11;"""Location bétonnière 350 L""";mois;50000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+MAT-12;"""Location compresseur""";jour;25000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+MAT-13;"""Location motopompe""";jour;10000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+MAT-14;"""Location aiguille vibrante, électrique""";jour;5000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+MAT-15;"""Location aiguille vibrante, avec compresseur""";jour;5000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+MAT-16;"""Location nacelle traditionnelle (hors montage)""";jour;35000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+MAT-17;"""Achat nacelle traditionnelle""";u;1500000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-01;"""Location simple banche métallique (coffrage)""";m2;5500;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-02;"""Location banche métallique (travaux)""";m2;12000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-03;"""Étai métallique neuf 5,00 m""";u;18000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-04;"""Étai métallique neuf 4,00 m""";u;14000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-05;"""Étai métallique neuf 3,60 m""";u;11000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-06;"""Location étai métallique d'occasion 4,00 m""";jour;150;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-07;"""Location étai métallique d'occasion 3,60 m""";jour;100;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-08;"""Étai métallique d'occasion 4,00 m""";u;12000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-09;"""Étai métallique d'occasion 3,60 m""";u;8500;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-10;"""Panneau de coffrage jaune 3000 x 500 x 21 mm""";u;30000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-11;"""Panneau de coffrage jaune 3000 x 500 x 27 mm""";u;35000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-12;"""Ensemble de cravates pour poteau 15/45 cm""";u;20000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-13;"""Clavette de fixation""";u;800;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-14;"""Poutrelle H20, longueur 3,90 m""";ml;8000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-15;"""Fourche à 4 voies H20""";u;7000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-16;"""Vérin de réglage peint, neuf""";u;20000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-17;"""Vérin de réglage, occasion""";u;15000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-18;"""Trépied d'étai métallique 6 kg""";u;15000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-19;"""Contreplaqué bakélisé 2440 x 1220 x 1800 mm""";u;30000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-20;"""Contreplaqué bakélisé 2500 x 1250 x 1800 mm""";u;35000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-21;"""Contreplaqué bakélisé 2500 x 1250 x 2100 mm""";u;50000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-22;"""Pince de dalle""";u;22500;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-23;"""Collier galvanisé forgé""";u;2500;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-24;"""Collier fixe en tôle""";u;1750;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-25;"""Collier mobile en tôle""";u;2000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-26;"""Tige de coffrage Artéon, neuve""";u;4000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-27;"""Serre-joint français neuf""";u;10000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+COF-28;"""Serre-joint français occasion""";u;5000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+ECH-01;"""Échafaudage léger importé neuf""";m2;20000;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+ECH-02;"""Location échafaudage léger importé""";m2/jour;1500;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-01;"""Abattage et dessouchage d'arbre, circonférence 1 à 3 m""";u;111743;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-02;"""Abattage et dessouchage d'arbre, circonférence > 3 m""";u;217229;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-03;"""Décapage à la pioche (terre végétale)""";m2;748;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-04;"""Décapage à la pelle (terre végétale)""";m2;467;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-05;"""Débalis mis en dépôt""";m3;2280;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-06;"""Évacuation de la terre végétale à la décharge""";m3;653;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-07;"""Transport à la décharge publique""";m3.km;218;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-08;"""Fouilles mécaniques en excavation, 1re catégorie""";m3;1392;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-09;"""Fouilles mécaniques en excavation, 2e catégorie""";m3;1537;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-10;"""Fouilles mécaniques en excavation, 3e catégorie""";m3;1687;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-11;"""Fouilles mécaniques en excavation, 4e catégorie""";m3;1905;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-12;"""Fouilles mécaniques en puits, 1re catégorie""";m3;2738;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-13;"""Fouilles mécaniques en puits, 2e catégorie""";m3;2987;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-14;"""Fouilles mécaniques en puits, 3e catégorie""";m3;3356;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-15;"""Fouilles mécaniques en puits, 4e catégorie""";m3;3850;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-16;"""Fouilles mécaniques en tranchée, 1re catégorie""";m3;977;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-17;"""Fouilles mécaniques en tranchée, 2e catégorie""";m3;1189;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-18;"""Fouilles mécaniques en tranchée, 3e catégorie""";m3;1586;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-19;"""Fouilles mécaniques en tranchée, 4e catégorie""";m3;2281;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-20;"""Fouilles manuelles en excavation, 1re catégorie""";m3;2466;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-21;"""Fouilles manuelles en excavation, 2e catégorie""";m3;2868;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-22;"""Fouilles manuelles en excavation, 3e catégorie""";m3;3212;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;à vérifier
+TER-23;"""Fouilles manuelles en excavation, 4e catégorie""";m3;8604;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-24;"""Fouilles manuelles en puits, 1re catégorie""";m3;2849;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-25;"""Fouilles manuelles en puits, 2e catégorie""";m3;3275;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-26;"""Fouilles manuelles en puits, 3e catégorie""";m3;3822;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-27;"""Fouilles manuelles en puits, 4e catégorie""";m3;10116;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-28;"""Fouilles manuelles en tranchée, 1re catégorie""";m3;2744;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-29;"""Fouilles manuelles en tranchée, 2e catégorie""";m3;3143;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-30;"""Fouilles manuelles en tranchée, 3e catégorie""";m3;3656;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+TER-31;"""Fouilles manuelles en tranchée, 4e catégorie""";m3;9747;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+REM-01;"""Remblai de terre, épaisseur 15 cm""";m3;4947;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+REM-02;"""Apport de terre graveleuse""";m3;4617;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+REM-03;"""Apport de terre argilo-sableuse""";m3;862;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;à vérifier
+REM-04;"""Remblai manuel des fouilles""";m3;1121;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;à vérifier
+REM-05;"""Remblai compacté sous dallage""";m3;2789;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;à vérifier
+REM-06;"""Épandage des terres""";m3;774;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;à vérifier
+REM-07;"""Nivellement définitif sous dallage""";m2;740;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+REM-08;"""Exécution de talus droit""";m;1052;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;à vérifier
+REM-09;"""Exécution de talus courbe""";m3;3025;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+REM-10;"""Évacuation des déblais excédentaires""";m;680;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;à vérifier
+BET-01;"""Béton de propreté C16/20 (BPE)""";m3;89261;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-02;"""Béton C30/37 en fondation, radier (BPE)""";m3;108104;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-03;"""Béton C30/37 en infrastructure, amorces de poteaux (BPE)""";m3;108975;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-04;"""Béton C30/37 en infrastructure, voiles banchés (BPE)""";m3;108265;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-05;"""Béton C30/37 en infrastructure, poteaux et raidisseurs (BPE)""";m3;108824;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-06;"""Béton C30/37 en infrastructure, poutres chaînages linteaux (BPE)""";m3;110644;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-07;"""Béton C30/37 en infrastructure, dalle pleine (BPE)""";m3;107562;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-08;"""Béton C30/37 en infrastructure, escaliers (BPE)""";m3;108088;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-09;"""Béton C30/37 en élévation, poteaux (BPE)""";m3;108824;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-10;"""Béton C30/37 en élévation, poutres chaînages linteaux (BPE)""";m3;110644;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-11;"""Béton C30/37 en élévation, dalle pleine (BPE)""";m3;107562;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-12;"""Béton C30/37 en élévation, escaliers (BPE)""";m3;108088;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-13;"""Béton C30/37 en élévation, voiles (BPE)""";m3;108265;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-150CPA;"""Béton fabriqué chantier dosé 150 kg/m3, CPA 42,5 (semelle ou propreté)""";m3;63972;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-200CPA;"""Béton fabriqué chantier dosé 200 kg/m3, CPA 42,5 (semelle ou propreté)""";m3;71606;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-250CPA;"""Béton fabriqué chantier dosé 250 kg/m3, CPA 42,5 (semelle ou propreté)""";m3;79194;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-300CPA;"""Béton fabriqué chantier dosé 300 kg/m3, CPA 42,5 (semelle ou propreté)""";m3;86782;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-350CPA;"""Béton fabriqué chantier dosé 350 kg/m3, CPA 42,5 (semelle ou propreté)""";m3;94369;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-400CPA;"""Béton fabriqué chantier dosé 400 kg/m3, CPA 42,5 (semelle ou propreté)""";m3;101958;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-450CPA;"""Béton fabriqué chantier dosé 450 kg/m3, CPA 42,5 (semelle ou propreté)""";m3;109545;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-500CPA;"""Béton fabriqué chantier dosé 500 kg/m3, CPA 42,5 (semelle ou propreté)""";m3;117133;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-150CPJ;"""Béton fabriqué chantier dosé 150 kg/m3, CPJ 42,5""";m3;60804;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-200CPJ;"""Béton fabriqué chantier dosé 200 kg/m3, CPJ 42,5""";m3;67382;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-250CPJ;"""Béton fabriqué chantier dosé 250 kg/m3, CPJ 42,5""";m3;73914;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-300CPJ;"""Béton fabriqué chantier dosé 300 kg/m3, CPJ 42,5""";m3;80445;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-350CPJ;"""Béton fabriqué chantier dosé 350 kg/m3, CPJ 42,5""";m3;86977;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-400CPJ;"""Béton fabriqué chantier dosé 400 kg/m3, CPJ 42,5""";m3;93509;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-450CPJ;"""Béton fabriqué chantier dosé 450 kg/m3, CPJ 42,5""";m3;100042;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-500CPJ;"""Béton fabriqué chantier dosé 500 kg/m3, CPJ 42,5""";m3;106572;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-150CPJ32;"""Béton fabriqué chantier dosé 150 kg/m3, CPJ 32,5""";m3;60335;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-350CPJ32;"""Béton fabriqué chantier dosé 350 kg/m3, CPJ 32,5""";m3;85882;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-500CPJ32;"""Béton fabriqué chantier dosé 500 kg/m3, CPJ 32,5""";m3;105008;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-E1;"""Béton dosé 350 kg/m3 CPA 42,5, élévation poteaux""";m3;99148;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-E2;"""Béton dosé 350 kg/m3 CPA 42,5, élévation poutres""";m3;98425;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-E3;"""Béton dosé 350 kg/m3 CPA 42,5, élévation dalle pleine""";m3;97109;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-E4;"""Béton dosé 350 kg/m3 CPA 42,5, élévation escaliers""";m3;100562;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-E5;"""Béton dosé 350 kg/m3 CPA 42,5, élévation voiles""";m3;96781;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-E6;"""Béton dosé 350 kg/m3 CPJ 42,5, élévation poteaux""";m3;91754;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-E7;"""Béton dosé 350 kg/m3 CPJ 42,5, élévation poutres""";m3;91033;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-E8;"""Béton dosé 350 kg/m3 CPJ 42,5, élévation dalle pleine""";m3;89717;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+BET-E9;"""Béton dosé 350 kg/m3 CPJ 42,5, élévation voiles""";m3;89390;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+AGG-01;"""Agglo plein 20 cm CPA 42,5""";m2;19428;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+AGG-02;"""Agglo plein 15 cm CPA 42,5""";m2;14754;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+AGG-03;"""Agglo plein 10 cm CPA 42,5""";m2;10516;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+AGG-04;"""Agglo plein 7 cm CPA 42,5""";m2;7103;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+AGG-05;"""Agglo creux 20 cm CPA 42,5""";m2;11919;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+AGG-06;"""Agglo creux 15 cm CPA 42,5""";m2;9402;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+AGG-07;"""Agglo creux 12 cm CPA 42,5""";m2;8813;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+AGG-08;"""Agglo creux 10 cm CPA 42,5""";m2;8274;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+AGG-09;"""Agglo creux 7 cm CPA 42,5""";m2;6085;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+AGG-10;"""Agglo plein 20 cm CPJ 42,5""";m2;18293;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+AGG-11;"""Agglo plein 15 cm CPJ 42,5""";m2;13911;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+AGG-12;"""Agglo plein 10 cm CPJ 42,5""";m2;9952;"""BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd""";14/10/2026;;valide
+ACI-01;"""Barre HA Ø8 (acier à béton)""";kg;3200;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ACI-02;"""Barre HA Ø10 (acier à béton)""";kg;3300;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ACI-03;"""Barre HA Ø12 (acier à béton)""";kg;3400;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ACI-04;"""Barre HA Ø14 (acier à béton)""";kg;3500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ACI-05;"""Barre HA Ø16 (acier à béton)""";kg;3600;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ACI-06;"""Barre HA Ø20 (acier à béton)""";kg;3700;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ACI-07;"""Barre HA Ø25 (acier à béton)""";kg;3800;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ACI-08;"""Treillis soudé (panneau)""";m2;4500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ACI-09;"""Fil d'attache recuit (kg)""";kg;1200;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ACI-10;"""Acier pour fondations (kg)""";kg;3500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ACI-11;"""Acier pour poutres et poteaux (kg)""";kg;3600;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+BIT-01;"""Bitume 60/70 (vrac)""";t;420000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+BIT-02;"""Enrobé bitumineux à chaud (EB)""";t;95000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+BIT-03;"""Grave bitume (GB) 0/20""";m3;48000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+BIT-04;"""Enduit superficiel (couche d'accrochage)""";m2;3500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+BIT-05;"""Couche de base (latérite améliorée)""";m3;28000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+BIT-06;"""Couche de fondation (matériau sélectionné)""";m3;22000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+BIT-07;"""Bordure en béton (ml)""";ml;12000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+BIT-08;"""Caniveau préfabriqué (ml)""";ml;18000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+BIT-09;"""Marquage routier (peinture thermoplastique)""";m2;2500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+BIT-10;"""Panneau de signalisation (u)""";u;85000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+BOI-01;"""Bois de coffrage (sapin)""";m3;180000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+BOI-02;"""Bois de charpente (chêne/iroko)""";m3;220000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+BOI-03;"""Planche de coffrage 27 mm""";m3;175000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+BOI-04;"""Chevrons (bois)""";ml;2500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+BOI-05;"""Volige (bois)""";m2;8000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+BOI-06;"""Contreplaqué marine (m²)""";m2;12000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+BOI-07;"""Tasseaux et liteaux (ml)""";ml;800;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+CLIM-01;"""Climatiseur split 12000 BTU (u)""";u;320000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+CLIM-02;"""Gaines et accessoires ventilation (ml)""";ml;3500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+COUV-01;"""Tôle ondulée galvanisée (m²)""";m2;7500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+COUV-02;"""Tôle bac acier (m²)""";m2;9000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+COUV-03;"""Tuile béton (u)""";u;800;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+COUV-04;"""Charpente métallique (kg)""";kg;1200;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+COUV-05;"""Gouttière PVC (ml)""";ml;4500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MO-01;"""Maçon (journée)""";jour;15000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MO-02;"""Aide-maçon (journée)""";jour;8000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MO-03;"""Ferrailleur (journée)""";jour;18000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MO-04;"""Coffreur (journée)""";jour;18000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MO-05;"""Peintre (journée)""";jour;12000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MO-06;"""Carreleur (journée)""";jour;15000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MO-07;"""Plombier (journée)""";jour;18000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MO-08;"""Électricien (journée)""";jour;18000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MO-09;"""Menuisier (journée)""";jour;15000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MO-10;"""Chef d'équipe (journée)""";jour;25000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MB-01;"""Ciment CPA 42,5 (sac 50 kg)""";sac 50 kg;5500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MB-02;"""Ciment CPJ 42,5 (sac 50 kg)""";sac 50 kg;4800;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MB-03;"""Sable de rivière (m³)""";m3;65000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MB-04;"""Gravier 5/15 (m³)""";m3;60000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MB-05;"""Gravier 15/25 (m³)""";m3;58000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MB-06;"""Latérite (m³)""";m3;40000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MB-07;"""Argile (m³)""";m3;25000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MB-08;"""Eau (m³)""";m3;1500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MB-09;"""Additif béton (kg)""";kg;2500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MB-10;"""Treillis soudé (m²)""";m2;4500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MB-11;"""Barre acier HA (kg)""";kg;3500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MB-12;"""Fil d'attache (kg)""";kg;1200;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MB-13;"""Clous (kg)""";kg;1800;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MB-14;"""Vis (kg)""";kg;3000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MB-15;"""Mortier prêt à l'emploi (m³)""";m3;95000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MB-16;"""Enduit de façade (m²)""";m2;3500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MB-17;"""Peinture (L)""";L;4500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MENU-01;"""Porte bois pleine (u)""";u;120000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MENU-02;"""Fenêtre bois (u)""";u;95000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MENU-03;"""Porte métallique (u)""";u;180000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MENU-04;"""Fenêtre aluminium (u)""";u;110000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MENU-05;"""Placard / armoire (m²)""";m2;45000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+MENU-06;"""Plinthe (ml)""";ml;3500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+PLO-01;"""Tube PVC Ø100 (ml)""";ml;3500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+PLO-02;"""Coude PVC (u)""";u;1200;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+PLO-03;"""Té PVC (u)""";u;1500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+PLO-04;"""Vanne à boisseau (u)""";u;8000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+PLO-05;"""Robinet (u)""";u;6000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+PLO-06;"""WC complet (u)""";u;45000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+PLO-07;"""Lavabo (u)""";u;35000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+PLO-08;"""Douche (u)""";u;40000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+PLO-09;"""Chauffe-eau (u)""";u;120000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+PLO-10;"""Fosse septique (u)""";u;250000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+PLO-11;"""Regard béton (u)""";u;35000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+PLO-12;"""Canalisation (ml)""";ml;8000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+PLO-13;"""Pompage / essai (forfait)""";forfait;60000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+TRA-01;"""Transport matériaux (voyage camion)""";voyage;150000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+TRA-02;"""Location camion (jour)""";jour;350000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+TRA-03;"""Carburant (L)""";L;650;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+TRA-04;"""Manutention (forfait)""";forfait;45000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ELEC-01;"""Câble électrique (ml)""";ml;1200;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ELEC-02;"""Disjoncteur (u)""";u;8000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ELEC-03;"""Tableau électrique (u)""";u;65000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ELEC-04;"""Prise (u)""";u;3500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ELEC-05;"""Interrupteur (u)""";u;3000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ELEC-06;"""Luminaire (u)""";u;15000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ELEC-07;"""Gaine (ml)""";ml;400;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ELEC-08;"""Mise à la terre (forfait)""";forfait;80000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ELEC-09;"""Groupe électrogène (jour)""";jour;75000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ELEC-10;"""Installation électrique (m²)""";m2;12000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ELEC-11;"""Armoire électrique (u)""";u;95000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ELEC-12;"""Paratonnerre (u)""";u;250000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+EPI-01;"""Casque de chantier (u)""";u;8000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+EPI-02;"""Gants de protection (paire)""";paire;2500;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+EPI-03;"""Chaussures de sécurité (paire)""";paire;25000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+EPI-04;"""Gilet haute visibilité (u)""";u;3000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+EPI-05;"""Lunettes de protection (u)""";u;4000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+EPI-06;"""Harnais de sécurité (u)""";u;35000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+EPI-07;"""Extincteur (u)""";u;25000;"""Marché ivoirien 2026 (estimation) - à vérifier""";2026-10-16;2027-04-16;a_verifier
+ACI-12;"Bloc agglomere (u)";Agglos;u;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+BET-99;"Betonne (concrete) (m3)";Béton prêt;m3;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+LTR-01;"Laterite (m3)";Sols;m3;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+GRN-01;"Granulat (m3)";Granulats;m3;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+TER-99;"Terrassement (m3)";Terrassement;m3;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+EXC-01;"Excavation (m3)";Excavation;m3;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+ENR-01;"Enrobe bitumineux (t)";Enrobés;t;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+ASP-01;"Asphalte (t)";Enrobés;t;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+COU-01;"Couverture (m2)";Toiture;m2;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+ETN-01;"Etancheite (m2)";Étanchéité;m2;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+MEM-01;"Membrane etancheite (m2)";Étanchéité;m2;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+SOT-01;"Sous-toiture (m2)";Toiture;m2;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+BRD-01;"Bardage (m2)";Charpente;m2;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+CAR-01;"Carrelage (m2)";Revêtement sol;m2;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+CRU-01;"Carreau (u)";Revêtement sol;u;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+FAI-01;"Faience (m2)";Revêtement mural;m2;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+COL-01;"Colle a carrelage (kg)";Colles;kg;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+MTC-01;"Mortier colle (kg)";Colles;kg;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+CHP-01;"Chape (m3)";Chape;m3;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
+RGR-01;"Ragreage (m2)";Ragréage;m2;"Marché ivoirien 2026 (estimation) - à vérifier";14/10/2026;16/04/2027;a_verifier
