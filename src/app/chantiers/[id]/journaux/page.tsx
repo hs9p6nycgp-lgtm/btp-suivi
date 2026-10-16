@@ -1,68 +1,58 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { cacheGet, cacheSet } from "@/lib/offline/storage";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { getLangue } from "@/lib/i18n";
 
 type Journal = {
   id: string;
   chantier_id: string;
   date_journal: string;
   meteo: string | null;
+  observations: string | null;
   statut: "brouillon" | "valide";
   created_at: string;
 };
 
+const STATUT_LABELS: Record<string, { fr: string; en: string; color: "success" | "warning" | "danger" | "info" }> = {
+  brouillon: { fr: "Brouillon", en: "Draft", color: "warning" },
+  valide: { fr: "Validé", en: "Validated", color: "success" },
+};
+
 export default function JournauxPage() {
   const params = useParams();
-  const chantierId = String(params?.id ?? "");
   const router = useRouter();
+  const chantierId = String(params?.id ?? "");
+  const langue = getLangue();
   const [items, setItems] = useState<Journal[]>([]);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [meteo, setMeteo] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [offline, setOffline] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (chantierId) load();
+  }, [chantierId]);
 
   async function load() {
-    const cacheKey = `journaux_${chantierId}`;
-    if (typeof navigator !== "undefined" && !navigator.onLine) {
-      setOffline(true);
-      const cached = await cacheGet<Journal[]>(cacheKey);
-      setItems(cached ?? []);
-      return;
-    }
     const supabase = createClient();
     const { data, error } = await supabase
       .from("journaux")
       .select("*")
       .eq("chantier_id", chantierId)
       .order("date_journal", { ascending: false });
-    if (error) {
-      setOffline(true);
-      const cached = await cacheGet<Journal[]>(cacheKey);
-      setItems(cached ?? []);
-      setMessage(error.message);
-    } else {
-      setOffline(false);
-      const list = (data ?? []) as Journal[];
-      setItems(list);
-      await cacheSet(cacheKey, list);
-    }
+    if (error) return;
+    setItems((data ?? []) as Journal[]);
+    setLoading(false);
   }
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (chantierId) load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chantierId]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setMessage(null);
     const supabase = createClient();
     const { data, error } = await supabase
       .from("journaux")
@@ -70,59 +60,65 @@ export default function JournauxPage() {
       .select()
       .single();
     setLoading(false);
-    if (error) {
-      setMessage(error.message);
-      return;
-    }
+    if (error) return;
     router.push(`/chantiers/${chantierId}/journaux/${data.id}`);
   }
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 py-8">
-      <div className="mb-4">
-        <Link href={`/chantiers/${chantierId}`} className="text-sm text-orange-600">
-          &lt; Retour chantier
+    <main className="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-6">
+      <div className="mb-6 flex items-start justify-between">
+        <Link href={`/chantiers/${chantierId}`} className="text-sm text-orange-600 hover:underline">
+          ← Retour chantier
         </Link>
+        <h1 className="text-2xl font-bold text-slate-900">Journal de chantier</h1>
       </div>
-      <h1 className="mb-6 text-2xl font-semibold">Journal de chantier</h1>
 
-      {offline && (
-        <p className="mb-4 rounded bg-warning/10 p-3 text-sm text-warning">
-          Mode hors connexion : journaux lus depuis le cache local (lecture seule).
-        </p>
-      )}
-
-      <section className="mb-8 card p-4">
-        <h2 className="mb-3 text-lg font-medium">Nouveau journal</h2>
-        <form onSubmit={handleCreate} className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <input className="rounded border p-2" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
-          <input className="rounded border p-2" placeholder="Meteo" value={meteo} onChange={(e) => setMeteo(e.target.value)} />
-          <button type="submit" disabled={loading} className="rounded bg-orange-600 px-4 py-2 text-white disabled:opacity-50">
-            {loading ? "Creation..." : "Creer le journal"}
+      <Card variant="elevated" padding="lg">
+        <h2 className="mb-4 text-lg font-bold text-slate-900">Nouveau journal</h2>
+        <form onSubmit={handleCreate} className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
+            <input className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Météo</label>
+            <input className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Ensoleillé, pluvieux..." value={meteo} onChange={(e) => setMeteo(e.target.value)} />
+          </div>
+          <button type="submit" disabled={loading} className="rounded-xl bg-orange-600 px-4 py-3 text-white font-semibold hover:bg-orange-700 disabled:opacity-50 transition-all shadow-sm hover:shadow-md">
+            {loading ? "Création..." : "Créer le journal"}
           </button>
         </form>
-        {message && <p className="mt-3 text-sm text-zinc-600">{message}</p>}
-      </section>
+      </Card>
 
-      <section className="card p-4">
-        <h2 className="mb-3 text-lg font-medium">Journaux existants</h2>
-        <ul className="space-y-2">
-          {items.map((j) => (
-            <li key={j.id} className="flex items-center justify-between rounded border p-3">
-              <div>
-                <p className="font-medium">{new Date(j.date_journal).toLocaleDateString("fr-FR")}</p>
-                <p className="text-sm text-zinc-600">
-                  {j.meteo ?? "Meteo non renseignee"} - Statut : {j.statut}
-                </p>
-              </div>
-              <Link href={`/chantiers/${chantierId}/journaux/${j.id}`} className="text-orange-600">
-                Ouvrir
+      <div className="mt-6">
+        <h2 className="mb-4 text-lg font-bold text-slate-900">Journaux existants</h2>
+        <div className="space-y-3">
+          {loading ? (
+            <div className="animate-pulse rounded-full h-8 w-32 bg-slate-200"></div>
+          ) : items.length === 0 ? (
+            <div className="rounded-xl border-2 border-dashed border-slate-300 p-10 text-center bg-slate-50">
+              <p className="text-sm text-slate-500">Aucun journal pour le moment.</p>
+            </div>
+          ) : (
+            items.map((j) => (
+              <Link key={j.id} href={`/chantiers/${chantierId}/journaux/${j.id}`} className="block">
+                <Card padding="none" className="flex items-center gap-4 p-4 hover:bg-slate-50 transition-all border-b border-slate-100 last:border-0">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-slate-900">{new Date(j.date_journal).toLocaleDateString(langue === "fr" ? "fr-FR" : "en-US")}</span>
+                      <Badge variant={j.statut === "valide" ? "success" : "warning"}>
+                        {langue === "fr" ? STATUT_LABELS[j.statut].fr : STATUT_LABELS[j.statut].en}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-slate-600 mt-1">{j.meteo ?? (langue === "fr" ? "Météo non renseignée" : "Weather not specified")}</p>
+                  </div>
+                  <span className="text-orange-600 text-sm font-medium">Ouvrir →</span>
+                </Card>
               </Link>
-            </li>
-          ))}
-          {items.length === 0 && <li className="text-sm text-zinc-600">Aucun journal pour le moment.</li>}
-        </ul>
-      </section>
+            ))
+          )}
+        </div>
+      </div>
     </main>
   );
 }
