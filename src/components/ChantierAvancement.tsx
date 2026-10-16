@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
-import { avancementPoste, avancementPhysiqueGlobal } from "@/lib/calculs/metre";
+import { avancementPoste, avancementPhysiqueGlobal, avancementFinancier, ecartQuantite } from "@/lib/calculs/metre";
 
 type Poste = {
   id: string;
@@ -14,11 +14,14 @@ type Poste = {
 
 export default function ChantierAvancement({
   chantierId,
+  seuilEcartPct,
 }: {
   chantierId: string;
+  seuilEcartPct?: number;
 }) {
   const [global, setGlobal] = useState(0);
-  const [postes, setPostes] = useState<Array<Poste & { avancement: number }>>([]);
+  const [financier, setFinancier] = useState(0);
+  const [postes, setPostes] = useState<Array<Poste & { avancement: number; ecartQte: number }>>([]);
 
   useEffect(() => {
     async function load() {
@@ -31,6 +34,11 @@ export default function ChantierAvancement({
         .from("quantites_realisees")
         .select("poste_dqe_id,quantite")
         .eq("chantier_id", chantierId);
+      const { data: c } = await supabase
+        .from("chantiers")
+        .select("montant_marche")
+        .eq("id", chantierId)
+        .maybeSingle();
 
       const realMap = new Map<string, number>();
       for (const row of q ?? []) {
@@ -45,14 +53,17 @@ export default function ChantierAvancement({
         const montant = poste.quantite_marche * poste.prix_unitaire;
         totalMontant += montant;
         montantRealise += montant * (avancement / 100);
-        return { ...poste, avancement };
+        const ecartQte = ecartQuantite(realise, poste.quantite_marche);
+        return { ...poste, avancement, ecartQte };
       });
 
       const g = avancementPhysiqueGlobal(
         rows.map((r) => ({ avancementPct: r.avancement, montant: r.quantite_marche * r.prix_unitaire })),
         totalMontant,
       );
+      const f = c?.montant_marche ? avancementFinancier(montantRealise, Number(c.montant_marche)) : 0;
       setGlobal(Math.round(g * 10) / 10);
+      setFinancier(Math.round(f * 10) / 10);
       setPostes(rows.sort((a, b) => b.avancement - a.avancement));
     }
     if (chantierId) {
@@ -73,6 +84,16 @@ export default function ChantierAvancement({
           style={{ width: `${Math.min(global, 100)}%` }}
         />
       </div>
+      <div className="mb-2 flex items-center justify-between text-sm">
+        <span>Avancement financier</span>
+        <span className="font-semibold">{financier} %</span>
+      </div>
+      <div className="mb-4 h-3 w-full overflow-hidden rounded-full bg-slate-200">
+        <div
+          className="h-full rounded-full bg-emerald transition-all"
+          style={{ width: `${Math.min(financier, 100)}%` }}
+        />
+      </div>
 
       {postes.length > 0 ? (
         <ul className="space-y-2">
@@ -81,6 +102,12 @@ export default function ChantierAvancement({
               <div className="mb-1 flex justify-between text-xs">
                 <span className="truncate">{p.code ?? "-"} {p.designation}</span>
                 <span>{Math.round(p.avancement)} %</span>
+              </div>
+              <div className="mb-1 flex justify-between text-xs text-muted">
+                <span>Écart quantité : {p.ecartQte >= 0 ? "+" : ""}{Math.round(p.ecartQte)} %</span>
+                {Math.abs(p.ecartQte) > (seuilEcartPct ?? 10) && (
+                  <span className="text-rose-600 text-xs font-semibold">⚠️ Seuil dépassé</span>
+                )}
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
                 <div
