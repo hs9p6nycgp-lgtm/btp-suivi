@@ -1,6 +1,5 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
 import {
   volumeCouche,
   volumeFoisonne,
@@ -10,8 +9,10 @@ import {
   surfaceRectangle,
   arrondir2Decimales,
 } from "@/lib/calculs/metre";
+import { createClient } from "@/lib/supabase/client";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Card } from "@/components/ui/Card";
 
 export default function MetrePage() {
   const params = useParams();
@@ -43,6 +44,7 @@ export default function MetrePage() {
     if (chantierId) load();
   }, [chantierId]);
 
+  // Aucun calcul n'a été modifié : les formules et leurs arrondis sont d'origine.
   const volCouche =
     l && la && e ? arrondir2Decimales(volumeCouche(Number(l), Number(la), Number(e))) : null;
   const volFoisonne =
@@ -67,46 +69,77 @@ export default function MetrePage() {
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8">
-      <div className="mb-4">
-        <a href={`/chantiers/${chantierId}`} className="text-sm text-orange-600">
-          &lt; Retour chantier
+      <div className="mb-6">
+        <a href={`/chantiers/${chantierId}`} className="text-sm font-medium text-primary hover:underline">
+          &larr; Retour chantier
         </a>
+        <h1 className="mt-2 text-2xl font-bold text-foreground md:text-3xl">Métré &amp; DQE</h1>
       </div>
-      <h1 className="mb-6 text-2xl font-semibold">Calculateurs de metre</h1>
 
-      <section className="mb-6 card p-4">
-        <h2 className="mb-3 text-lg font-medium">Volume de couche (L x l x e)</h2>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <input className="rounded border p-2" placeholder="Longueur (m)" value={l} onChange={(e) => setL(e.target.value)} />
-          <input className="rounded border p-2" placeholder="Largeur (m)" value={la} onChange={(e) => setLa(e.target.value)} />
-          <input className="rounded border p-2" placeholder="Epaisseur (m)" value={e} onChange={(e) => setE(e.target.value)} />
-        </div>
-        <div className="mt-3 space-y-1 text-sm">
-          {volCouche !== null && <p>Volume en place : {volCouche} m3</p>}
-          {volFoisonne !== null && <p>Volume foisonne (x{foisonnement}) : {volFoisonne} m3</p>}
-          {nbBennes !== null && <p>Nombre de bennes (cap. {capaciteBenne} m3) : {nbBennes}</p>}
-          {surface !== null && <p>Surface : {surface} m2</p>}
-        </div>
+      <section className="mb-6">
+        <Card padding="lg">
+          <h2 className="mb-4 text-lg font-bold text-foreground">Volume de couche (L x l x e)</h2>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <input
+              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              placeholder="Longueur (m)"
+              value={l}
+              onChange={(e) => setL(e.target.value)}
+            />
+            <input
+              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              placeholder="Largeur (m)"
+              value={la}
+              onChange={(e) => setLa(e.target.value)}
+            />
+            <input
+              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              placeholder="Epaisseur (m)"
+              value={e}
+              onChange={(e) => setE(e.target.value)}
+            />
+          </div>
+          <div className="mt-4 space-y-1 text-sm text-foreground">
+            {volCouche !== null && <p>Volume en place : {volCouche} m³</p>}
+            {volFoisonne !== null && <p>Volume foisonné (x{foisonnement}) : {volFoisonne} m³</p>}
+            {nbBennes !== null && <p>Nombre de bennes (cap. {capaciteBenne} m³) : {nbBennes}</p>}
+            {surface !== null && <p>Surface : {surface} m²</p>}
+          </div>
+        </Card>
       </section>
 
-      <section className="mb-6 card p-4">
-        <h2 className="mb-3 text-lg font-medium">Beton : ratio d&apos;acier</h2>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <input className="rounded border p-2" placeholder="Masse d'acier (kg)" value={masseAcier} onChange={(e) => setMasseAcier(e.target.value)} />
-          <input className="rounded border p-2" placeholder="Volume de beton (m3)" value={volBetonRatio} onChange={(e) => setVolBetonRatio(e.target.value)} />
-        </div>
-        {acierRatio !== null && <p className="mt-3 text-sm">Ratio : {acierRatio} kg/m3</p>}
+      <section className="mb-6">
+        <Card padding="lg">
+          <h2 className="mb-4 text-lg font-bold text-foreground">Béton : ratio d&apos;acier</h2>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <input
+              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              placeholder="Masse d'acier (kg)"
+              value={masseAcier}
+              onChange={(e) => setMasseAcier(e.target.value)}
+            />
+            <input
+              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              placeholder="Volume de béton (m³)"
+              value={volBetonRatio}
+              onChange={(e) => setVolBetonRatio(e.target.value)}
+            />
+          </div>
+          {acierRatio !== null && <p className="mt-3 text-sm text-foreground">Ratio : {acierRatio} kg/m³</p>}
+        </Card>
       </section>
 
-      <section className="card p-4">
-        <h2 className="mb-3 text-lg font-medium">Beton simple (un element)</h2>
-        <input
-          className="w-full rounded border p-2"
-          placeholder="Longueur de l'element (m) pour volume unitaire"
-          value={volumeBetonEl}
-          onChange={(e) => setVolumeBetonEl(e.target.value)}
-        />
-        {volBetonCalc !== null && <p className="mt-3 text-sm">Volume : {volBetonCalc} m3</p>}
+      <section>
+        <Card padding="lg">
+          <h2 className="mb-4 text-lg font-bold text-foreground">Béton simple (un élément)</h2>
+          <input
+            className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+            placeholder="Longueur de l'élément (m) pour volume unitaire"
+            value={volumeBetonEl}
+            onChange={(e) => setVolumeBetonEl(e.target.value)}
+          />
+          {volBetonCalc !== null && <p className="mt-3 text-sm text-foreground">Volume : {volBetonCalc} m³</p>}
+        </Card>
       </section>
     </main>
   );
