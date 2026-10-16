@@ -154,6 +154,8 @@ export default function JournalDetailPage() {
     if (error) { setMessage(error.message); return; }
     loadAll();
   }
+
+  async function addPhoto(e: React.FormEvent) {
     e.preventDefault();
     if (!editable || !photoFile) return;
     setLoading(true);
@@ -187,6 +189,36 @@ export default function JournalDetailPage() {
     if (!confirm(langue === "fr" ? "Valider ce journal ? Une fois validé, il ne sera plus modifiable." : "Validate this journal? Once validated, it cannot be modified.")) return;
     setLoading(true);
     const supabase = createClient();
+
+    // NOT-01 : générer des alertes si l'écart de quantité dépasse le seuil du chantier
+    try {
+      const { data: chantier } = await supabase.from("chantiers").select("seuil_ecart_pct").eq("id", chantierId).maybeSingle();
+      const seuil = Number(chantier?.seuil_ecart_pct ?? 10);
+      const { data: postes } = await supabase.from("postes_dqe").select("id,quantite_marche").eq("chantier_id", chantierId);
+      const posteMap = new Map<string, number>();
+      for (const p of postes ?? []) posteMap.set(p.id, Number(p.quantite_marche) || 0);
+      const { data: qtes } = await supabase.from("quantites_realisees").select("poste_dqe_id,quantite").eq("journal_id", journalId);
+      const realMap = new Map<string, number>();
+      for (const q of qtes ?? []) realMap.set(q.poste_dqe_id, (realMap.get(q.poste_dqe_id) ?? 0) + Number(q.quantite));
+      for (const [posteId, qteRealisee] of realMap) {
+        const qtePrevue = posteMap.get(posteId) ?? 0;
+        if (qtePrevue <= 0) continue;
+        const ecart = ((qteRealisee - qtePrevue) / qtePrevue) * 100;
+        if (Math.abs(ecart) > seuil) {
+          await supabase.from("alertes").insert({
+            chantier_id: chantierId,
+            type: "quantite",
+            valeur: Math.round(ecart * 100) / 100,
+            seuil,
+            statut: "ouverte",
+          });
+        }
+      }
+    } catch (e) {
+      // Ne pas bloquer la validation si la génération d'alertes échoue
+      console.error("Erreur génération alertes:", e);
+    }
+
     const { error } = await supabase.from("journaux").update({ statut: "valide", validated_at: new Date().toISOString() }).eq("id", journalId);
     setLoading(false);
     if (error) { setMessage(error.message); return; }
