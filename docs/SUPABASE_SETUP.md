@@ -16,7 +16,13 @@
 7. Repeter l'operation avec `supabase/migrations/0004_phase1_metre_bpu.sql`.
 8. Repeter l'operation avec `supabase/migrations/0005_phase2_journal.sql`.
 9. Repeter l'operation avec `supabase/migrations/0006_phase2_livraisons.sql`.
-10. Lancer l'application en local : `npm run dev`, puis ouvrir http://localhost:3000.
-11. Creer un premier compte depuis la page de connexion (bouton "Creer un compte").
+10. Repeter l'operation avec `supabase/migrations/0007_phase3_multitenant_isolation.sql`.
+    Le chantier dispose d'un proprietaire et chaque compte n'accede qu'aux
+    chantiers qui lui sont accessibles.
+11. Repeter l'operation avec `supabase/migrations/0008_phase3_planning_couts.sql`.
+12. Repeter l'operation avec `supabase/migrations/0009_phase3_qualite_non_conformite.sql`.
+13. Lancer l'application en local : `npm run dev`, puis ouvrir http://localhost:3000.
+14. Creer un premier compte depuis la page de connexion (bouton "Creer un compte").
 
-Note : en V0, un seul compte administrateur est suffisant pour la demo.
+Note : la regle d'un seul compte administrateur suffisait a la phase V0 ; depuis
+la phase 0007, chaque chantier a son propre acces.
