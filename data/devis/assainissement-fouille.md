@@ -23,13 +23,13 @@ Type de chantier : route
 ## Controle a la main
 
 - ASS-TERR : L x l x h (m3) = 48 m3
-  x 977 FCFA = 46 896 FCFA FCFA
+  x 977 FCFA = 46 896 FCFA
 - ASS-FOISON : volume x coeff. foisonnement (m3) = 60 m3
-  x 977 FCFA = 58 620 FCFA FCFA
+  x 977 FCFA = 58 620 FCFA
 - ASS-BENNES : volume foisonne / capacite benne (arrondi sup.) = 6 u
 - ASS-REMBLAI : volume de fouille (m3) = 48 m3
-  x 1 121 FCFA = 53 808 FCFA FCFA
-- Somme des montants = 159 324 FCFA FCFA (controle : addition manuelle des lignes ci-dessus).
+  x 1 121 FCFA = 53 808 FCFA
+- Somme des montants = 159 324 FCFA (controle : addition manuelle des lignes ci-dessus).
 
 ## Planning suggere (estimation)
 

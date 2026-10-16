@@ -20,10 +20,10 @@ Type de chantier : batiment
 ## Controle a la main
 
 - DALLE-BETON : L x l x e (m3) = 6 m3
-  x 86 782 FCFA = 520 692 FCFA FCFA
+  x 86 782 FCFA = 520 692 FCFA
 - DALLE-ACIER : volume x ratio (kg) = 480 kg
-  x 3 500 FCFA = 1 680 000 FCFA FCFA
-- Somme des montants = 2 200 692 FCFA FCFA (controle : addition manuelle des lignes ci-dessus).
+  x 3 500 FCFA = 1 680 000 FCFA
+- Somme des montants = 2 200 692 FCFA (controle : addition manuelle des lignes ci-dessus).
 
 ## Planning suggere (estimation)
 

@@ -22,14 +22,14 @@ Type de chantier : batiment
 ## Controle a la main
 
 - PIEUX-BETON : nb x pi x (d/2)^2 x h (m3) = 13,57 m3
-  x 94 369 FCFA = 1 280 746 FCFA FCFA
+  x 94 369 FCFA = 1 280 746 FCFA
 - PIEUX-ACIER : volume x ratio (kg) = 1 628,60 kg
-  x 3 500 FCFA = 5 700 106 FCFA FCFA
+  x 3 500 FCFA = 5 700 106 FCFA
 - PIEUX-SPOIL : volume x 1.3 (m3) = 17,64 m3
-  x 977 FCFA = 17 237 FCFA FCFA
+  x 977 FCFA = 17 237 FCFA
 - PIEUX-COFFRAGE : surface laterale (m2) = 90,48 m2
-  x 180 000 FCFA = 16 286 016 FCFA FCFA
-- Somme des montants = 23 284 105 FCFA FCFA (controle : addition manuelle des lignes ci-dessus).
+  x 180 000 FCFA = 16 286 016 FCFA
+- Somme des montants = 23 284 105 FCFA (controle : addition manuelle des lignes ci-dessus).
 
 ## Planning suggere (estimation)
 

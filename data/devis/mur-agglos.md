@@ -24,16 +24,16 @@ Type de chantier : batiment
 ## Controle a la main
 
 - MUR-AGGLO : surface nette / 0.04 x (1 + pertes) = 699 u
-  x 19 428 FCFA = 13 580 172 FCFA FCFA
+  x 19 428 FCFA = 13 580 172 FCFA
 - MUR-MORTIER : mortier (m3) = 0,13 m3
-  x 5 500 FCFA = 723 FCFA FCFA
+  x 5 500 FCFA = 723 FCFA
 - MUR-CIMENT : mortier x 280 kg/m3 = 36,83 kg
-  x 5 500 FCFA = 202 541 FCFA FCFA
+  x 5 500 FCFA = 202 541 FCFA
 - MUR-SABLE : mortier x 0.8 m3 = 0,11 m3
-  x 65 000 FCFA = 6 839 FCFA FCFA
+  x 65 000 FCFA = 6 839 FCFA
 - MUR-ENDUIT : surface nette (m2) = 26,60 m2
-  x 3 500 FCFA = 93 100 FCFA FCFA
-- Somme des montants = 13 883 375 FCFA FCFA (controle : addition manuelle des lignes ci-dessus).
+  x 3 500 FCFA = 93 100 FCFA
+- Somme des montants = 13 883 375 FCFA (controle : addition manuelle des lignes ci-dessus).
 
 ## Planning suggere (estimation)
 

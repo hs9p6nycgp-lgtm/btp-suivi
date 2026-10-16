@@ -59,4 +59,41 @@ describe("ameliorations (priorite S)", () => {
       assert.ok(csv.includes("CIM-01;Ciment"));
     });
   });
+
+  describe("COU-04 : valeur acquise", () => {
+    it("calcule tous les indicateurs de la valeur acquise", () => {
+      const res = calculValeurAcquise(10000, 4000, 4500, 5000);
+      // CV = EV - AC = 4500 - 5000 = -500
+      // SV = EV - PV = 4500 - 4000 = 500
+      // CPI = EV / AC = 4500 / 5000 = 0.9
+      // SPI = EV / PV = 4500 / 4000 = 1.125
+      assert.strictEqual(res.ecartCout, -500);
+      assert.strictEqual(res.ecartDelai, 500);
+      assert.strictEqual(res.indicePerformanceCout, 0.9);
+      assert.strictEqual(res.indicePerformanceDelai, 1.125);
+    });
+
+    it("geres les divisions par zero", () => {
+      const res = calculValeurAcquise(0, 0, 0, 0);
+      assert.strictEqual(res.indicePerformanceCout, 0);
+      assert.strictEqual(res.indicePerformanceDelai, 0);
+    });
+  });
+
+  describe("MET-06 : avenants", () => {
+    it("calcule l'impact d'un avenant sur le montant", () => {
+      const res = impactAvenant(100, 150, 1000, 1200);
+      // ancien = 100 * 1000 = 100000
+      // nouveau = 150 * 1200 = 180000
+      // ecart = 80000
+      assert.strictEqual(res.ancienMontant, 100000);
+      assert.strictEqual(res.nouveauMontant, 180000);
+      assert.strictEqual(res.ecart, 80000);
+    });
+
+    it("geres un avenant sans impact", () => {
+      const res = impactAvenant(100, 100, 1000, 1000);
+      assert.strictEqual(res.ecart, 0);
+    });
+  });
 });

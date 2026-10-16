@@ -22,11 +22,11 @@ Type de chantier : route
 ## Controle a la main
 
 - TERR-VOL : L x l x e (m3) = 175 m3
-  x 4 617 FCFA = 807 975 FCFA FCFA
+  x 4 617 FCFA = 807 975 FCFA
 - TERR-FOISON : volume x coeff. foisonnement (m3) = 210 m3
-  x 4 617 FCFA = 969 570 FCFA FCFA
+  x 4 617 FCFA = 969 570 FCFA
 - TERR-BENNES : volume foisonne / capacite benne (arrondi sup.) = 14 u
-- Somme des montants = 1 777 545 FCFA FCFA (controle : addition manuelle des lignes ci-dessus).
+- Somme des montants = 1 777 545 FCFA (controle : addition manuelle des lignes ci-dessus).
 
 ## Planning suggere (estimation)
 

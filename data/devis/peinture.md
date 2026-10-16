@@ -19,10 +19,10 @@ Type de chantier : batiment
 ## Controle a la main
 
 - PEINT-QTE : surface x couches / rendement (L) = 20 L
-  x 4 500 FCFA = 90 000 FCFA FCFA
+  x 4 500 FCFA = 90 000 FCFA
 - PEINT-SURFACE : surface (m2) = 100 m2
-  x 3 500 FCFA = 350 000 FCFA FCFA
-- Somme des montants = 440 000 FCFA FCFA (controle : addition manuelle des lignes ci-dessus).
+  x 3 500 FCFA = 350 000 FCFA
+- Somme des montants = 440 000 FCFA (controle : addition manuelle des lignes ci-dessus).
 
 ## Planning suggere (estimation)
 

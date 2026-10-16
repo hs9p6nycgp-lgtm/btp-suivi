@@ -25,11 +25,11 @@ Type de chantier : route
 
 - CHAUSS-SURFACE : L x l (m2) = 700 m2
 - CHAUSS-BASE-VOL : L x l x e_base x coeff. foisonnement (m3) = 210 m3
-  x 28 000 FCFA = 5 880 000 FCFA FCFA
+  x 28 000 FCFA = 5 880 000 FCFA
 - CHAUSS-ENROBE : L x l x e_roul (m3) = 35 m3
-  x 95 000 FCFA = 3 325 000 FCFA FCFA
+  x 95 000 FCFA = 3 325 000 FCFA
 - CHAUSS-BENNES : volume foisonne / capacite benne (arrondi sup.) = 14 u
-- Somme des montants = 9 205 000 FCFA FCFA (controle : addition manuelle des lignes ci-dessus).
+- Somme des montants = 9 205 000 FCFA (controle : addition manuelle des lignes ci-dessus).
 
 ## Planning suggere (estimation)
 

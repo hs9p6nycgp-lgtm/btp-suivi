@@ -21,12 +21,12 @@ Type de chantier : batiment
 ## Controle a la main
 
 - CHARP-SURFACE : surface du toit (m2) = 120 m2
-  x 7 500 FCFA = 900 000 FCFA FCFA
+  x 7 500 FCFA = 900 000 FCFA
 - CHARP-ETANCHE : surface x 1.10 (m2) = 132 m2
 - CHARP-BOIS : surface x 0.05 m3 (estimation) = 6 m3
-  x 220 000 FCFA = 1 320 000 FCFA FCFA
+  x 220 000 FCFA = 1 320 000 FCFA
 - CHARP-BARDAGE : perimetre estime x 0.6 (m2) = 26,29 m2
-- Somme des montants = 2 220 000 FCFA FCFA (controle : addition manuelle des lignes ci-dessus).
+- Somme des montants = 2 220 000 FCFA (controle : addition manuelle des lignes ci-dessus).
 
 ## Planning suggere (estimation)
 

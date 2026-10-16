@@ -23,14 +23,14 @@ Type de chantier : batiment
 ## Controle a la main
 
 - FOND-BETON : nb x L x l x h (m3) = 3,46 m3
-  x 79 194 FCFA = 273 694 FCFA FCFA
+  x 79 194 FCFA = 273 694 FCFA
 - FOND-ACIER : volume x ratio (kg) = 311,04 kg
-  x 3 500 FCFA = 1 088 640 FCFA FCFA
+  x 3 500 FCFA = 1 088 640 FCFA
 - FOND-COFFRAGE : surface contact (m2) = 11,52 m2
-  x 180 000 FCFA = 2 073 600 FCFA FCFA
+  x 180 000 FCFA = 2 073 600 FCFA
 - FOND-TERRASSEMENT : volume + foisonnement (m3) = 4,15 m3
-  x 4 947 FCFA = 20 516 FCFA FCFA
-- Somme des montants = 3 456 451 FCFA FCFA (controle : addition manuelle des lignes ci-dessus).
+  x 4 947 FCFA = 20 516 FCFA
+- Somme des montants = 3 456 451 FCFA (controle : addition manuelle des lignes ci-dessus).
 
 ## Planning suggere (estimation)
 

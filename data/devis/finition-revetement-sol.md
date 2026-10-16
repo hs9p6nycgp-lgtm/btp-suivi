@@ -22,11 +22,11 @@ Type de chantier : batiment
 
 - REV-CARREAU : surface / surface_carreau x (1 + pertes) = 1 375 u
 - REV-COLLE : surface x 5 kg/m2 = 250 kg
-  x 95 000 FCFA = 23 750 000 FCFA FCFA
+  x 95 000 FCFA = 23 750 000 FCFA
 - REV-JOINT : surface x 2 kg/m2 = 100 kg
-  x 3 500 FCFA = 350 000 FCFA FCFA
+  x 3 500 FCFA = 350 000 FCFA
 - REV-SURFACE : surface (m2) = 50 m2
-- Somme des montants = 24 100 000 FCFA FCFA (controle : addition manuelle des lignes ci-dessus).
+- Somme des montants = 24 100 000 FCFA (controle : addition manuelle des lignes ci-dessus).
 
 ## Planning suggere (estimation)
 
