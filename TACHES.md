@@ -18,13 +18,7 @@
 
 | Réf | Tâche | Propriétaire | Fichiers concernés | Code exigence | Priorité |
 |-----|-------|--------------|--------------------|---------------|----------|
-| T-UI-01 | Corriger l'icône « Aucune alerte en cours » (vert → neutre) | Session 1 | `src/app/page.tsx` (ligne ~450) | BUG-001 | faible | Terminé (déjà dans le code) |
-| T-UI-02 | Corriger le drapeau « English » (🇫🇧 → 🇬🇧) dans la Sidebar | Session 1 | `src/components/layout/Sidebar.tsx` (ligne ~152) | BUG-002 | faible | Terminé (déjà dans le code) |
-| T-UI-03 | Corriger le libellé « Total items » identique FR/EN sur la page BPU | Session 1 | `src/app/bpu/page.tsx` (ligne ~125) | BUG-003 | faible | Terminé (déjà dans le code) |
-| T-UI-04 | Ajouter les gestionnaires d'événement aux 4 boutons « Supprimer » du journal | Session 1 | `src/app/chantiers/[id]/journaux/[journalId]/page.tsx` (lignes ~241, ~262, ~289, ~318) | BUG-004 | moyenne | Terminé (déjà dans le code) |
-| T-LOG-04 | Calculer `date_prevue_fin` = `date_prevue_debut + durée` (planning) | Session 2 (logique) + Session 1 (intégration écrans — séquencer après T-UI sur les mêmes fichiers) | `src/lib/calculs/metre.ts`, `src/components/ChantierAvancement.tsx`, `src/app/chantiers/[id]/couts/page.tsx`, `src/app/chantiers/[id]/planning/page.tsx` | BUG-008 | moyenne | Non (fichier UI — Session 1 attend Session 2) |
-| T-MIG-01 | Vérifier et activer les politiques RLS d'isolation multitenant côté base | Session 3 | `supabase/migrations/0007_phase3_multitenant_isolation.sql`, `supabase/RLS_MANUAL_CHECK.md` | BUG-009 | haute |
-| T-TEST-01 | Maintenir `BUGS.md` à jour (ajouter les nouveaux bugs, fermer les corrigés) | Session 4 | `BUGS.md` | — | continue |
+| — | Aucune tâche en attente | — | — | — | — |
 
 ---
 
@@ -32,7 +26,9 @@
 
 | Réf | Tâche | Session | Fichiers concernés | Démarré le |
 |-----|-------|---------|--------------------|------------|
-| — | — | — | — | — |
+| T-LOG-04 | Calculer `date_prevue_fin` = `date_prevue_debut + durée` (planning) | Session 2 | `src/app/chantiers/[id]/planning/page.tsx` (ligne ~217) | 16/10/2026 |
+| T-MIG-01 | Vérifier et activer les politiques RLS d'isolation multitenant côté base | Session 3 | `supabase/migrations/0007_phase3_multitenant_isolation.sql`, `supabase/RLS_MANUAL_CHECK.md` | 16/10/2026 |
+| T-TEST-01 | Maintenir `BUGS.md` à jour (ajouter les nouveaux bugs, fermer les corrigés) | Session 4 | `BUGS.md` | 16/10/2026 |
 
 ---
 
@@ -40,6 +36,10 @@
 
 | Réf | Tâche | Session | Fichiers concernés | Coché le |
 |-----|-------|---------|--------------------|----------|
+| T-UI-01 | Corriger l'icône « Aucune alerte en cours » (vert → neutre) | 1 | `src/app/page.tsx` | 16/10/2026 |
+| T-UI-02 | Corriger le drapeau « English » (🇫🇧 → 🇬🇧) dans la Sidebar | 1 | `src/components/layout/Sidebar.tsx` | 16/10/2026 |
+| T-UI-03 | Corriger le libellé « Total items » identique FR/EN sur la page BPU | 1 | `src/app/bpu/page.tsx` | 16/10/2026 |
+| T-UI-04 | Ajouter les gestionnaires d'événement aux 4 boutons « Supprimer » du journal | 1 | `src/app/chantiers/[id]/journaux/[journalId]/page.tsx` | 16/10/2026 |
 | T-LOG-01 | Indicateurs section 5 (écart quantité, avancement physique/financier, écart délai, écart budgétaire, rendement engin, disponibilité, conformité, marge PERT, indices de performance) | 2 | `src/lib/calculs/metre.ts`, `src/lib/calculs/qualite.ts` | 16/10/2026 |
 | T-LOG-02 | `validerBasePrix` (REF-04 : source + date obligatoires) | 2 | `src/lib/import/basePrix.ts` | 16/10/2026 |
 | T-LOG-03 | `estConforme` (QUA-02 : conformité automatique avec tolérance) | 2 | `src/lib/calculs/qualite.ts` | 16/10/2026 |
@@ -52,26 +52,20 @@
 | T-LOG-11 | Valeur acquise complète (COU-04 : EV, AC, PV, écarts, indices CPI/SPI) | 2 | `src/lib/calculs/metre.ts` | 16/10/2026 |
 | T-LOG-12 | Avenants avec historique (MET-06) | 2 | `src/lib/calculs/metre.ts` | 16/10/2026 |
 | T-SEED | Données de départ prix (seed CSV + script idempotent) | 2 | `supabase/seed/prix_ci.csv`, `supabase/seed/load_prix_ci.mjs` | 16/10/2026 |
-| T-UI-01 | Corriger l'icône « Aucune alerte en cours » (vert → neutre) | 1 | `src/app/page.tsx` | 16/10/2026 |
-| T-UI-02 | Corriger le drapeau « English » (🇫🇧 → 🇬🇧) dans la Sidebar | 1 | `src/components/layout/Sidebar.tsx` | 16/10/2026 |
-| T-UI-03 | Corriger le libellé « Total items » identique FR/EN sur la page BPU | 1 | `src/app/bpu/page.tsx` | 16/10/2026 |
-| T-UI-04 | Ajouter les gestionnaires d'événement aux 4 boutons « Supprimer » du journal | 1 | `src/app/chantiers/[id]/journaux/[journalId]/page.tsx` | 16/10/2026 |
-
----
 
 ---
 
 ## Notes de séquençage (conflits de fichiers)
 
-- `src/app/page.tsx` : touché par T-UI-01 (Session 1) et potentiellement par T-LOG-01 (Session 2) → **séquencer** : T-UI-01 d'abord, puis T-LOG-01.
-- `src/app/chantiers/[id]/planning/page.tsx` : touché par T-UI-04 ? Non (c'est le journal). Touché par T-LOG-04 (Session 2, fichier `src/app`) → si Session 1 intervient sur ce même fichier, **séquencer**.
-- `supabase/migrations/0007_phase3_multitenant_isolation.sql` : touché par T-MIG-01 (Session 3). Si Session 2 travaille aussi dans `supabase/`, **séquencer**.
+- `src/app/page.tsx` : touché par T-UI-01 (Session 1, terminé) → libéré.
+- `src/app/chantiers/[id]/planning/page.tsx` : touché par T-LOG-04 (Session 2, en cours). Aucune autre session ne doit toucher ce fichier tant que T-LOG-04 n'est pas terminée.
+- `supabase/migrations/0007_phase3_multitenant_isolation.sql` : touché par T-MIG-01 (Session 3, terminé). Libéré pour les autres sessions.
 
 ---
 
 ## Prochaine tâche à assigner
 
-- **Session 1 (apparence)** : aucune tâche en attente (T-UI-01 à T-UI-04 terminées).
-- **Session 2 (logique)** : T-LOG-04 (calcul `date_prevue_fin` planning) — à démarrer.
-- **Session 3 (migrations/déploiement)** : T-MIG-01 (vérification RLS multitenant) — à démarrer.
-- **Session 4 (tests)** : T-TEST-01 (maintenir BUGS.md) — en continu.
+- **Session 1 (apparence)** : aucune tâche en attente.
+- **Session 2 (logique)** : T-LOG-04 en cours. À prévoir après : aucune tâche définie pour l'instant.
+- **Session 3 (migrations/déploiement)** : T-MIG-01 en cours.
+- **Session 4 (tests)** : T-TEST-01 en continu.
