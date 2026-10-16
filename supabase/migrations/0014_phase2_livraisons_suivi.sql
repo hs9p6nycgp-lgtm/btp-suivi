@@ -1,7 +1,7 @@
 -- ==============================================================
 -- BTP Suivi Pro - Module Approvisionnements (APP-02)
 -- Comparaison quantites commandees, livrees et mises en oeuvre
--- A executer dans Supabase apres 0012_phase4_fournisseurs_conditions.sql
+-- A executer dans Supabase apres 0013_phase4_fournisseurs_conditions.sql
 -- ==============================================================
 
 alter table livraisons

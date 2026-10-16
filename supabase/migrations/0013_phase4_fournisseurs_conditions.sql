@@ -1,6 +1,6 @@
 -- ==============================================================
 -- BTP Suivi Pro - Module Fournisseurs (FOU-02, FOU-04, FOU-06)
--- A executer dans Supabase apres 0011_phase4_fournisseurs.sql
+-- A executer dans Supabase apres 0012_phase4_fournisseurs.sql
 -- ==============================================================
 
 -- FOU-02 : conditions commerciales sur la fiche fournisseur
@@ -43,6 +43,22 @@ alter table devis_fournisseurs enable row level security;
 alter table evaluations_fournisseurs enable row level security;
 
 create policy "devis_fournisseurs - acces"
-  on devis_fournisseurs for all to authenticated using (true) with check (true);
+  on devis_fournisseurs for all to authenticated
+  using (user_can_access_chantier(chantier_id))
+  with check (user_can_access_chantier(chantier_id));
 create policy "evaluations_fournisseurs - acces"
-  on evaluations_fournisseurs for all to authenticated using (true) with check (true);
+  on evaluations_fournisseurs for all to authenticated
+  using (
+    exists (
+      select 1 from fournisseurs f
+      where f.id = evaluations_fournisseurs.fournisseur_id
+        and f.proprietaire_id = auth.uid()
+    )
+  )
+  with check (
+    exists (
+      select 1 from fournisseurs f
+      where f.id = evaluations_fournisseurs.fournisseur_id
+        and f.proprietaire_id = auth.uid()
+    )
+  );
