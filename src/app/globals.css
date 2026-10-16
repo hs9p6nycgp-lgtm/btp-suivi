@@ -1,50 +1,66 @@
 @import "tailwindcss";
 
+/*
+ * Design system — palette et thème (voir DESIGN.md).
+ * Règle absolue : seuls l'apparence est gérée ici, ni le calcul ni la logique métier ne sont touchés.
+ */
+
 :root {
+  /* Palette DESIGN.md — mode clair */
   --background: #f8fafc;
   --foreground: #0f172a;
-  --primary: #1e3a5f;
+  --primary: #0f2a4a; /* bleu nuit : barre latérale, titres */
   --primary-light: #3b6ea5;
-  --action: #ea580c;
-  --action-hover: #c2410c;
+  --surface: #ffffff;
+  --action: #f97316; /* orange chantier : un seul élément d'action principal */
   --success: #16a34a;
-  --warning: #f59e0b;
-  --danger: #ef4444;
+  --warning: #d97706;
+  --danger: #dc2626;
   --muted: #64748b;
   --border: #e2e8f0;
+}
+
+:root.dark {
+  /* Palette DESIGN.md — mode sombre */
+  --background: #0b1220;
+  --foreground: #e2e8f0;
+  --primary: #1e3a5f;
+  --primary-light: #3b6ea5;
+  --surface: #111a2e;
+  --action: #fb923c;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --muted: #94a3b8;
+  --border: #26334d;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
+  --color-primary-light: var(--primary-light);
   --color-action: var(--action);
+  --color-surface: var(--surface);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
-    --foreground: #f1f5f9;
-    --primary: #93b4e8;
-    --action: #fb923c;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
 /* ---------- Cartes modernes ---------- */
 .card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 1rem;
   box-shadow: 0 1px 3px 0 rgb(15 23 42 / 0.06), 0 1px 2px -1px rgb(15 23 42 / 0.04);
 }
@@ -63,12 +79,12 @@ body {
   border: none;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 6px -1px rgb(234 88 12 / 0.25);
+  box-shadow: 0 4px 6px -1px rgb(249 115 22 / 0.25);
 }
 
 .btn-primary:hover {
-  background: var(--action-hover);
-  box-shadow: 0 6px 8px -1px rgb(234 88 12 / 0.35);
+  background: var(--action);
+  box-shadow: 0 6px 8px -1px rgb(249 115 22 / 0.35);
   transform: translateY(-1px);
 }
 
@@ -140,7 +156,7 @@ body {
 .progress-bar {
   height: 8px;
   border-radius: 9999px;
-  background: #e2e8f0;
+  background: var(--border);
   overflow: hidden;
 }
 

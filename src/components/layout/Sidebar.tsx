@@ -1,71 +1,145 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import {
+  BookOpen,
+  Building2,
+  CalendarRange,
+  Calculator,
+  ClipboardCheck,
+  Coins,
+  FileText,
+  LayoutDashboard,
+  Scale,
+  Truck,
+  Ruler,
+} from "lucide-react";
+import { getLangue, setLangue, t, Langue } from "@/lib/i18n";
 import SignOutButton from "@/components/SignOutButton";
-import { t, getLangue, setLangue, Langue } from "@/lib/i18n";
 
-const navItems = [
-  { href: "/", label: "nav.accueil", icon: "🏠" },
-  { href: "/chantiers", label: "nav.chantiers", icon: "🏗️" },
-  { href: "/bpu", label: "nav.bpu", icon: "💰" },
-  { href: "/calculateurs/devis", label: "nav.devis", icon: "📋" },
+type ItemNav = {
+  href: string;
+  cle: string; // clé i18n pour le libellé
+  icon: React.ReactNode;
+};
+
+// Écrans accessibles sans chantier (top level)
+const NAV_TOP_LEVEL: ItemNav[] = [
+  { href: "/", cle: "home.titre", icon: <LayoutDashboard className="h-5 w-5" /> },
+  { href: "/chantiers", cle: "chantiers.titre", icon: <Building2 className="h-5 w-5" /> },
+  { href: "/bpu", cle: "nav.bpu", icon: <BookOpen className="h-5 w-5" /> },
+  { href: "/calculateurs/devis", cle: "nav.devis", icon: <Calculator className="h-5 w-5" /> },
+  { href: "/calculateurs/mur", cle: "nav.mur", icon: <Ruler className="h-5 w-5" /> },
+];
+
+// Onglets d'un chantier (visibles quand un chantier est ouvert)
+type ItemNavChantier = {
+  idChantier: string;
+  href: (id: string) => string;
+  cle: string;
+  icon: React.ReactNode;
+};
+
+const NAV_CHANTIER: ItemNavChantier[] = [
+  { idChantier: "", cle: "detail.planning", href: (id) => `/chantiers/${id}/planning`, icon: <CalendarRange className="h-5 w-5" /> },
+  { idChantier: "", cle: "detail.couts", href: (id) => `/chantiers/${id}/couts`, icon: <Coins className="h-5 w-5" /> },
+  { idChantier: "", cle: "detail.quality", href: (id) => `/chantiers/${id}/qualite`, icon: <ClipboardCheck className="h-5 w-5" /> },
+  { idChantier: "", cle: "detail.metre", href: (id) => `/chantiers/${id}/metre`, icon: <Scale className="h-5 w-5" /> },
+  { idChantier: "", cle: "detail.journal", href: (id) => `/chantiers/${id}/journaux`, icon: <FileText className="h-5 w-5" /> },
+  { idChantier: "", cle: "detail.livraisons", href: (id) => `/chantiers/${id}/livraisons`, icon: <Truck className="h-5 w-5" /> },
 ];
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [langue, setLangueState] = useState<Langue>(getLangue());
+  const chemin = usePathname() ?? "/";
 
   useEffect(() => {
     setLangueState(getLangue());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  // Id du chantier actuellement ouvert (/chantiers/<id>/...), s'il y en a un
+  const segments = chemin.split("/").filter(Boolean);
+  const idChantierActif =
+    segments[0] === "chantiers" && segments.length >= 2 ? segments[1] : null;
+
+  const estActif = (href: string) =>
+    href === "/" ? chemin === "/" : chemin === href || chemin.startsWith(`${href}/`);
+
+  const liensChantier = NAV_CHANTIER.filter((item) => {
+    if (!idChantierActif) return false;
+    const href = item.href(idChantierActif);
+    return estActif(href);
+  });
 
   return (
-    <aside className={`fixed inset-y-0 left-0 z-40 transition-all duration-300 ${collapsed ? "w-16" : "w-64"}`}>
-      {/* Mobile overlay */}
-      {isMobile && collapsed === false && (
-        <div className="absolute inset-0 bg-black/50 z-39 backdrop-blur-sm" onClick={() => setCollapsed(true)} />
-      )}
-      <div className="flex flex-col h-full border-r border-slate-200 bg-white">
+    <aside
+      className={`fixed inset-y-0 left-0 z-40 hidden transition-all duration-200 md:flex md:flex-col ${
+        collapsed ? "w-16" : "w-60"
+      } bg-primary text-white`}
+    >
+      <div className="flex h-full flex-col">
         {/* Logo */}
-        <div className={`h-14 flex items-center justify-center px-4 border-b border-slate-200 ${collapsed ? "justify-center px-0" : "justify-start"}`}>
+        <div className={`flex h-14 items-center border-b border-white/15 px-4 ${collapsed ? "justify-center" : "justify-start"}`}>
           {collapsed ? (
             <span className="text-xl font-bold">B</span>
           ) : (
-            <span className="text-xl font-bold tracking-tight text-white bg-slate-900 rounded-lg px-2">BTP</span>
+            <span className="rounded-lg bg-white/10 px-2 py-1 text-lg font-bold tracking-tight">BTP</span>
           )}
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-4 overflow-y-auto">
-          {navItems.map((item) => {
-            const isActive = typeof window !== "undefined" && window.location.pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-colors ${
-                  isActive
-                    ? "bg-orange-50 text-orange-700"
-                    : collapsed
-                    ? "text-slate-500 hover:bg-slate-50"
-                    : "text-slate-600 hover:bg-slate-50"
-                } ${collapsed ? "justify-center px-2" : ""}`}
-              >
-                <span className={`text-lg ${collapsed ? "ml-0" : "ml-1"}`}>{item.icon}</span>
-                {!collapsed && <span>{t(item.label)}</span>}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 overflow-y-auto py-4">
+          {NAV_TOP_LEVEL.filter((item) => estActif(item.href)).map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              title={t(item.cle)}
+              className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${
+                estActif(item.href)
+                  ? "bg-white/15 text-white"
+                  : "text-white/70 hover:bg-white/10 hover:text-white"
+              } ${collapsed ? "justify-center px-2" : ""}`}
+            >
+              <span className="shrink-0">{item.icon}</span>
+              {!collapsed && <span className="truncate">{t(item.cle)}</span>}
+            </Link>
+          ))}
+
+          {/* Onglets d'un chantier */}
+          {idChantierActif && (
+            <div className={collapsed ? "mt-6" : "mt-6"}>
+              {!collapsed && (
+                <p className="px-4 pb-2 text-xs font-semibold uppercase tracking-wider text-white/50">
+                  {t("nav.groupe_chantier")}
+                </p>
+              )}
+              {liensChantier.map((item) => {
+                const href = item.href(idChantierActif);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    title={t(item.cle)}
+                    className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${
+                      estActif(href) ? "bg-white/15 text-white" : "text-white/70 hover:bg-white/10 hover:text-white"
+                    } ${collapsed ? "justify-center px-2" : ""}`}
+                  >
+                    <span className="shrink-0">{item.icon}</span>
+                    {!collapsed && <span className="truncate">{t(item.cle)}</span>}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </nav>
 
         {/* Langue et déconnexion */}
-        <div className="p-4 border-t border-slate-200">
-          <div className="flex items-center justify-between px-2 mb-3">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{t("langue.titre")}</span>
+        <div className="border-t border-white/15 p-4">
+          {!collapsed && (
             <button
               onClick={() => {
                 const next = langue === "fr" ? "en" : "fr";
@@ -73,22 +147,14 @@ export default function Sidebar() {
                 setLangueState(next);
                 window.location.reload();
               }}
-              className="text-xs text-orange-600 font-medium hover:underline"
+              className="mb-3 w-full rounded-xl px-3 py-2 text-left text-sm font-medium text-white/80 hover:bg-white/10 transition"
             >
-              {langue === "fr" ? "🇬🇧 English" : "🇫🇷 Français"}
+              {langue === "fr" ? "🇫🇧 English" : "🇫🇷 Français"}
             </button>
-          </div>
+          )}
           <SignOutButton />
         </div>
       </div>
-
-      {/* Mobile collapse toggle */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className={`absolute bottom-4 left-2 z-50 p-2 rounded-lg bg-white border border-slate-200 shadow-md hover:bg-slate-50 transition ${collapsed ? "ml-3" : ""}`}
-      >
-        <span className={`text-slate-600 ${collapsed ? "rotate-180" : ""}`}>›</span>
-      </button>
     </aside>
   );
 }

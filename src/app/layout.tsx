@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 import Sidebar from "@/components/layout/Sidebar";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import NetworkStatus from "@/components/NetworkStatus";
-import SignOutButton from "@/components/SignOutButton";
+import TopBar from "@/components/layout/TopBar";
+import MobileNavigation from "@/components/layout/MobileNavigation";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -16,38 +18,33 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1e3a5f",
+  themeColor: "#0F2A4A",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-slate-50 text-slate-900">
-        <ServiceWorkerRegister />
-        <NetworkStatus />
-        <div className="flex h-screen overflow-hidden">
-          <Sidebar />
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-6 z-20 shadow-sm">
-              <div className="flex items-center gap-2 md:hidden">
-                <button className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </button>
-              </div>
-              <div className="flex-1 text-center">
-                <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Tableau de bord</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <SignOutButton />
-              </div>
-            </header>
-            <main className="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-6">
-              {children}
-            </main>
+    // suppressHydrationWarning : next-themes ajuste la classe "dark" après le chargement
+    <html
+      lang="fr"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <body className="min-h-full flex flex-col bg-background text-foreground">
+        <ThemeProvider attribute="class" defaultTheme="light">
+          <ServiceWorkerRegister />
+          <NetworkStatus />
+          <div className="flex h-screen overflow-hidden">
+            <Sidebar />
+            <div className="flex flex-1 flex-col overflow-hidden">
+              <TopBar />
+              <main className="flex-1 overflow-y-auto bg-background p-4 pb-28 md:p-6 md:pb-6">
+                {children}
+              </main>
+            </div>
           </div>
-        </div>
+          {/* Navigation mobile en bas de l'écran */}
+          <MobileNavigation />
+        </ThemeProvider>
       </body>
     </html>
   );

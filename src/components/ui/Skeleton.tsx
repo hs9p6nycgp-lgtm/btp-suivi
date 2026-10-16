@@ -9,7 +9,7 @@ type SkeletonProps = React.HTMLAttributes<HTMLDivElement> & {
 };
 
 export function Skeleton({ className = "", variant = "text", width, height, ...props }: SkeletonProps) {
-  const base = "animate-pulse bg-slate-200 rounded";
+  const base = "animate-pulse bg-slate-200 dark:bg-slate-700 rounded";
   const styles: Record<string, React.CSSProperties> = {
     text: { height: "1rem", width: width ?? "100%" },
     circle: { width: width ?? "2.5rem", height: height ?? "2.5rem", borderRadius: "9999px" },

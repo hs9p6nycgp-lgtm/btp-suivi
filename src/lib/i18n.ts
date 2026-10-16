@@ -6,8 +6,21 @@ export const DICTIONNAIRE: Record<string, Record<Langue, string>> = {
   // Navigation
   "nav.accueil": { fr: "Accueil", en: "Home" },
   "nav.chantiers": { fr: "Chantiers", en: "Sites" },
-  "nav.bpu": { fr: "BPU", en: "Price Library" },
-  "nav.devis": { fr: "Devis", en: "Estimates" },
+  "nav.dashboard": { fr: "Tableau de bord", en: "Dashboard" },
+  "nav.bpu": { fr: "Base de prix", en: "Price Library" },
+  "nav.devis": { fr: "Calcul de devis", en: "Estimates" },
+  "nav.mur": { fr: "Calcul de murs", en: "Wall calculator" },
+
+  // Navigation des onglets d'un chantier
+  "nav.groupe_chantier": { fr: "Onglets du chantier", en: "Site tabs" },
+  "detail.metre": { fr: "Métré & DQE", en: "Quantity & DQE" },
+
+  // Top bar
+  "topbar.rechercher": { fr: "Rechercher...", en: "Search..." },
+  "topbar.theme": { fr: "Thème", en: "Theme" },
+  "topbar.alertes": { fr: "Alertes", en: "Alerts" },
+  "topbar.profil": { fr: "Profil", en: "Profile" },
+  "topbar.saisie_jour": { fr: "Saisie du jour", en: "Daily entry" },
 
   // Actions communes
   "action.creer": { fr: "Créer", en: "Create" },

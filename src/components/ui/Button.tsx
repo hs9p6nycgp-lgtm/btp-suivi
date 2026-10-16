@@ -18,12 +18,13 @@ export function Button({
   ...props
 }: ButtonProps) {
   const variants = {
-    primary: "bg-orange-600 text-white hover:bg-orange-700",
-    secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200",
-    outline: "border border-slate-300 text-slate-700 hover:bg-slate-50",
-    ghost: "text-slate-600 hover:bg-slate-100",
-    danger: "bg-red-600 text-white hover:bg-red-700",
-    success: "bg-emerald-600 text-white hover:bg-emerald-700",
+    // Action principale de l'écran : l'orange chantier (un seul par écran)
+    primary: "bg-action text-white hover:bg-action/90",
+    secondary: "bg-primary text-white hover:bg-primary/90",
+    outline: "border border-primary text-primary hover:bg-primary/10",
+    ghost: "text-foreground hover:bg-slate-100 dark:hover:bg-white/10",
+    danger: "bg-danger text-white hover:bg-danger/90",
+    success: "bg-success text-white hover:bg-success/90",
   };
 
   const sizes = {

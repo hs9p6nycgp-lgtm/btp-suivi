@@ -11,10 +11,10 @@ type ProgressBarProps = {
 };
 
 const colorMap = {
-  primary: "bg-orange-600",
-  success: "bg-emerald-600",
-  warning: "bg-amber-600",
-  danger: "bg-rose-600",
+  primary: "bg-action",
+  success: "bg-success",
+  warning: "bg-warning",
+  danger: "bg-danger",
 };
 
 export function ProgressBar({ value, label, showValue = true, size = "md", color = "primary" }: ProgressBarProps) {
@@ -23,13 +23,13 @@ export function ProgressBar({ value, label, showValue = true, size = "md", color
   return (
     <div className="w-full">
       {label && (
-        <div className="flex justify-between mb-1.5 text-xs font-semibold text-slate-600">
+        <div className="flex justify-between mb-1.5 text-xs font-semibold text-muted">
           <span>{label}</span>
           {showValue && <span>{clamped.toFixed(0)}%</span>}
         </div>
       )}
-      <div className={`w-full ${height} rounded-full bg-slate-200 overflow-hidden`}>
-        <div className={`h-full ${colorMap[color]} transition-all duration-700 ease-out`} style={{ width: `${clamped}%` }}></div>
+      <div className={`w-full ${height} rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden`}>
+        <div className={`h-full ${colorMap[color]} transition-all duration-200 ease-out`} style={{ width: `${clamped}%` }}></div>
       </div>
     </div>
   );
