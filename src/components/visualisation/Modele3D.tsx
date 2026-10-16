@@ -3,6 +3,7 @@
 import { Box } from "lucide-react";
 import * as THREE from "three";
 import { useEffect, useRef, useState } from "react";
+import { gsap } from "gsap";
 
 type SectionData = {
   id: string;
@@ -40,17 +41,20 @@ export default function Modele3D({
     const largeur = chantier.largeur || 10;
     const hauteur = chantier.hauteur || 5;
 
-    // Configuration de la scène
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf0f4f8);
     scene.fog = new THREE.Fog(0xf0f4f8, 10, 50);
 
-    // Caméra
-    const camera = new THREE.PerspectiveCamera(45, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 100);
-    camera.position.set(15, 15, 15);
-    camera.lookAt(0, 0, 0);
+    const camera = new THREE.PerspectiveCamera(
+      45,
+      containerRef.current.clientWidth / containerRef.current.clientHeight,
+      0.1,
+      100,
+    );
+    // Position de départ (loin) pour l'animation d'intro
+    camera.position.set(largeur * 2, hauteur * 4, longueur * 2);
+    camera.lookAt(0, hauteur / 2, 0);
 
-    // Rendu
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -59,7 +63,6 @@ export default function Modele3D({
     const containerEl = containerRef.current!;
     containerEl.appendChild(renderer.domElement);
 
-    // Lumières
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
 
@@ -74,21 +77,18 @@ export default function Modele3D({
     pointLight.position.set(-5, 5, 5);
     scene.add(pointLight);
 
-    // Grille au sol
     const gridHelper = new THREE.GridHelper(40, 40, 0xcccccc, 0x888888);
     gridHelper.position.y = 0;
     scene.add(gridHelper);
 
-    // Aides
     const axesHelper = new THREE.AxesHelper(5);
     scene.add(axesHelper);
 
-    // Fonction pour créer un élément 3D
     function creerElement3D(
       type: string,
       position: THREE.Vector3,
       dimensions: { x: number; y: number; z: number },
-      color: string
+      color: string,
     ) {
       let geometry: THREE.BoxGeometry | THREE.CylinderGeometry | THREE.SphereGeometry;
       let material: THREE.MeshStandardMaterial;
@@ -96,19 +96,19 @@ export default function Modele3D({
       switch (type) {
         case "mur":
           geometry = new THREE.BoxGeometry(dimensions.x, dimensions.y, dimensions.z);
-          material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.7 });
+          material = new THREE.MeshStandardMaterial({ color, roughness: 0.7 });
           break;
         case "pilier":
           geometry = new THREE.CylinderGeometry(dimensions.x / 2, dimensions.x / 2, dimensions.y, 8);
-          material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6 });
+          material = new THREE.MeshStandardMaterial({ color, roughness: 0.6 });
           break;
         case "dalle":
           geometry = new THREE.BoxGeometry(dimensions.x, 0.2, dimensions.z);
-          material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 });
+          material = new THREE.MeshStandardMaterial({ color, roughness: 0.8 });
           break;
         default:
           geometry = new THREE.BoxGeometry(dimensions.x, dimensions.y, dimensions.z);
-          material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.7 });
+          material = new THREE.MeshStandardMaterial({ color, roughness: 0.7 });
       }
 
       const mesh = new THREE.Mesh(geometry, material);
@@ -120,50 +120,49 @@ export default function Modele3D({
       return mesh;
     }
 
-    // Créer le bâtiment basé sur les données du chantier
+    const meshes: THREE.Mesh[] = [];
     const epaisseurMur = 0.3;
 
-    // Mur avant
-    creerElement3D(
+    const murA = creerElement3D(
       "mur",
       new THREE.Vector3(0, hauteur / 2, largeur / 2),
       { x: longueur, y: hauteur, z: epaisseurMur },
-      "#8b7355"
+      "#8b7355",
     );
+    meshes.push(murA);
 
-    // Mur arrière
-    creerElement3D(
+    const murArriere = creerElement3D(
       "mur",
       new THREE.Vector3(0, hauteur / 2, -largeur / 2),
       { x: longueur, y: hauteur, z: epaisseurMur },
-      "#8b7355"
+      "#8b7355",
     );
+    meshes.push(murArriere);
 
-    // Mur gauche
-    creerElement3D(
+    const murGauche = creerElement3D(
       "mur",
       new THREE.Vector3(-longueur / 2, hauteur / 2, 0),
       { x: epaisseurMur, y: hauteur, z: largeur },
-      "#8b7355"
+      "#8b7355",
     );
+    meshes.push(murGauche);
 
-    // Mur droit
-    creerElement3D(
+    const murDroit = creerElement3D(
       "mur",
       new THREE.Vector3(longueur / 2, hauteur / 2, 0),
       { x: epaisseurMur, y: hauteur, z: largeur },
-      "#8b7355"
+      "#8b7355",
     );
+    meshes.push(murDroit);
 
-    // Dalle / Toit
-    creerElement3D(
+    const dalle = creerElement3D(
       "dalle",
       new THREE.Vector3(0, hauteur + 0.1, 0),
       { x: longueur + 0.6, y: 0.2, z: largeur + 0.6 },
-      "#6b5b45"
+      "#6b5b45",
     );
+    meshes.push(dalle);
 
-    // Piliers aux coins
     const rayonPilier = 0.4;
     const hauteurPilier = hauteur;
     const positionsPiliers = [
@@ -174,32 +173,37 @@ export default function Modele3D({
     ];
 
     positionsPiliers.forEach((pos) => {
-      creerElement3D(
+      const p = creerElement3D(
         "pilier",
         new THREE.Vector3(pos[0], pos[1], pos[2]),
         { x: rayonPilier * 2, y: hauteurPilier, z: rayonPilier * 2 },
-        "#4a4a4a"
+        "#4a4a4a",
       );
+      meshes.push(p);
     });
 
-    // Créer les sections comme des éléments distincts
     sections.forEach((section, index) => {
       const couleurSection = index % 2 === 0 ? "#4a90e2" : "#50c878";
-      creerElement3D(
+      const m = creerElement3D(
         "section",
         new THREE.Vector3(
           section.pk_debut !== null ? section.pk_debut - longueur / 2 + 5 : index * 5 - longueur / 2 + 5,
           2,
-          0
+          0,
         ),
-        { x: section.pk_fin !== null && section.pk_debut !== null ? section.pk_fin - section.pk_debut : 3,
+        {
+          x:
+            section.pk_fin !== null && section.pk_debut !== null
+              ? section.pk_fin - section.pk_debut
+              : 3,
           y: 3,
-          z: 2 },
-        couleurSection
+          z: 2,
+        },
+        couleurSection,
       );
+      meshes.push(m);
     });
 
-    // Contrôles de caméra simples (orbite manuelle)
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };
 
@@ -214,12 +218,10 @@ export default function Modele3D({
         x: event.clientX - previousMousePosition.x,
         y: event.clientY - previousMousePosition.y,
       };
-
       const rotateSpeed = 0.005;
       camera.position.x -= deltaMove.x * rotateSpeed * 5;
       camera.position.z -= deltaMove.y * rotateSpeed * 5;
       camera.lookAt(0, hauteur / 2, 0);
-
       previousMousePosition = { x: event.clientX, y: event.clientY };
     };
 
@@ -230,7 +232,7 @@ export default function Modele3D({
     const onMouseWheel = (event: WheelEvent) => {
       const zoomSpeed = 0.1;
       camera.position.addScaledVector(camera.position.clone().normalize(), -event.deltaY * zoomSpeed * 0.001);
-      camera.lookAt(0, hauteur / 2, 0);
+      camera.lookAt(hauteur / 2, hauteur / 2, 0);
     };
 
     if (containerEl) {
@@ -242,14 +244,52 @@ export default function Modele3D({
       containerEl.addEventListener("wheel", onMouseWheel);
     }
 
-    // Animation
+    const ctx = gsap.context(() => {
+      // Animation d'intro : la caméra arrive sur le modèle depuis le loin
+      gsap.fromTo(
+        camera.position,
+        { x: largeur * 2, y: hauteur * 4, z: longueur * 2 },
+        {
+          x: 15,
+          y: 15,
+          z: 15,
+          duration: 2.4,
+          ease: "power3.out",
+          onUpdate: () => camera.lookAt(0, hauteur / 2, 0),
+        },
+      );
+
+      // Animation d'entrée des éléments : apparition en cascade
+      meshes.forEach((mesh, i) => {
+        const mat = mesh.material as THREE.MeshStandardMaterial;
+        mat.transparent = true;
+        mat.opacity = 0;
+        mesh.scale.set(0.01, 0.01, 0.01);
+
+        gsap.to(mesh.scale, {
+          x: 1,
+          y: 1,
+          z: 1,
+          duration: 0.8,
+          delay: 1.6 + i * 0.08,
+          ease: "back.out(1.7)",
+        });
+        gsap.to(mat, {
+          opacity: 1,
+          duration: 0.8,
+          delay: 1.6 + i * 0.08,
+          ease: "power2.out",
+        });
+      });
+    }, containerEl);
+
+    let rafId: number;
     const animer = () => {
-      requestAnimationFrame(animer);
+      rafId = requestAnimationFrame(animer);
       renderer.render(scene, camera);
     };
-    animer();
+    rafId = requestAnimationFrame(animer);
 
-    // Gestion du redimensionnement
     const onResize = () => {
       if (containerEl) {
         camera.aspect = containerEl.clientWidth / containerEl.clientHeight;
@@ -262,6 +302,8 @@ export default function Modele3D({
     setIsLoaded(true);
 
     return () => {
+      cancelAnimationFrame(rafId);
+      ctx.revert();
       if (containerEl) {
         containerEl.removeEventListener("mousedown", onMouseDown);
         containerEl.removeEventListener("mousemove", onMouseMove);
