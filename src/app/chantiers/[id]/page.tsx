@@ -124,6 +124,12 @@ export default function ChantierDetailPage() {
           >
             Coûts & Budget
           </Link>
+          <Link
+            href={`/chantiers/${chantier.id}/qualite`}
+            className="rounded-xl bg-purple-600 px-4 py-2 text-white text-sm font-semibold hover:bg-purple-700 transition-all shadow-sm"
+          >
+            Qualité
+          </Link>
         </div>
       </div>
 

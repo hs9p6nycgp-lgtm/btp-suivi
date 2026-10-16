@@ -22,6 +22,9 @@ export default function NouveauChantierPage() {
   const [dateFin, setDateFin] = useState("");
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
+  const [longueur, setLongueur] = useState("");
+  const [largeur, setLargeur] = useState("");
+  const [hauteur, setHauteur] = useState("");
   const [seuil, setSeuil] = useState("10");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -49,6 +52,9 @@ export default function NouveauChantierPage() {
         date_fin_prevue: dateFin || null,
         latitude: latitude ? Number(latitude) : null,
         longitude: longitude ? Number(longitude) : null,
+        longueur: longueur ? Number(longueur) : null,
+        largeur: largeur ? Number(largeur) : null,
+        hauteur: hauteur ? Number(hauteur) : null,
         seuil_ecart_pct: Number(seuil) || 10,
         statut: "en_preparation",
         proprietaire_id: user.id,
@@ -180,6 +186,45 @@ export default function NouveauChantierPage() {
                 step="0.000001"
                 value={longitude}
                 onChange={(e) => setLongitude(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                {langue === "fr" ? "Longueur (m)" : "Length (m)"}
+              </label>
+              <input
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                type="number"
+                step="0.01"
+                value={longueur}
+                onChange={(e) => setLongueur(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                {langue === "fr" ? "Largeur (m)" : "Width (m)"}
+              </label>
+              <input
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                type="number"
+                step="0.01"
+                value={largeur}
+                onChange={(e) => setLargeur(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                {langue === "fr" ? "Hauteur (m)" : "Height (m)"}
+              </label>
+              <input
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                type="number"
+                step="0.01"
+                value={hauteur}
+                onChange={(e) => setHauteur(e.target.value)}
               />
             </div>
           </div>
