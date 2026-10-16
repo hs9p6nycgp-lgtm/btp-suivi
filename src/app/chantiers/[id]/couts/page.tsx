@@ -173,6 +173,25 @@ export default function CoutsPage() {
     setDepenses((prev) => [...prev, { id: "", chantier_id: chantierId, categorie, designation: designation.trim(), quantite: Number(quantite), unite: unite || null, prix_unitaire: Math.round(Number(prixUnitaire)), montant_total: montantTotal, date_depense: dateDepense, reference: reference || null } as unknown as DepenseReelle]);
     setDesignation(""); setQuantite(""); setUnite(""); setPrixUnitaire(""); setReference("");
     setMessage(langue === "fr" ? "Dépense ajoutée." : "Expense added.");
+
+    // NOT-01 : alerte si l'écart budgétaire dépasse 5 % du budget prévu
+    try {
+      const nouveauTotalReel = totalCoutReel + montantTotal;
+      const seuilBudget = totalCoutPrevu > 0 ? 0.05 * totalCoutPrevu : 0;
+      if (totalCoutPrevu > 0 && (nouveauTotalReel - totalCoutPrevu) > seuilBudget) {
+        const supabase2 = createClient();
+        const ecartPct = Math.round(((nouveauTotalReel - totalCoutPrevu) / totalCoutPrevu) * 10000) / 100;
+        await supabase2.from("alertes").insert({
+          chantier_id: chantierId,
+          type: "budget",
+          valeur: ecartPct,
+          seuil: 5,
+          statut: "ouverte",
+        });
+      }
+    } catch (e) {
+      console.error("Erreur génération alerte budget:", e);
+    }
   }
 
   async function supprimerDepense(id: string) {
