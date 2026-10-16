@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatCard } from "@/components/ui/StatCard";
 import { getLangue } from "@/lib/i18n";
+import { ecartBudgetaire } from "@/lib/calculs/metre";
 
 type PosteDQE = {
   id: string;
@@ -130,7 +131,7 @@ export default function CoutsPage() {
     const prix = bpuItem?.prix_unitaire ?? p.prix_unitaire;
     const coutPrevu = p.quantite_marche * prix;
     const coutReel = qteReelle * prix;
-    const ecart = coutReel - coutPrevu;
+    const ecart = ecartBudgetaire(coutReel, coutPrevu);
     const avancementPct = p.quantite_marche > 0 ? (qteReelle / p.quantite_marche) * 100 : 0;
     return {
       code: p.code,

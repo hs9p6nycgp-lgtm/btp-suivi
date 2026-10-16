@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { StatCard } from "@/components/ui/StatCard";
 import { Card } from "@/components/ui/Card";
 import { getLangue } from "@/lib/i18n";
+import { joursEcartDelai } from "@/lib/calculs/metre";
 
 type Tache = {
   id: string;
@@ -58,6 +59,7 @@ export default function PlanningPage() {
   const [dependances, setDependances] = useState<Dependance[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
+  const [dateFinPrevue, setDateFinPrevue] = useState<string | null>(null);
 
   const [nomTache, setNomTache] = useState("");
   const [dureeTache, setDureeTache] = useState("1");
@@ -74,14 +76,17 @@ export default function PlanningPage() {
     if (!user) { router.replace("/login"); return; }
     const { data: chantier } = await supabase.from("chantiers").select("id").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle();
     if (!chantier) { router.replace("/chantiers"); return; }
-    const [tRes, dRes] = await Promise.all([
+    const [tRes, dRes, cRes] = await Promise.all([
       supabase.from("taches_planning").select("*").eq("chantier_id", chantierId).order("created_at", { ascending: true }),
       supabase.from("dependances_planning").select("*").eq("chantier_id", chantierId),
+      supabase.from("chantiers").select("date_fin_prevue").eq("id", chantierId).maybeSingle(),
     ]);
     if (tRes.error) { setMessage(tRes.error.message); return; }
     if (dRes.error) { setMessage(dRes.error.message); return; }
+    if (cRes.error) { setMessage(cRes.error.message); return; }
     setTaches((tRes.data ?? []) as Tache[]);
     setDependances((dRes.data ?? []) as Dependance[]);
+    setDateFinPrevue(cRes.data?.date_fin_prevue ?? null);
     setLoading(false);
   }
 
@@ -207,6 +212,20 @@ export default function PlanningPage() {
   const tachesCritiques = pert.filter((p) => p.est_critique).length;
   const terminees = taches.filter((t) => t.statut === "termine").length;
 
+  // 5.4 - Écart de délai : fin prévue du projet vs date contractuelle du chantier
+  const dernierFinPrevue = pert.length > 0
+    ? Math.max(...pert.map((p) => {
+        const t = taches.find((t) => t.id === p.tache_id);
+        return t?.date_prevue_fin ? new Date(t.date_prevue_fin).getTime() : 0;
+      }))
+    : 0;
+  const ecartDelaiJours = dateFinPrevue && dernierFinPrevue > 0
+    ? joursEcartDelai(
+        new Date(dernierFinPrevue).toISOString().split("T")[0],
+        dateFinPrevue,
+      )
+    : 0;
+
   async function ajouterTache(e: React.FormEvent) {
     e.preventDefault();
     if (!nomTache.trim()) return;
@@ -287,6 +306,13 @@ export default function PlanningPage() {
           value={terminees}
           icon={<CalendarClock className="h-5 w-5" />}
           color="emerald"
+        />
+        <StatCard
+          title={langue === "fr" ? "Écart délai" : "Delay gap"}
+          value={ecartDelaiJours >= 0 ? `+${ecartDelaiJours}` : String(ecartDelaiJours)}
+          subtitle="jours"
+          icon={<TimerReset className="h-5 w-5" />}
+          color={ecartDelaiJours > 0 ? "rose" : "blue"}
         />
       </div>
 

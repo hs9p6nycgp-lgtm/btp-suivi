@@ -7,6 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import DqeImport from "@/components/DqeImport";
 import ChantierEquipe from "@/components/ChantierEquipe";
+import ChantierAvancement from "@/components/ChantierAvancement";
 import Modele3D from "@/components/visualisation/Modele3D";
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
@@ -230,6 +231,7 @@ export default function ChantierDetailPage() {
 
         <div className="space-y-6">
           <ChantierEquipe chantierId={chantier.id} initialMembers={(membres ?? []) as any} />
+          <ChantierAvancement chantierId={chantier.id} seuilEcartPct={chantier.seuil_ecart_pct} />
         </div>
       </div>
 
