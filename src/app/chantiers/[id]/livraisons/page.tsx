@@ -1,11 +1,11 @@
 "use client";
 
+import { Construction } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { getLangue } from "@/lib/i18n";
 
@@ -111,102 +111,145 @@ export default function LivraisonsPage() {
   }, {});
 
   return (
-    <main className="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-6">
-      <div className="mb-6 flex items-start justify-between">
-        <Link href={`/chantiers/${chantierId}`} className="text-sm text-orange-600 hover:underline">
-          ← Retour chantier
-        </Link>
-        <h1 className="text-2xl font-bold text-slate-900">Approvisionnements et livraisons</h1>
+    <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <Link href={`/chantiers/${chantierId}`} className="text-sm font-medium text-primary hover:underline">
+            &larr; Retour au chantier
+          </Link>
+          <h1 className="text-2xl font-bold text-foreground md:text-3xl">Approvisionnements et livraisons</h1>
+        </div>
       </div>
 
       <Card variant="elevated" padding="lg">
-        <h2 className="mb-4 text-lg font-bold text-slate-900">Nouvelle livraison</h2>
+        <h2 className="mb-4 text-lg font-bold text-foreground">Nouvelle livraison</h2>
         <form onSubmit={handleAdd} className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Matériau *</label>
-            <input className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" value={materiau} onChange={(e) => setMateriau(e.target.value)} required />
+            <label htmlFor="materiau" className="mb-1 block text-sm font-medium text-foreground">Matériau *</label>
+            <input
+              id="materiau"
+              className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              value={materiau}
+              onChange={(e) => setMateriau(e.target.value)}
+              required
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Fournisseur</label>
-            <input className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" value={fournisseur} onChange={(e) => setFournisseur(e.target.value)} />
+            <label htmlFor="fournisseur" className="mb-1 block text-sm font-medium text-foreground">Fournisseur</label>
+            <input
+              id="fournisseur"
+              className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              value={fournisseur}
+              onChange={(e) => setFournisseur(e.target.value)}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Quantité *</label>
-            <input className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" type="number" step="0.01" value={quantite} onChange={(e) => setQuantite(e.target.value)} required />
+            <label htmlFor="quantite" className="mb-1 block text-sm font-medium text-foreground">Quantité *</label>
+            <input
+              id="quantite"
+              className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              type="number"
+              step="0.01"
+              value={quantite}
+              onChange={(e) => setQuantite(e.target.value)}
+              required
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">N° de bon</label>
-            <input className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" value={numeroBon} onChange={(e) => setNumeroBon(e.target.value)} />
+            <label htmlFor="numeroBon" className="mb-1 block text-sm font-medium text-foreground">N° de bon</label>
+            <input
+              id="numeroBon"
+              className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              value={numeroBon}
+              onChange={(e) => setNumeroBon(e.target.value)}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Camion</label>
-            <input className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" value={camion} onChange={(e) => setCamion(e.target.value)} />
+            <label htmlFor="camion" className="mb-1 block text-sm font-medium text-foreground">Camion</label>
+            <input
+              id="camion"
+              className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              value={camion}
+              onChange={(e) => setCamion(e.target.value)}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
-            <input className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <label htmlFor="date" className="mb-1 block text-sm font-medium text-foreground">Date</label>
+            <input
+              id="date"
+              className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Photo du bon</label>
-            <input type="file" accept="image/*,.pdf" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            <label htmlFor="photo" className="mb-1 block text-sm font-medium text-foreground">Photo du bon</label>
+            <input
+              id="photo"
+              type="file"
+              accept="image/*,.pdf"
+              className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
           </div>
-          <button type="submit" disabled={loading} className="rounded-xl bg-orange-600 px-4 py-3 text-white font-semibold hover:bg-orange-700 disabled:opacity-50 transition-all shadow-sm hover:shadow-md">
+          <Button type="submit" size="lg" className="w-full md:col-span-3" disabled={loading}>
             {loading ? "Enregistrement..." : "Enregistrer"}
-          </button>
+          </Button>
         </form>
         {message && (
-          <div className="mt-3 rounded-lg bg-rose-50 border border-rose-200 p-3 text-sm text-rose-700">
+          <div className="mt-3 rounded-xl border border-rose-300 bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-950/30 dark:text-rose-300">
             {message}
           </div>
         )}
       </Card>
 
       <section className="mt-8">
-        <h2 className="mb-4 text-lg font-bold text-slate-900">Récapitulatif par matériau</h2>
+        <h2 className="mb-4 text-lg font-bold text-foreground">Récapitulatif par matériau</h2>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
           {Object.entries(recap).map(([mat, q]) => (
-            <div key={mat} className="rounded-xl border border-slate-200 bg-white p-4">
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{mat}</p>
-              <div className="flex items-end gap-1 mt-1">
-                <span className="text-2xl font-bold text-slate-900">{q.toFixed(2)}</span>
-                <span className="text-sm text-slate-500">u</span>
+            <div key={mat} className="rounded-xl border border-border bg-surface p-4">
+              <p className="text-xs font-semibold text-muted uppercase tracking-wider">{mat}</p>
+              <div className="mt-1 flex items-end gap-1">
+                <span className="text-2xl font-bold text-foreground">{q.toFixed(2)}</span>
+                <span className="text-sm text-muted">u</span>
               </div>
             </div>
           ))}
           {Object.keys(recap).length === 0 && (
-            <div className="rounded-xl border-2 border-dashed border-slate-300 p-10 text-center bg-slate-50">
-              <p className="text-sm text-slate-500">Aucune livraison.</p>
+            <div className="rounded-2xl border-2 border-dashed border-border p-10 text-center">
+              <p className="text-sm text-muted">Aucune livraison.</p>
             </div>
           )}
         </div>
       </section>
 
       <section className="mt-6">
-        <h2 className="mb-4 text-lg font-bold text-slate-900">Livraisons enregistrées</h2>
+        <h2 className="mb-4 text-lg font-bold text-foreground">Livraisons enregistrées</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left">
-                <th className="p-3 font-semibold text-slate-500">Date</th>
-                <th className="p-3 font-semibold text-slate-500">Matériau</th>
-                <th className="p-3 font-semibold text-slate-500 text-center">Quantité</th>
-                <th className="p-3 font-semibold text-slate-500">Fournisseur</th>
-                <th className="p-3 font-semibold text-slate-500 text-right">N° bon</th>
-                <th className="p-3 font-semibold text-slate-500 text-right">Camion</th>
-                <th className="p-3 font-semibold text-slate-500"></th>
+              <tr className="border-b border-border text-left">
+                <th className="p-3 font-semibold text-muted">Date</th>
+                <th className="p-3 font-semibold text-muted">Matériau</th>
+                <th className="p-3 font-semibold text-muted text-center">Quantité</th>
+                <th className="p-3 font-semibold text-muted">Fournisseur</th>
+                <th className="p-3 font-semibold text-muted text-right">N° bon</th>
+                <th className="p-3 font-semibold text-muted text-right">Camion</th>
+                <th className="p-3 font-semibold text-muted text-right"></th>
               </tr>
             </thead>
             <tbody>
               {items.map((l) => (
-                <tr key={l.id} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="p-3 text-sm text-slate-600">{new Date(l.date_livraison).toLocaleDateString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                  <td className="p-3 text-sm text-slate-900">{l.materiau}</td>
-                  <td className="p-3 text-sm text-right text-slate-600">{Number(l.quantite).toFixed(2)}</td>
-                  <td className="p-3 text-sm text-slate-600">{l.fournisseur ?? "-"}</td>
-                  <td className="p-3 text-sm text-right text-slate-600">{l.numero_bon ?? "-"}</td>
-                  <td className="p-3 text-sm text-right text-slate-600">{l.camion ?? "-"}</td>
+                <tr key={l.id} className="border-b border-border last:border-0">
+                  <td className="p-3 text-muted">{new Date(l.date_livraison).toLocaleDateString(langue === "fr" ? "fr-FR" : "en-US")}</td>
+                  <td className="p-3 font-medium text-foreground">{l.materiau}</td>
+                  <td className="p-3 text-right text-muted">{Number(l.quantite).toFixed(2)}</td>
+                  <td className="p-3 text-muted">{l.fournisseur ?? "-"}</td>
+                  <td className="p-3 text-right text-muted">{l.numero_bon ?? "-"}</td>
+                  <td className="p-3 text-right text-muted">{l.camion ?? "-"}</td>
                   <td className="p-3 text-right">
-                    <button onClick={() => handleRemove(l.id, l.photo_bon)} className="text-rose-600 text-xs hover:underline font-medium">
+                    <button type="button" onClick={() => handleRemove(l.id, l.photo_bon)} className="text-danger text-xs font-medium hover:underline">
                       Supprimer
                     </button>
                   </td>
@@ -214,7 +257,7 @@ export default function LivraisonsPage() {
               ))}
               {items.length === 0 && (
                 <tr>
-                  <td className="p-6 text-center text-slate-500" colSpan={7}>
+                  <td className="p-6 text-center text-muted" colSpan={7}>
                     Aucune livraison.
                   </td>
                 </tr>
