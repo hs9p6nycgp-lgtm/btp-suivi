@@ -8,6 +8,7 @@ export const DICTIONNAIRE: Record<string, Record<Langue, string>> = {
   "nav.chantiers": { fr: "Chantiers", en: "Sites" },
   "nav.dashboard": { fr: "Tableau de bord", en: "Dashboard" },
   "nav.bpu": { fr: "Base de prix", en: "Price Library" },
+  "nav.referentiel": { fr: "Référentiel de prix", en: "Price Reference" },
   "nav.fournisseurs": { fr: "Fournisseurs", en: "Suppliers" },
   "nav.export": { fr: "Export Excel", en: "Excel Export" },
   "nav.rapports": { fr: "Rapports", en: "Reports" },

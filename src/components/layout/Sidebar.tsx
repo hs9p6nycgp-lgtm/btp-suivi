@@ -33,6 +33,7 @@ const NAV_TOP_LEVEL: ItemNav[] = [
   { href: "/", cle: "home.titre", icon: <LayoutDashboard className="h-5 w-5" /> },
   { href: "/chantiers", cle: "chantiers.titre", icon: <Building2 className="h-5 w-5" /> },
   { href: "/bpu", cle: "nav.bpu", icon: <BookOpen className="h-5 w-5" /> },
+  { href: "/referentiel", cle: "nav.referentiel", icon: <BookOpen className="h-5 w-5" /> },
   { href: "/fournisseurs", cle: "nav.fournisseurs", icon: <Users className="h-5 w-5" /> },
   { href: "/export", cle: "nav.export", icon: <Download className="h-5 w-5" /> },
   { href: "/rapports", cle: "nav.rapports", icon: <Printer className="h-5 w-5" /> },
