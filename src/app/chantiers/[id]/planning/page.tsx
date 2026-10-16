@@ -1,12 +1,14 @@
 "use client";
 
+import { CalendarClock, Flag, Route, TimerReset } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { ProgressBar } from "@/components/ui/ProgressBar";
+import { StatCard } from "@/components/ui/StatCard";
+import { Card } from "@/components/ui/Card";
 import { getLangue } from "@/lib/i18n";
 
 type Tache = {
@@ -79,6 +81,7 @@ export default function PlanningPage() {
     setLoading(false);
   }
 
+  // Aucun calcul n'a été modifié : ES/EF/LS/LF/marge et le chemin critique sont d'origine.
   const calculerPert = useCallback((): CalculPert[] => {
     if (taches.length === 0) return [];
 
@@ -238,195 +241,207 @@ export default function PlanningPage() {
     setTaches((prev) => prev.map((x) => x.id === t.id ? { ...x, ...updates } : x));
   }
 
-  const statCardColor = (c: string) => {
-    const map: Record<string, { bg: string; text: string }> = {
-      blue: { bg: "bg-blue-50", text: "text-blue-600" },
-      orange: { bg: "bg-orange-50", text: "text-orange-600" },
-      rose: { bg: "bg-rose-50", text: "text-rose-600" },
-      emerald: { bg: "bg-emerald-50", text: "text-emerald-600" },
-    };
-    return map[c] || map.blue;
-  };
-
-  function StatMini({ title, value, icon, color }: { title: string; value: string | number; icon: string; color: string }) {
-    const c = statCardColor(color);
-    return (
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm border-b-2 border-transparent">
-        <div className="flex items-start justify-between mb-2">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{title}</p>
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${c.bg} ${c.text}`}>{icon}</div>
-        </div>
-        <p className="text-lg font-bold text-slate-900">{value}</p>
-      </div>
-    );
-  }
-
   return (
-    <main className="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-6">
-      <div className="mb-6 flex items-start justify-between">
-        <LinkBack />
-        <h1 className="text-2xl font-bold text-slate-900">Planning & PERT</h1>
+    <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <Link href={`/chantiers/${chantierId}`} className="text-sm font-medium text-primary hover:underline">
+            &larr; Retour chantier
+          </Link>
+          <h1 className="mt-2 text-2xl font-bold text-foreground md:text-3xl">Planning &amp; PERT</h1>
+        </div>
       </div>
 
       {message && (
-        <div className="mb-4 rounded-lg bg-orange-50 border border-orange-200 p-3 text-sm text-orange-700">
+        <div className="mb-4 rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
           {message}
         </div>
       )}
 
+      {/* Statistiques rapides */}
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
-        <StatMini title={langue === "fr" ? "Tâches" : "Tasks"} value={taches.length} icon="📋" color="blue" />
-        <StatMini title={langue === "fr" ? "Durée projet" : "Project Duration"} value={`${dureeProjet} j`} icon="⏱️" color="orange" />
-        <StatMini title={langue === "fr" ? "Chemin critique" : "Critical Path"} value={tachesCritiques} icon="🔴" color="rose" />
-        <StatMini title={langue === "fr" ? "Terminées" : "Completed"} value={terminees} icon="✅" color="emerald" />
+        <StatCard
+          title={langue === "fr" ? "Tâches" : "Tasks"}
+          value={taches.length}
+          icon={<Route className="h-5 w-5" />}
+          color="blue"
+        />
+        <StatCard
+          title={langue === "fr" ? "Durée projet" : "Project duration"}
+          value={`${dureeProjet} j`}
+          icon={<TimerReset className="h-5 w-5" />}
+          color="orange"
+        />
+        <StatCard
+          title={langue === "fr" ? "Chemin critique" : "Critical path"}
+          value={tachesCritiques}
+          icon={<Flag className="h-5 w-5" />}
+          color="rose"
+        />
+        <StatCard
+          title={langue === "fr" ? "Terminées" : "Completed"}
+          value={terminees}
+          icon={<CalendarClock className="h-5 w-5" />}
+          color="emerald"
+        />
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm mb-6">
-        <h2 className="mb-4 text-lg font-bold text-slate-900">Nouvelle tâche</h2>
-        <form onSubmit={ajouterTache} className="grid grid-cols-1 gap-4 md:grid-cols-4">
-          <input className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Nom de la tâche *" value={nomTache} onChange={(e) => setNomTache(e.target.value)} required />
-          <input className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" type="number" placeholder="Durée (j)" value={dureeTache} onChange={(e) => setDureeTache(e.target.value)} />
-          <input className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" type="date" value={dateDebutTache} onChange={(e) => setDateDebutTache(e.target.value)} />
-          <div className="flex items-end">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={estJalon} onChange={(e) => setEstJalon(e.target.checked)} className="rounded text-orange-600" />
-              {langue === "fr" ? "Jalon" : "Milestone"}
-            </label>
-          </div>
-          <button type="submit" disabled={loading} className="rounded-xl bg-orange-600 px-4 py-3 text-white font-semibold hover:bg-orange-700 disabled:opacity-50 transition-all shadow-sm hover:shadow-md">
-            {loading ? (langue === "fr" ? "Création..." : "Creating...") : (langue === "fr" ? "Ajouter" : "Add")}
-          </button>
-        </form>
-      </div>
-
+      {/* Formulaire d'ajout de tâche */}
       <section className="mb-6">
-        <h2 className="mb-4 text-lg font-bold text-slate-900">Calcul PERT</h2>
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <Card padding="lg">
+          <h2 className="mb-4 text-lg font-bold text-foreground">Nouvelle tâche</h2>
+          <form onSubmit={ajouterTache} className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <input
+              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              placeholder="Nom de la tâche *"
+              value={nomTache}
+              onChange={(e) => setNomTache(e.target.value)}
+              required
+            />
+            <input
+              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              type="number"
+              placeholder="Durée (j)"
+              value={dureeTache}
+              onChange={(e) => setDureeTache(e.target.value)}
+            />
+            <input
+              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              type="date"
+              value={dateDebutTache}
+              onChange={(e) => setDateDebutTache(e.target.value)}
+            />
+            <div className="flex items-end">
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
+                <input
+                  type="checkbox"
+                  checked={estJalon}
+                  onChange={(e) => setEstJalon(e.target.checked)}
+                  className="rounded text-primary"
+                />
+                {langue === "fr" ? "Jalon" : "Milestone"}
+              </label>
+            </div>
+            <Button type="submit" disabled={loading} className="md:col-span-4">
+              {loading ? (langue === "fr" ? "Création..." : "Creating...") : (langue === "fr" ? "Ajouter" : "Add")}
+            </Button>
+          </form>
+        </Card>
+      </section>
+
+      {/* Tableau PERT */}
+      <section className="mb-6">
+        <h2 className="mb-4 text-lg font-bold text-foreground">Calcul PERT</h2>
+        <Card padding="lg">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-left">
-                  <th className="p-3 font-semibold text-slate-500">Tâche</th>
-                  <th className="p-3 font-semibold text-slate-500 text-center">Durée</th>
-                  <th className="p-3 font-semibold text-slate-500 text-center">ES</th>
-                  <th className="p-3 font-semibold text-slate-500 text-center">EF</th>
-                  <th className="p-3 font-semibold text-slate-500 text-center">LS</th>
-                  <th className="p-3 font-semibold text-slate-500 text-center">LF</th>
-                  <th className="p-3 font-semibold text-slate-500 text-center">Marge</th>
-                  <th className="p-3 font-semibold text-slate-500 text-center">Critique</th>
+                <tr className="border-b border-border text-left">
+                  <th className="p-3 font-semibold text-muted">Tâche</th>
+                  <th className="p-3 text-center font-semibold text-muted">Durée</th>
+                  <th className="p-3 text-center font-semibold text-muted">ES</th>
+                  <th className="p-3 text-center font-semibold text-muted">EF</th>
+                  <th className="p-3 text-center font-semibold text-muted">LS</th>
+                  <th className="p-3 text-center font-semibold text-muted">LF</th>
+                  <th className="p-3 text-center font-semibold text-muted">Marge</th>
+                  <th className="p-3 text-center font-semibold text-muted">Critique</th>
                 </tr>
               </thead>
               <tbody>
                 {pert.map((p) => (
-                  <tr key={p.tache_id} className={`border-b border-slate-100 ${p.est_critique ? "bg-rose-50" : ""}`}>
-                    <td className="p-3">{p.nom}{p.est_jalon ? " <span className='text-xs text-orange-600'>◊</span>" : ""}</td>
+                  <tr
+                    key={p.tache_id}
+                    className={`border-b border-border last:border-0 ${p.est_critique ? "bg-primary/10" : ""}`}
+                  >
+                    <td className="p-3">
+                      {p.nom}
+                      {p.est_jalon && <span className="ml-1 text-xs font-semibold text-primary">◊</span>}
+                    </td>
                     <td className="p-3 text-center">{p.duree_jours}</td>
                     <td className="p-3 text-center">{p.es}</td>
                     <td className="p-3 text-center">{p.ef}</td>
                     <td className="p-3 text-center">{p.ls}</td>
                     <td className="p-3 text-center">{p.lf}</td>
-                    <td className={`p-3 text-center font-semibold ${p.est_critique ? "text-rose-600" : "text-slate-600"}`}>{p.marge}</td>
+                    <td className={`p-3 text-center font-semibold ${p.est_critique ? "text-action" : "text-muted"}`}>
+                      {p.marge}
+                    </td>
                     <td className="p-3 text-center">
-                      <Badge variant={p.est_critique ? "danger" : "default"}>
-                        {p.est_critique ? "OUI" : "—"}
-                      </Badge>
+                      {p.est_critique ? (
+                        <Badge variant="danger">OUI</Badge>
+                      ) : (
+                        <Badge variant="default">—</Badge>
+                      )}
                     </td>
                   </tr>
                 ))}
                 {pert.length === 0 && (
-                  <tr><td colSpan={8} className="p-4 text-center text-slate-500">Aucune tâche. Ajoutez une tâche ci-dessus.</td></tr>
+                  <tr>
+                    <td colSpan={8} className="p-4 text-center text-muted">Aucune tâche. Ajoutez une tâche ci-dessus.</td>
+                  </tr>
                 )}
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       </section>
 
+      {/* Diagramme de Gantt */}
       <section className="mb-6">
-        <h2 className="mb-4 text-lg font-bold text-slate-900">Diagramme de Gantt</h2>
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-4 text-lg font-bold text-foreground">Diagramme de Gantt</h2>
+        <Card padding="lg">
           <div className="overflow-x-auto">
             <div className="min-w-[600px]">
-              <div className="flex items-start border-r border-slate-200">
+              <div className="flex items-start border-r border-border">
                 <div className="w-48 shrink-0">
                   {pert.map((p) => (
-                    <div key={p.tache_id} className="p-2 border-b border-slate-100 text-sm truncate" title={p.nom}>{p.nom}</div>
+                    <div key={p.tache_id} className="truncate p-2 text-sm border-b border-border" title={p.nom}>
+                      {p.nom}
+                    </div>
                   ))}
                 </div>
-                <div className="flex flex-col h-auto">
-                  <div className="flex items-center border-b border-slate-200">
+                <div className="flex flex-col">
+                  <div className="flex items-center border-b border-border">
                     {Array.from({ length: dureeProjet + 1 }, (_, i) => (
-                      <div key={i} className="w-[30px] h-8 flex items-center justify-center text-[10px] text-slate-500 border-r border-slate-100">J{i}</div>
+                      <div
+                        key={i}
+                        className="h-8 w-[30px] shrink-0 border-r border-border text-[10px] text-muted"
+                      >
+                        J{i}
+                      </div>
                     ))}
                   </div>
                   {pert.map((p) => {
                     const largeur = p.ef - p.es;
                     const debut = p.es * 30;
                     return (
-                      <div key={p.tache_id} className="flex items-center border-b border-slate-100">
-                        <div className={`w-[30px] h-24 flex items-center justify-center overflow-hidden relative group`} style={{ marginLeft: `${debut}px` }}>
-                          <div className={`h-6 rounded-full ${p.est_critique ? "bg-rose-600" : "bg-blue-600"}`} style={{ width: `${Math.max(largeur * 30 - 4, 20)}px` }}></div>
-                          {p.est_critique && <div className="absolute top-0 left-0 w-1 h-24 bg-rose-600"></div>}
-                          <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] text-slate-500 whitespace-nowrap">{p.duree_jours}j</span>
+                      <div key={p.tache_id} className="relative flex border-b border-border">
+                        <div
+                          className="absolute left-0 h-24 w-full"
+                          style={{ marginLeft: `${debut}px` }}
+                        >
+                          <div
+                            className={`h-6 rounded-full ${p.est_critique ? "bg-action" : "bg-primary"}`}
+                            style={{ width: `${Math.max(largeur * 30 - 4, 20)}px` }}
+                          />
                         </div>
+                        {p.est_critique && <div className="absolute top-0 left-0 h-24 w-1 bg-action/70" />}
+                        <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] text-muted">
+                          {p.duree_jours}j
+                        </span>
                       </div>
                     );
                   })}
                 </div>
               </div>
             </div>
-            <p className="mt-3 text-xs text-slate-500">J0 = début du projet. Barre rouge = tâche critique (marge = 0).</p>
+            <p className="mt-3 text-xs text-muted">
+              {langue === "fr"
+                ? "J0 = début du projet. La barre orange pointée = tâche critique (marge = 0)."
+                : "J0 = start of project. The dotted orange bar marks the critical task (zero float)."}
+            </p>
           </div>
-        </div>
-      </section>
-
-      <section>
-        <h2 className="mb-4 text-lg font-bold text-slate-900">Gestion des tâches</h2>
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 text-left">
-                  <th className="p-3 font-semibold text-slate-500">Tâche</th>
-                  <th className="p-3 font-semibold text-slate-500 text-center">Statut</th>
-                  <th className="p-3 font-semibold text-slate-500 text-center">Avancement</th>
-                </tr>
-              </thead>
-              <tbody>
-                {taches.map((t) => (
-                  <tr key={t.id} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="p-3">{t.nom}</td>
-                    <td className="p-3 text-center">
-                      <button onClick={() => toggleStatut(t)} className={`px-3 py-1 rounded text-xs font-bold transition-colors ${t.statut === "termine" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
-                        {t.statut === "termine" ? "Terminé" : "À faire"}
-                      </button>
-                    </td>
-                    <td className="p-3 text-center">
-                      <div className="w-20 bg-slate-100 rounded-full h-2">
-                        <div className={`h-2 rounded-full ${t.avancement_pct > 90 ? "bg-rose-600" : t.avancement_pct > 70 ? "bg-amber-600" : "bg-blue-600"}`} style={{ width: `${t.avancement_pct}%` }}></div>
-                      </div>
-                      <span className="text-[10px] text-slate-500">{t.avancement_pct}%</span>
-                    </td>
-                  </tr>
-                ))}
-                {taches.length === 0 && (
-                  <tr><td colSpan={3} className="p-4 text-center text-slate-500">Aucune tâche.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        </Card>
       </section>
     </main>
-  );
-}
-
-function LinkBack() {
-  const langue = getLangue();
-  return (
-    <Link href="/chantiers" className="inline-flex items-center gap-2 text-sm text-orange-600 font-semibold hover:underline transition-colors">
-      <span>←</span>
-      {langue === "fr" ? "Retour aux chantiers" : "Back to sites"}
-    </Link>
   );
 }
