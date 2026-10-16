@@ -16,6 +16,7 @@ import {
   Truck,
   Ruler,
   Users,
+  Download,
 } from "lucide-react";
 import { getLangue, setLangue, t, Langue } from "@/lib/i18n";
 import SignOutButton from "@/components/SignOutButton";
@@ -32,6 +33,7 @@ const NAV_TOP_LEVEL: ItemNav[] = [
   { href: "/chantiers", cle: "chantiers.titre", icon: <Building2 className="h-5 w-5" /> },
   { href: "/bpu", cle: "nav.bpu", icon: <BookOpen className="h-5 w-5" /> },
   { href: "/fournisseurs", cle: "nav.fournisseurs", icon: <Users className="h-5 w-5" /> },
+  { href: "/export", cle: "nav.export", icon: <Download className="h-5 w-5" /> },
   { href: "/calculateurs/devis", cle: "nav.devis", icon: <Calculator className="h-5 w-5" /> },
   { href: "/calculateurs/mur", cle: "nav.mur", icon: <Ruler className="h-5 w-5" /> },
 ];

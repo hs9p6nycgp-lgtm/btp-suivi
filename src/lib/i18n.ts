@@ -9,6 +9,7 @@ export const DICTIONNAIRE: Record<string, Record<Langue, string>> = {
   "nav.dashboard": { fr: "Tableau de bord", en: "Dashboard" },
   "nav.bpu": { fr: "Base de prix", en: "Price Library" },
   "nav.fournisseurs": { fr: "Fournisseurs", en: "Suppliers" },
+  "nav.export": { fr: "Export Excel", en: "Excel Export" },
   "nav.devis": { fr: "Calcul de devis", en: "Estimates" },
   "nav.mur": { fr: "Calcul de murs", en: "Wall calculator" },
 
