@@ -106,6 +106,7 @@ export const DICTIONNAIRE: Record<string, Record<Langue, string>> = {
   "detail.couts": { fr: "Coûts & Budget", en: "Costs & Budget" },
   "detail.journal": { fr: "Journal de chantier", en: "Site Log" },
   "detail.livraisons": { fr: "Livraisons", en: "Deliveries" },
+  "detail.modelisation3d": { fr: "Modélisation 3D", en: "3D Modeling" },
 
   // Langue
   "langue.titre": { fr: "Langue", en: "Language" },

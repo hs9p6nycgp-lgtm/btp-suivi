@@ -15,6 +15,7 @@ import {
   Scale,
   Truck,
   Ruler,
+  Box,
   Users,
   Download,
   Printer,
@@ -56,6 +57,7 @@ const NAV_CHANTIER: ItemNavChantier[] = [
   { idChantier: "", cle: "detail.metre", href: (id) => `/chantiers/${id}/metre`, icon: <Scale className="h-5 w-5" /> },
   { idChantier: "", cle: "detail.journal", href: (id) => `/chantiers/${id}/journaux`, icon: <FileText className="h-5 w-5" /> },
   { idChantier: "", cle: "detail.livraisons", href: (id) => `/chantiers/${id}/livraisons`, icon: <Truck className="h-5 w-5" /> },
+  { idChantier: "", cle: "detail.modelisation3d", href: (id) => `/chantiers/${id}/modelisation3d`, icon: <Box className="h-5 w-5" /> },
 ];
 
 export default function Sidebar() {

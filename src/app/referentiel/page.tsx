@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { getLangue } from "@/lib/i18n";
+import { lignesAffecteesParMiseAJour } from "@/lib/referentiel/prix";
 
 type Prix = {
   id: string;
@@ -25,6 +26,12 @@ export default function ReferentielPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filtreCategorie, setFiltreCategorie] = useState("");
+
+  // Propagation REF-06 : confirmation avant de mettre à jour les DQE/BPU affectés
+  const [propagating, setPropagating] = useState(false);
+  const [pendingPrice, setPendingPrice] = useState<{ id: string; prix: number; ancienPrix: number; designation: string } | null>(null);
+  const [affectedDQE, setAffectedDQE] = useState<Array<{ id: string; chantier_id: string; code: string | null; designation: string; quantite_marche: number }>>([]);
+  const [affectedBPU, setAffectedBPU] = useState<Array<{ id: string; code: string | null; designation: string; prix_unitaire: number }>>([]);
 
   // Formulaire
   const [showForm, setShowForm] = useState(false);

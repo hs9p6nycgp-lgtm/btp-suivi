@@ -6,6 +6,8 @@ import {
   projectionCoutFinal,
   serieCumulative,
   stockTheorique,
+  calculValeurAcquise,
+  impactAvenant,
 } from "../metre";
 import { exporterReferentielCSV } from "../../referentiel/prix";
 

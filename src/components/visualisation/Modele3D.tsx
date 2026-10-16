@@ -23,9 +23,9 @@ type ChantierData = {
   id: string;
   nom: string;
   type: string;
-  longueur: number;
-  largeur: number;
-  hauteur: number;
+  longueur: number | null;
+  largeur: number | null;
+  hauteur: number | null;
 };
 
 export default function Modele3D({

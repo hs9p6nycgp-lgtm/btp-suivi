@@ -111,7 +111,7 @@ export function margeTotaleTache(
 ): number {
   if (!dateFinAuPlusTard || !dateFinAuPlusTot) return 0;
   const auPlusTard = new Date(`${dateFinAuPlusTard}T00:00:00`).getTime();
-  const auPlusTot = new Date(`${dateFinAuPlusTot}T00:00:00}`).getTime();
+  const auPlusTot = new Date(`${dateFinAuPlusTot}T00:00:00`).getTime();
   if (Number.isNaN(auPlusTard) || Number.isNaN(auPlusTot)) return 0;
   return Math.round((auPlusTard - auPlusTot) / 86400000);
 }
@@ -126,6 +126,69 @@ export function indicePerformanceCoût(valeurAcquise: number, coutReel: number):
 export function indicePerformanceDelai(valeurAcquise: number, valeurPlanifiee: number): number {
   if (valeurPlanifiee <= 0) return 0;
   return valeurAcquise / valeurPlanifiee;
+}
+
+// ---------------------------------------------------------------------------
+// Ameliorations (priorite S) - Valeur acquise (COU-04).
+// ---------------------------------------------------------------------------
+
+export type ValeurAcquise = {
+  budgetPrevu: number;      // BAC - Budget à l'achèvement (valeur planifiée)
+  valeurAcquise: number;    // EV - Valeur acquise (travail réellement effectué)
+  coutReel: number;         // AC - Coût réel engagé
+  ecartCout: number;        // CV = EV - AC
+  ecartDelai: number;       // SV = EV - PV
+  indicePerformanceCout: number;   // CPI = EV / AC
+  indicePerformanceDelai: number;  // SPI = EV / PV
+};
+
+/** Calcule l'ensemble des indicateurs de la valeur acquise (méthode COU-04). */
+export function calculValeurAcquise(
+  budgetPrevu: number,
+  valeurPlanifiee: number,
+  valeurAcquise: number,
+  coutReel: number,
+): ValeurAcquise {
+  const ecartCout = valeurAcquise - coutReel;
+  const ecartDelai = valeurAcquise - valeurPlanifiee;
+  const indicePerformanceCout = coutReel > 0 ? valeurAcquise / coutReel : 0;
+  const indicePerformanceDelai = valeurPlanifiee > 0 ? valeurAcquise / valeurPlanifiee : 0;
+  return {
+    budgetPrevu,
+    valeurAcquise,
+    coutReel,
+    ecartCout,
+    ecartDelai,
+    indicePerformanceCout,
+    indicePerformanceDelai,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Ameliorations (priorite S) - Avenants (MET-06).
+// ---------------------------------------------------------------------------
+
+export type Avenant = {
+  id: string;
+  posteDqeId: string;
+  ancienneQuantite: number;
+  nouvelleQuantite: number;
+  ancienPrixUnitaire: number;
+  nouveauPrixUnitaire: number;
+  motif: string;
+  dateValidation: string;
+};
+
+/** Calcule l'impact d'un avenant sur le montant d'un poste DQE. */
+export function impactAvenant(
+  ancienneQuantite: number,
+  nouvelleQuantite: number,
+  ancienPrixUnitaire: number,
+  nouveauPrixUnitaire: number,
+): { ancienMontant: number; nouveauMontant: number; ecart: number } {
+  const ancienMontant = ancienneQuantite * ancienPrixUnitaire;
+  const nouveauMontant = nouvelleQuantite * nouveauPrixUnitaire;
+  return { ancienMontant, nouveauMontant, ecart: nouveauMontant - ancienMontant };
 }
 
 // ---------------------------------------------------------------------------

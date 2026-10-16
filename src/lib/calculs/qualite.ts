@@ -7,12 +7,12 @@
  * Une tolérance nulle signifie que la valeur doit être exactement égale.
  */
 export function estConforme(
-  valeurMesurée: number,
-  valeurExigée: number,
+  valeurMesuree: number,
+  valeurExigee: number,
   tolerancePositives: number,
-  toleranceNégatives: number,
+  toleranceNegatives: number,
 ): boolean {
-  const borneInférieure = valeurExigée - toleranceNégatives;
-  const borneSupérieure = valeurExigée + tolerancePositives;
-  return valeurMesurée >= borneInférieure && valeurMesurée <= borneSupérieure;
+  const borneInferieure = valeurExigee - toleranceNegatives;
+  const borneSuperieure = valeurExigee + tolerancePositives;
+  return valeurMesuree >= borneInferieure && valeurMesuree <= borneSuperieure;
 }
