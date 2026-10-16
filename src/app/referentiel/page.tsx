@@ -109,15 +109,37 @@ export default function ReferentielPage() {
 
     if (editing) {
       // REF-03 : enregistrer l'historique si le prix a changé
-      if (Number(prix) !== editing.prix_unitaire) {
+      const nouveauPrix = Math.round(Number(prix) || 0);
+      if (nouveauPrix !== editing.prix_unitaire) {
         await supabase.from("historique_prix").insert({
           referentiel_prix_id: editing.id,
           ancien_prix: editing.prix_unitaire,
-          nouveau_prix: Math.round(Number(prix) || 0),
+          nouveau_prix: nouveauPrix,
           auteur: null,
           motif: motif.trim() || null,
         });
       }
+
+      // REF-06 : détecter les DQE et BPU affectés par ce changement de prix
+      if (nouveauPrix !== editing.prix_unitaire && editing.code) {
+        const [dqeRes, bpuRes] = await Promise.all([
+          supabase.from("postes_dqe").select("id,chantier_id,code,designation,quantite_marche").ilike("code", editing.code),
+          supabase.from("bpu_postes").select("id,code,designation,prix_unitaire").ilike("code", editing.code),
+        ]);
+        const dqeLignes = (dqeRes.data ?? []) as Array<{ id: string; chantier_id: string; code: string | null; designation: string; quantite_marche: number }>;
+        const bpuLignes = (bpuRes.data ?? []) as Array<{ id: string; code: string | null; designation: string; prix_unitaire: number }>;
+        const affectesDQE = lignesAffecteesParMiseAJour(editing.code, editing.designation, dqeLignes);
+        const affectesBPU = lignesAffecteesParMiseAJour(editing.code, editing.designation, bpuLignes);
+        if (affectesDQE.length > 0 || affectesBPU.length > 0) {
+          setPendingPrice({ id: editing.id, prix: nouveauPrix, ancienPrix: editing.prix_unitaire, designation: editing.designation });
+          setAffectedDQE(affectesDQE as Array<{ id: string; chantier_id: string; code: string | null; designation: string; quantite_marche: number }>);
+          setAffectedBPU(affectesBPU as Array<{ id: string; code: string | null; designation: string; prix_unitaire: number }>);
+          setPropagating(true);
+          setLoading(false);
+          return;
+        }
+      }
+
       const { error } = await supabase.from("referentiel_prix").update(payload).eq("id", editing.id);
       if (error) { setMessage(error.message); setLoading(false); return; }
       setMessage("Prix mis à jour.");
@@ -129,6 +151,29 @@ export default function ReferentielPage() {
     setLoading(false);
     resetForm();
     load();
+  }
+
+  async function confirmPropagation() {
+    if (!pendingPrice) return;
+    setLoading(true);
+    const supabase = createClient();
+    const { error } = await supabase.from("referentiel_prix").update({ prix_unitaire: pendingPrice.prix }).eq("id", pendingPrice.id);
+    setLoading(false);
+    if (error) { setMessage(error.message); return; }
+    setMessage(`Prix mis à jour (${pendingPrice.ancienPrix} → ${pendingPrice.prix} FCFA). ${affectedDQE.length + affectedBPU.length} poste(s) DQE/BPU concerné(s) — mise à jour manuelle recommandée.`);
+    setPropagating(false);
+    setPendingPrice(null);
+    setAffectedDQE([]);
+    setAffectedBPU([]);
+    resetForm();
+    load();
+  }
+
+  function cancelPropagation() {
+    setPropagating(false);
+    setPendingPrice(null);
+    setAffectedDQE([]);
+    setAffectedBPU([]);
   }
 
   async function handleDelete(id: string) {
