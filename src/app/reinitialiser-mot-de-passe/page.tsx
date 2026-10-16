@@ -1,8 +1,11 @@
 "use client";
 
+import { Construction } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 export default function ReinitialiserMotDePassePage() {
   const router = useRouter();
@@ -32,44 +35,52 @@ export default function ReinitialiserMotDePassePage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md card p-6">
-        <h1 className="mb-2 text-2xl font-semibold">Nouveau mot de passe</h1>
-        <p className="mb-6 text-sm text-zinc-600">
-          Choisissez un nouveau mot de passe pour votre compte.
-        </p>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium">Nouveau mot de passe</label>
-            <input
-              className="w-full rounded border p-2"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Confirmer</label>
-            <input
-              className="w-full rounded border p-2"
-              type="password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              required
-              minLength={6}
-            />
-          </div>
-          {message && <p className="text-sm text-red-600">{message}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded bg-orange-600 px-4 py-2 text-white disabled:opacity-50"
-          >
-            {loading ? "Mise a jour..." : "Mettre a jour"}
-          </button>
-        </form>
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
+      <div className="w-full max-w-md">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
+            <Construction className="h-8 w-8 text-white" />
+          </span>
+          <h1 className="text-2xl font-bold text-foreground md:text-3xl">Nouveau mot de passe</h1>
+          <p className="mt-2 text-sm text-muted">Choisissez un nouveau mot de passe pour votre compte.</p>
+        </div>
+
+        <Card variant="elevated" padding="lg">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="password" className="mb-1 block text-sm font-medium text-foreground">Nouveau mot de passe</label>
+              <input
+                id="password"
+                className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+            </div>
+            <div>
+              <label htmlFor="confirm" className="mb-1 block text-sm font-medium text-foreground">Confirmer</label>
+              <input
+                id="confirm"
+                className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                type="password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                required
+                minLength={6}
+              />
+            </div>
+            {message && (
+              <div className="rounded-xl border border-rose-300 bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-950/30 dark:text-rose-300">
+                {message}
+              </div>
+            )}
+            <Button type="submit" size="lg" className="w-full" disabled={loading}>
+              {loading ? "Mise à jour..." : "Mettre à jour"}
+            </Button>
+          </form>
+        </Card>
       </div>
     </div>
   );
