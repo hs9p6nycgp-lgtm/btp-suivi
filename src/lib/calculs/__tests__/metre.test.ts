@@ -149,7 +149,7 @@ describe("formules de la section 5 du cahier des charges", () => {
         { longueur: 10, largeur: 5, hauteur: 0.2 },
         { longueur: 4, largeur: 3, hauteur: 0.3 },
       ]);
-      assert.strictEqual(total, 12 + 3.6);
+      assert.strictEqual(total, 10 + 3.6);
     });
 
     it("calcule le ratio d'acier", () => {
