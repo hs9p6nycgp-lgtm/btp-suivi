@@ -70,6 +70,10 @@ export default function PlanningPage() {
 
   async function load() {
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { router.replace("/login"); return; }
+    const { data: chantier } = await supabase.from("chantiers").select("id").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle();
+    if (!chantier) { router.replace("/chantiers"); return; }
     const [tRes, dRes] = await Promise.all([
       supabase.from("taches_planning").select("*").eq("chantier_id", chantierId).order("created_at", { ascending: true }),
       supabase.from("dependances_planning").select("*").eq("chantier_id", chantierId),
@@ -214,7 +218,7 @@ export default function PlanningPage() {
       nom: nomTache.trim(),
       duree_jours: Number(dureeTache) || 1,
       date_prevue_debut: dateDebutTache || null,
-      date_prevue_fin: dateDebutTache ? new Date(dateDebutTache).toISOString() : null,
+      date_prevue_fin: dateDebutTache ? new Date(new Date(dateDebutTache).getTime() + (Number(dureeTache) || 1) * 86400000).toISOString() : null,
       est_jalon: estJalon,
       statut: "a_faire",
     }).select().single();

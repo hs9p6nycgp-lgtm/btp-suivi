@@ -2,6 +2,7 @@
 
 import { BadgeCheck, ClipboardCheck, FlaskConical, ShieldAlert } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { estConforme } from "@/lib/calculs/qualite";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -66,6 +67,7 @@ type EpreuveBeton = {
 
 export default function QualitePage() {
   const params = useParams();
+  const router = useRouter();
   const chantierId = String(params?.id ?? "");
   const langue = getLangue();
 
@@ -89,6 +91,10 @@ export default function QualitePage() {
 
   async function load() {
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { router.replace("/login"); return; }
+    const { data: chantier } = await supabase.from("chantiers").select("id").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle();
+    if (!chantier) { router.replace("/chantiers"); return; }
     const [pRes, eRes, ncRes, epRes] = await Promise.all([
       supabase.from("plans_controle").select("*").eq("chantier_id", chantierId),
       supabase.from("essais_qualite").select("*").eq("chantier_id", chantierId).order("date_controle", { ascending: false }),
@@ -112,7 +118,7 @@ export default function QualitePage() {
     const valeurExigee = plan ? plan.valeur_exigee : 0;
     const tolPos = plan ? plan.tolerance_pos : 0;
     const tolNeg = plan ? plan.tolerance_neg : 0;
-    const conforme = valeur >= (valeurExigee - tolNeg) && valeur <= (valeurExigee + tolPos);
+    const conforme = estConforme(valeur, valeurExigee, tolPos, tolNeg);
 
     const { data, error } = await supabase.from("essais_qualite").insert({
       chantier_id: chantierId,

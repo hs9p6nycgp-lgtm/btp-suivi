@@ -122,7 +122,7 @@ export default function BpuPage() {
 
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
         <StatCard
-          title={langue === "fr" ? "Total items" : "Total items"}
+          title={langue === "fr" ? "Total des postes" : "Total items"}
           value={filtered.length}
           icon={<PackageSearch className="h-5 w-5" />}
           color="blue"

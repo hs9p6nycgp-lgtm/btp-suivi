@@ -10,12 +10,13 @@ import {
   arrondir2Decimales,
 } from "@/lib/calculs/metre";
 import { createClient } from "@/lib/supabase/client";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
 
 export default function MetrePage() {
   const params = useParams();
+  const router = useRouter();
   const chantierId = String(params?.id ?? "");
   const [foisonnement, setFoisonnement] = useState(1.2);
   const [capaciteBenne, setCapaciteBenne] = useState(15);
@@ -31,6 +32,10 @@ export default function MetrePage() {
   useEffect(() => {
     async function load() {
       const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.replace("/login"); return; }
+      const { data: chantier } = await supabase.from("chantiers").select("id").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle();
+      if (!chantier) { router.replace("/chantiers"); return; }
       const { data } = await supabase
         .from("parametres_metre")
         .select("*")

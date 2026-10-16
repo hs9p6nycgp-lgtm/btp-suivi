@@ -45,6 +45,10 @@ export default function JournauxPage() {
 
   async function load() {
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { router.replace("/login"); return; }
+    const { data: chantier } = await supabase.from("chantiers").select("id").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle();
+    if (!chantier) { router.replace("/chantiers"); return; }
     const { data, error } = await supabase
       .from("journaux")
       .select("*")

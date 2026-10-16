@@ -3,7 +3,7 @@
 import { Construction } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -23,6 +23,7 @@ type Livraison = {
 
 export default function LivraisonsPage() {
   const params = useParams();
+  const router = useRouter();
   const chantierId = String(params?.id ?? "");
   const langue = getLangue();
 
@@ -43,6 +44,10 @@ export default function LivraisonsPage() {
 
   async function load() {
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { router.replace("/login"); return; }
+    const { data: chantier } = await supabase.from("chantiers").select("id").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle();
+    if (!chantier) { router.replace("/chantiers"); return; }
     const { data, error } = await supabase
       .from("livraisons")
       .select("*")

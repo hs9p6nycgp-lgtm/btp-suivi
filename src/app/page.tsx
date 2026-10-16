@@ -447,7 +447,7 @@ export default function Home() {
         </div>
         {alertes.length === 0 ? (
           <Card padding="lg" className="text-center">
-            <TriangleAlert className="mx-auto mb-3 h-10 w-10 text-success" />
+            <TriangleAlert className="mx-auto mb-3 h-10 w-10 text-muted" />
             <p className="text-sm text-muted">Aucune alerte en cours.</p>
           </Card>
         ) : (

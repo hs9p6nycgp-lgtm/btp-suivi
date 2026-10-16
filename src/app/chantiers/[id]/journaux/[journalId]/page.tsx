@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -10,6 +10,7 @@ import { getLangue } from "@/lib/i18n";
 
 export default function JournalDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const chantierId = String(params?.id ?? "");
   const journalId = String(params?.journalId ?? "");
   const langue = getLangue();
@@ -54,6 +55,10 @@ export default function JournalDetailPage() {
 
   async function loadAll() {
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { router.replace("/login"); return; }
+    const { data: chantier } = await supabase.from("chantiers").select("id").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle();
+    if (!chantier) { router.replace("/chantiers"); return; }
     const [j, p, s, ef, en, inc, ph, qt] = await Promise.all([
       supabase.from("journaux").select("*").eq("id", journalId).maybeSingle(),
       supabase.from("postes_dqe").select("id,code,designation,unite").eq("chantier_id", chantierId).order("created_at"),
@@ -142,7 +147,13 @@ export default function JournalDetailPage() {
     loadAll();
   }
 
-  async function addPhoto(e: React.FormEvent) {
+  async function removeItem(table: string, id: string) {
+    if (!editable) return;
+    const supabase = createClient();
+    const { error } = await supabase.from(table).delete().eq("id", id);
+    if (error) { setMessage(error.message); return; }
+    loadAll();
+  }
     e.preventDefault();
     if (!editable || !photoFile) return;
     setLoading(true);
@@ -238,7 +249,7 @@ export default function JournalDetailPage() {
             {effectifs.map((e) => (
               <li key={e.id} className="flex items-center justify-between text-sm rounded border border-slate-200 p-2">
                 <span>{e.corps_metier} : {e.nombre}</span>
-                {editable && <button onClick={() => { }} className="text-rose-600 text-xs">Supprimer</button>}
+                {editable && <button onClick={() => removeItem("journal_effectifs", e.id)} className="text-rose-600 text-xs">Supprimer</button>}
               </li>
             ))}
             {effectifs.length === 0 && <li className="text-sm text-slate-500">Aucun effectif.</li>}
@@ -259,7 +270,7 @@ export default function JournalDetailPage() {
             {engins.map((en) => (
               <li key={en.id} className="flex items-center justify-between text-sm rounded border border-slate-200 p-2">
                 <span>{en.type_engin} - {en.heures_marche} h</span>
-                {editable && <button className="text-rose-600 text-xs">Supprimer</button>}
+                {editable && <button onClick={() => removeItem("journal_engins", en.id)} className="text-rose-600 text-xs">Supprimer</button>}
               </li>
             ))}
             {engins.length === 0 && <li className="text-sm text-slate-500">Aucun engin.</li>}
@@ -286,7 +297,7 @@ export default function JournalDetailPage() {
             {incidents.map((inc) => (
               <li key={inc.id} className="flex items-center justify-between text-sm rounded border border-slate-200 p-2">
                 <span>{inc.type} - {inc.description ?? "sans description"} ({inc.duree_heures} h)</span>
-                {editable && <button className="text-rose-600 text-xs">Supprimer</button>}
+                {editable && <button onClick={() => removeItem("incidents_journal", inc.id)} className="text-rose-600 text-xs">Supprimer</button>}
               </li>
             ))}
             {incidents.length === 0 && <li className="text-sm text-slate-500">Aucun incident.</li>}
@@ -315,7 +326,7 @@ export default function JournalDetailPage() {
             {quantites.map((q) => (
               <li key={q.id} className="flex items-center justify-between text-sm rounded border border-slate-200 p-2">
                 <span>{postes.find((p) => p.id === q.poste_dqe_id)?.designation ?? q.poste_dqe_id} : {Number(q.quantite).toFixed(2)}</span>
-                {editable && <button className="text-rose-600 text-xs">Supprimer</button>}
+                {editable && <button onClick={() => removeItem("quantites_realisees", q.id)} className="text-rose-600 text-xs">Supprimer</button>}
               </li>
             ))}
             {quantites.length === 0 && <li className="text-sm text-slate-500">Aucune quantité.</li>}

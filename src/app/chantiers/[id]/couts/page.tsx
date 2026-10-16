@@ -3,7 +3,7 @@
 import { Banknote, Coins, Receipt, Scale } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -60,6 +60,7 @@ const CAT_LABELS: Record<string, { fr: string; en: string }> = {
 
 export default function CoutsPage() {
   const params = useParams();
+  const router = useRouter();
   const chantierId = String(params?.id ?? "");
   const langue = getLangue();
 
@@ -84,6 +85,10 @@ export default function CoutsPage() {
 
   async function load() {
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { router.replace("/login"); return; }
+    const { data: chantier } = await supabase.from("chantiers").select("id").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle();
+    if (!chantier) { router.replace("/chantiers"); return; }
     const [pRes, qRes, bRes, dRes] = await Promise.all([
       supabase.from("postes_dqe").select("*").eq("chantier_id", chantierId).order("created_at", { ascending: true }),
       supabase.from("quantites_realisees").select("*").eq("chantier_id", chantierId).order("date_saisie", { ascending: true }),

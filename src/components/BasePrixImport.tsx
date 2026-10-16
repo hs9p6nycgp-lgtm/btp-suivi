@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import * as XLSX from "xlsx";
-import { parseBasePrixWorkbook } from "@/lib/import/basePrix";
+import { parseBasePrixWorkbook, validerBasePrix } from "@/lib/import/basePrix";
 import { useState } from "react";
 
 export default function BasePrixImport({ onImported }: { onImported?: () => void }) {
@@ -34,6 +34,21 @@ export default function BasePrixImport({ onImported }: { onImported?: () => void
     setImporting(true);
     setMessage(null);
     const supabase = createClient();
+
+    // Exigence REF-04 : chaque prix doit porter une source et une date.
+    const problemes: string[] = [];
+    for (const r of rows) {
+      const err = validerBasePrix(r);
+      if (err) problemes.push(`${r.code ?? "?"} : ${err}`);
+    }
+    if (problemes.length > 0) {
+      setImporting(false);
+      setMessage(
+        `Import bloque : ${problemes.length} ligne(s) sans source ou sans date de source. ` +
+        `Exemples : ${problemes.slice(0, 3).join(" ; ")}`,
+      );
+      return;
+    }
 
     const payload = rows.map((r) => {
       const extra = [r.categorie ? `Categorie: ${r.categorie}` : "", r.zone ? `Zone: ${r.zone}` : ""]
