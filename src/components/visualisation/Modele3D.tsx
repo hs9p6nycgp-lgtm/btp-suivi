@@ -1,5 +1,6 @@
 "use client";
 
+import { Box } from "lucide-react";
 import * as THREE from "three";
 import { useEffect, useRef, useState } from "react";
 
@@ -274,23 +275,26 @@ export default function Modele3D({
 
   if (!chantier) {
     return (
-      <div className="flex h-full items-center justify-center bg-slate-100 rounded-xl border border-slate-200">
-        <p className="text-slate-500 text-sm">Aucune donnée de chantier pour la visualisation 3D</p>
+      <div className="flex h-full items-center justify-center rounded-xl border border-border bg-surface">
+        <p className="text-sm text-muted">Aucune donnée de chantier pour la visualisation 3D</p>
       </div>
     );
   }
 
   return (
-    <div className="relative h-[600px] w-full rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
+    <div className="relative h-[600px] w-full overflow-hidden rounded-xl border border-border bg-surface">
       <div ref={containerRef} className="h-full w-full" />
       {!isLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/90 backdrop-blur-sm">
-          <div className="animate-pulse rounded-full h-8 w-8 bg-orange-600"></div>
+        <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-sm">
+          <div className="animate-pulse rounded-full h-8 w-8 bg-primary/70"></div>
         </div>
       )}
-      <div className="absolute bottom-4 left-4 right-4 flex justify-between text-xs text-slate-500 pointer-events-none">
-        <span>🏗️ Modèle 3D - {chantier.nom}</span>
-        <span>Cliquer + glisser : rotation | Molette : zoom</span>
+      <div className="pointer-events-none absolute bottom-4 left-4 right-4 flex justify-between text-xs text-muted">
+        <span className="flex items-center gap-1 font-medium">
+          <Box className="h-3.5 w-3.5" />
+          Modèle 3D - {chantier.nom}
+        </span>
+        <span>Cliquér + glisser : rotation | Molette : zoom</span>
       </div>
     </div>
   );
