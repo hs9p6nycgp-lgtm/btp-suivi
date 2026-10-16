@@ -1,11 +1,14 @@
 "use client";
 
+import { Banknote, Coins, Receipt, Scale } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { StatCard } from "@/components/ui/StatCard";
 import { getLangue } from "@/lib/i18n";
 
 type PosteDQE = {
@@ -98,6 +101,7 @@ export default function CoutsPage() {
     setLoading(false);
   }
 
+  // Aucun calcul modifié : les formules du cahier des charges restent identiques.
   const bpuMap = new Map<string, BpuPoste>(bpu.map((b) => [b.id, b]));
   const qteMap = new Map<string, number>();
   qtes.forEach((q) => { qteMap.set(q.poste_dqe_id, (qteMap.get(q.poste_dqe_id) ?? 0) + q.quantite); });
@@ -173,91 +177,162 @@ export default function CoutsPage() {
     setDepenses((prev) => prev.filter((d) => d.id !== id));
   }
 
+  const libelleCategorie = (categorieDepense: string) => {
+    const c = CAT_LABELS[categorieDepense] ?? { fr: categorieDepense, en: categorieDepense };
+    return langue === "fr" ? c.fr : c.en;
+  };
+
   return (
-    <main className="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-6">
-      <div className="mb-6 flex items-start justify-between">
-        <LinkBack />
-        <h1 className="text-2xl font-bold text-slate-900">Coûts & Budget</h1>
+    <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <Link href={`/chantiers/${chantierId}`} className="text-sm font-medium text-primary hover:underline">
+            &larr; Retour chantier
+          </Link>
+          <h1 className="mt-2 text-2xl font-bold text-foreground md:text-3xl">Coûts &amp; Budget</h1>
+        </div>
       </div>
 
-      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
-        <StatCard title="Coût prévu" value={totalCoutPrevu.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")} subtitle="FCFA" icon="📊" color="blue" />
-        <StatCard title="Coût réalisé" value={totalCoutReel.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")} subtitle="FCFA" icon="💰" color="emerald" />
-        <StatCard title="Écart budgétaire" value={`${totalEcart >= 0 ? "+" : ""}${totalEcart.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}`} subtitle="FCFA" icon="⚖️" color={totalEcart > 0 ? "rose" : "blue"} />
-        <StatCard title="Dépenses réelles" value={totalDepenses.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")} subtitle="FCFA" icon="🧾" color="amber" />
+      {/* Cartes de synthèse */}
+      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          title={langue === "fr" ? "Coût prévu" : "Planned cost"}
+          value={totalCoutPrevu.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
+          subtitle="FCFA"
+          icon={<Coins className="h-5 w-5" />}
+          color="blue"
+        />
+        <StatCard
+          title={langue === "fr" ? "Coût réalisé" : "Realized cost"}
+          value={totalCoutReel.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
+          subtitle="FCFA"
+          icon={<Banknote className="h-5 w-5" />}
+          color="emerald"
+        />
+        <StatCard
+          title={langue === "fr" ? "Écart budgétaire" : "Budget gap"}
+          value={`${totalEcart >= 0 ? "+" : ""}${totalEcart.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}`}
+          subtitle="FCFA"
+          icon={<Scale className="h-5 w-5" />}
+          color={totalEcart > 0 ? "rose" : "blue"}
+        />
+        <StatCard
+          title={langue === "fr" ? "Dépenses réelles" : "Real expenses"}
+          value={totalDepenses.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
+          subtitle="FCFA"
+          icon={<Receipt className="h-5 w-5" />}
+          color="amber"
+        />
       </div>
 
       {message && (
-        <div className="mb-4 rounded-lg bg-orange-50 border border-orange-200 p-3 text-sm text-orange-700">
+        <div className="mb-4 rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
           {message}
         </div>
       )}
 
+      {/* Comparaison coût par poste DQE */}
       <section className="mb-6">
-        <h2 className="mb-4 text-lg font-bold text-slate-900">Coût par poste DQE</h2>
-        <p className="mb-3 text-sm text-slate-500">
-          Coût réalisé = Quantités réalisées × Prix du BPU. Écart = Coût réalisé − Coût prévu.
-        </p>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 text-left">
-                <th className="p-3 font-semibold text-slate-500">Poste</th>
-                <th className="p-3 font-semibold text-slate-500 text-center">Qté marché</th>
-                <th className="p-3 font-semibold text-slate-500 text-center">Qté réalisée</th>
-                <th className="p-3 font-semibold text-slate-500 text-center">Prix unitaire</th>
-                <th className="p-3 font-semibold text-slate-500 text-right">Coût prévu</th>
-                <th className="p-3 font-semibold text-slate-500 text-right">Coût réalisé</th>
-                <th className="p-3 font-semibold text-slate-500 text-right">Écart</th>
-                <th className="p-3 font-semibold text-slate-500 text-center">Avancement</th>
-              </tr>
-            </thead>
-            <tbody>
-              {coutsParPoste.map((c) => (
-                <tr key={c.designation} className={`border-b border-slate-100 ${c.ecart > c.cout_prevu * 0.05 ? "bg-rose-50" : ""}`}>
-                  <td className="p-3 text-sm text-slate-900">{c.designation} <span className="text-xs text-slate-600">({c.code ?? "-"})</span></td>
-                  <td className="p-3 text-sm text-center text-slate-600">{c.qte_marche.toFixed(2)}</td>
-                  <td className="p-3 text-sm text-center text-slate-600">{c.qte_reelle.toFixed(2)}</td>
-                  <td className="p-3 text-sm text-center text-slate-600">{c.prix_unitaire.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                  <td className="p-3 text-sm text-right text-slate-600">{c.cout_prevu.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                  <td className="p-3 text-sm text-right font-semibold text-slate-900">{c.cout_reel.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                  <td className={`p-3 text-sm text-right font-semibold ${c.ecart > 0 ? "text-rose-600" : "text-emerald-600"}`}>{c.ecart >= 0 ? "+" : ""}{c.ecart.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                  <td className="p-3 text-center">
-                    <div className="w-16 bg-slate-100 rounded-full h-2">
-                      <div className={`h-2 rounded-full ${c.avancement_pct > 90 ? "bg-rose-600" : c.avancement_pct > 70 ? "bg-amber-600" : "bg-blue-600"}`} style={{ width: `${Math.min(c.avancement_pct, 100)}%` }}></div>
-                    </div>
-                    <span className="text-[10px] text-slate-500">{c.avancement_pct.toFixed(0)}%</span>
-                  </td>
+        <Card padding="lg">
+          <h2 className="mb-4 text-lg font-bold text-foreground">Coût par poste DQE</h2>
+          <p className="mb-4 text-sm text-muted">
+            {langue === "fr"
+              ? "Coût réalisé = Quantités réalisées × Prix du BPU. Écart = Coût réalisé − Coût prévu."
+              : "Realized cost = Quantities realized × BPU price. Gap = Realized − Planned."}
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left">
+                  <th className="p-3 font-semibold text-muted">Poste</th>
+                  <th className="p-3 text-center font-semibold text-muted">Qté marché</th>
+                  <th className="p-3 text-center font-semibold text-muted">Qté réalisée</th>
+                  <th className="p-3 text-center font-semibold text-muted">Prix unitaire</th>
+                  <th className="p-3 text-right font-semibold text-muted">Coût prévu</th>
+                  <th className="p-3 text-right font-semibold text-muted">Coût réalisé</th>
+                  <th className="p-3 text-right font-semibold text-muted">Écart</th>
+                  <th className="p-3 text-center font-semibold text-muted">Avancement</th>
                 </tr>
-              ))}
-              {coutsParPoste.length === 0 && (
-                <tr><td colSpan={8} className="p-4 text-center text-slate-500">Aucun poste DQE importé.</td></tr>
-              )}
-            </tbody>
-            <tfoot>
-              <tr className="border-t border-slate-200 font-bold bg-slate-50">
-                <td className="p-3">TOTAL</td>
-                <td className="p-3 text-center"></td>
-                <td className="p-3 text-center"></td>
-                <td className="p-3 text-center"></td>
-                <td className="p-3 text-right">{totalCoutPrevu.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                <td className="p-3 text-right">{totalCoutReel.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                <td className={`p-3 text-right font-bold ${totalEcart > 0 ? "text-rose-600" : "text-emerald-600"}`}>{totalEcart >= 0 ? "+" : ""}{totalEcart.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                <td className="p-3 text-center"></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-        <p className="mt-3 text-xs text-slate-500">
-          {totalEcart > totalCoutPrevu * 0.05 ? "⚠️ Écart budgétaire supérieur à 5% du budget." : totalEcart < -totalCoutPrevu * 0.05 ? "ℹ️ Sous-consommation notable." : "✅ Écart budgétaire dans la tolérance (±5%)."}
-        </p>
+              </thead>
+              <tbody>
+                {coutsParPoste.map((c) => {
+                  const couleurAvancement = c.avancement_pct >= 90 ? "success" : c.avancement_pct >= 70 ? "warning" : "primary";
+                  return (
+                    <tr
+                      key={c.designation}
+                      className={`border-b border-border last:border-0 ${c.ecart > c.cout_prevu * 0.05 ? "bg-danger/5" : ""}`}
+                    >
+                      <td className="p-3">
+                        {c.designation} <span className="text-xs text-muted">({c.code ?? "-"})</span>
+                      </td>
+                      <td className="p-3 text-center">{c.qte_marche.toFixed(2)}</td>
+                      <td className="p-3 text-center">{c.qte_reelle.toFixed(2)}</td>
+                      <td className="p-3 text-center">{c.prix_unitaire.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
+                      <td className="p-3 text-right">{c.cout_prevu.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
+                      <td className="p-3 text-right font-semibold">{c.cout_reel.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
+                      <td className={`p-3 text-right font-semibold ${c.ecart > 0 ? "text-danger" : "text-success"}`}>
+                        {c.ecart >= 0 ? "+" : ""}{c.ecart.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
+                      </td>
+                      <td className="p-3 text-center">
+                        <ProgressBar
+                          value={c.avancement_pct}
+                          color={couleurAvancement}
+                          size="sm"
+                          showValue={false}
+                        />
+                        <span className="ml-2 text-xs font-semibold text-muted">{c.avancement_pct.toFixed(0)}%</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {coutsParPoste.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="p-4 text-center text-muted">Aucun poste DQE importé.</td>
+                  </tr>
+                )}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-border font-bold bg-slate-50 dark:bg-slate-800/40">
+                  <td className="p-3">TOTAL</td>
+                  <td className="p-3 text-center"></td>
+                  <td className="p-3 text-center"></td>
+                  <td className="p-3 text-center"></td>
+                  <td className="p-3 text-right">{totalCoutPrevu.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
+                  <td className="p-3 text-right">{totalCoutReel.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
+                  <td className={`p-3 text-right ${totalEcart > 0 ? "text-danger" : "text-success"}`}>
+                    {totalEcart >= 0 ? "+" : ""}{totalEcart.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
+                  </td>
+                  <td className="p-3 text-center"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <p className="mt-3 text-xs text-muted">
+            {langue === "fr"
+              ? totalEcart > totalCoutPrevu * 0.05
+                ? "⚠️ Écart budgétaire supérieur à 5 % du budget."
+                : totalEcart < -totalCoutPrevu * 0.05
+                  ? "ℹ️ Sous-consommation notable."
+                  : "✅ Écart budgétaire dans la tolérance (±5 %)."
+              : totalEcart > totalCoutPrevu * 0.05
+                ? "Budget gap larger than 5% of the budget."
+                : totalEcart < -totalCoutPrevu * 0.05
+                  ? "Notable underspending."
+                  : "Budget gap within tolerance (±5%)."}
+          </p>
+        </Card>
       </section>
 
-      <section className="mb-6">
-        <h2 className="mb-3 text-lg font-bold text-slate-900">Dépenses réelles</h2>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <form onSubmit={ajouterDepense} className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-6">
-            <select className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" value={categorie} onChange={(e) => setCategorie(e.target.value as any)}>
+      {/* Dépenses réelles */}
+      <section>
+        <Card padding="lg">
+          <h2 className="mb-4 text-lg font-bold text-foreground">Dépenses réelles</h2>
+          <form onSubmit={ajouterDepense} className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-6">
+            <select
+              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              value={categorie}
+              onChange={(e) => setCategorie(e.target.value as typeof categorie)}
+            >
               <option value="materiaux">Matériaux</option>
               <option value="main_doeuvre">Main-d'œuvre</option>
               <option value="engins">Engins</option>
@@ -265,83 +340,91 @@ export default function CoutsPage() {
               <option value="carburant">Carburant</option>
               <option value="autre">Autre</option>
             </select>
-            <input className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Désignation *" value={designation} onChange={(e) => setDesignation(e.target.value)} required />
-            <input className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" type="number" step="0.01" placeholder="Qté" value={quantite} onChange={(e) => setQuantite(e.target.value)} required />
-            <input className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Unité" value={unite} onChange={(e) => setUnite(e.target.value)} />
-            <input className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" type="number" step="0.01" placeholder="Prix unitaire (FCFA)" value={prixUnitaire} onChange={(e) => setPrixUnitaire(e.target.value)} required />
-            <input type="date" className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none" value={dateDepense} onChange={(e) => setDateDepense(e.target.value)} />
-            <button type="submit" className="rounded-xl bg-orange-600 px-4 py-2.5 text-white font-semibold hover:bg-orange-700">Ajouter</button>
+            <input
+              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              placeholder="Désignation *"
+              value={designation}
+              onChange={(e) => setDesignation(e.target.value)}
+              required
+            />
+            <input
+              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              type="number"
+              step="0.01"
+              placeholder="Qté"
+              value={quantite}
+              onChange={(e) => setQuantite(e.target.value)}
+              required
+            />
+            <input
+              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              placeholder="Unité"
+              value={unite}
+              onChange={(e) => setUnite(e.target.value)}
+            />
+            <input
+              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              type="number"
+              step="0.01"
+              placeholder="Prix unitaire (FCFA)"
+              value={prixUnitaire}
+              onChange={(e) => setPrixUnitaire(e.target.value)}
+              required
+            />
+            <input
+              type="date"
+              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              value={dateDepense}
+              onChange={(e) => setDateDepense(e.target.value)}
+            />
+            <Button type="submit" disabled={loading}>
+              Ajouter
+            </Button>
           </form>
-        </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 text-left">
-                <th className="p-3 font-semibold text-slate-500">Date</th>
-                <th className="p-3 font-semibold text-slate-500">Catégorie</th>
-                <th className="p-3 font-semibold text-slate-500">Désignation</th>
-                <th className="p-3 font-semibold text-slate-500 text-center">Qté</th>
-                <th className="p-3 font-semibold text-slate-500 text-center">Unité</th>
-                <th className="p-3 font-semibold text-slate-500 text-right">Prix unitaire</th>
-                <th className="p-3 font-semibold text-slate-500 text-right">Montant</th>
-                <th className="p-3 font-semibold text-slate-500 text-right">Référence</th>
-                <th className="p-3 font-semibold text-slate-500"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {depenses.map((d) => (
-                <tr key={d.id} className="border-b border-slate-100">
-                  <td className="p-3 text-sm text-slate-600">{new Date(d.date_depense).toLocaleDateString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                  <td className="p-3 text-sm text-slate-600">{CAT_LABELS[d.categorie]?.[langue] || d.categorie}</td>
-                  <td className="p-3 text-sm text-slate-900">{d.designation}</td>
-                  <td className="p-3 text-sm text-center text-slate-600">{d.quantite.toFixed(2)}</td>
-                  <td className="p-3 text-sm text-center text-slate-600">{d.unite ?? "-"}</td>
-                  <td className="p-3 text-sm text-right text-slate-600">{d.prix_unitaire.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                  <td className="p-3 text-sm text-right font-semibold text-slate-900">{d.montant_total.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                  <td className="p-3 text-sm text-right text-slate-600">{d.reference ?? "-"}</td>
-                  <td className="p-3">
-                    <button onClick={() => supprimerDepense(d.id)} className="text-rose-600 text-xs hover:underline font-medium">Supprimer</button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left">
+                  <th className="p-3 font-semibold text-muted">Date</th>
+                  <th className="p-3 font-semibold text-muted">Catégorie</th>
+                  <th className="p-3 font-semibold text-muted">Désignation</th>
+                  <th className="p-3 text-center font-semibold text-muted">Qté</th>
+                  <th className="p-3 text-center font-semibold text-muted">Unité</th>
+                  <th className="p-3 text-right font-semibold text-muted">Prix unitaire</th>
+                  <th className="p-3 text-right font-semibold text-muted">Montant</th>
+                  <th className="p-3 text-right font-semibold text-muted">Référence</th>
+                  <th className="p-3" />
                 </tr>
-              ))}
-              {depenses.length === 0 && (
-                <tr><td colSpan={9} className="p-4 text-center text-slate-500">Aucune dépense saisie.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {depenses.map((d) => (
+                  <tr key={d.id} className="border-b border-border last:border-0">
+                    <td className="p-3">{new Date(d.date_depense).toLocaleDateString(langue === "fr" ? "fr-FR" : "en-US")}</td>
+                    <td className="p-3">{libelleCategorie(d.categorie)}</td>
+                    <td className="p-3 font-medium text-foreground">{d.designation}</td>
+                    <td className="p-3 text-center">{d.quantite.toFixed(2)}</td>
+                    <td className="p-3 text-center text-muted">{d.unite ?? "-"}</td>
+                    <td className="p-3 text-right">{d.prix_unitaire.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
+                    <td className="p-3 text-right font-semibold">{d.montant_total.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
+                    <td className="p-3 text-right text-muted">{d.reference ?? "-"}</td>
+                    <td className="p-3 text-right">
+                      <button type="button" onClick={() => supprimerDepense(d.id)} className="text-danger text-xs font-medium hover:underline">
+                        Supprimer
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {depenses.length === 0 && (
+                  <tr>
+                    <td colSpan={9} className="p-4 text-center text-muted">Aucune dépense saisie.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       </section>
     </main>
-  );
-}
-
-function LinkBack() {
-  const langue = getLangue();
-  return (
-    <Link href="/chantiers" className="inline-flex items-center gap-2 text-sm text-orange-600 font-semibold hover:underline transition-colors">
-      <span>←</span>
-      {langue === "fr" ? "Retour aux chantiers" : "Back to sites"}
-    </Link>
-  );
-}
-
-function StatCard({ title, value, subtitle, icon, color }: { title: string; value: string | number; subtitle?: string; icon: string; color: string }) {
-  const colorMap: Record<string, { bg: string; text: string }> = {
-    blue: { bg: "bg-blue-50", text: "text-blue-600" },
-    emerald: { bg: "bg-emerald-50", text: "text-emerald-600" },
-    rose: { bg: "bg-rose-50", text: "text-rose-600" },
-    amber: { bg: "bg-amber-50", text: "text-amber-600" },
-  };
-  const c = colorMap[color] || colorMap.blue;
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm border-b-2 border-transparent">
-      <div className="flex items-start justify-between mb-2">
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{title}</p>
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${c.bg} ${c.text}`}>{icon}</div>
-      </div>
-      <p className="text-lg font-bold text-slate-900">{value}</p>
-      {subtitle && <p className="text-xs text-slate-500 mt-1">{subtitle}</p>}
-    </div>
   );
 }
