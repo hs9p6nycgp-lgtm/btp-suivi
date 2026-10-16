@@ -69,13 +69,14 @@ export default function ChantierDetailPage() {
       if (!user) { router.replace("/login"); return; }
 
       const [cRes, pRes, mRes, sRes] = await Promise.all([
-        supabase.from("chantiers").select("*").eq("id", chantierId).maybeSingle(),
+        supabase.from("chantiers").select("*").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle(),
         supabase.from("postes_dqe").select("*").eq("chantier_id", chantierId).order("created_at", { ascending: true }),
         supabase.from("chantier_utilisateurs").select("*, profil:profils(id,nom,email)").eq("chantier_id", chantierId),
         supabase.from("sections_chantier").select("*").eq("chantier_id", chantierId),
       ]);
 
       if (cRes.data) setChantier(cRes.data as Chantier);
+      else { router.replace("/chantiers"); return; }
       if (pRes.data) setPostes(pRes.data as any[]);
       if (mRes.data) setMembres(mRes.data as any[]);
       if (sRes.data) setSections(sRes.data as Section3D[]);
@@ -145,7 +146,9 @@ export default function ChantierDetailPage() {
           onChange={(e) => {
             setStatut(e.target.value);
             const supabase = createClient();
-            supabase.from("chantiers").update({ statut: e.target.value }).eq("id", chantierId);
+            supabase.auth.getUser().then(({ data: { user } }) => {
+              supabase.from("chantiers").update({ statut: e.target.value }).eq("id", chantierId).eq("proprietaire_id", user?.id ?? "");
+            });
           }}
           className="rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-foreground focus:ring-2 focus:ring-action focus:border-action outline-none transition-all"
         >
@@ -170,6 +173,12 @@ export default function ChantierDetailPage() {
           className="text-sm font-medium text-primary hover:underline"
         >
           Qualité
+        </Link>
+        <Link
+          href={`/chantiers/${chantier.id}/modelisation3d`}
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          {langue === "fr" ? "Modélisation 3D" : "3D Modeling"}
         </Link>
         </div>
 

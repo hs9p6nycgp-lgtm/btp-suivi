@@ -207,7 +207,7 @@ export default function Home() {
         return;
       }
 
-      const { data } = await supabase.from("chantiers").select("*").order("created_at", { ascending: false });
+      const { data } = await supabase.from("chantiers").select("*").eq("proprietaire_id", user.id).order("created_at", { ascending: false });
       setChantiers((data ?? []) as Chantier[]);
       setLoading(false);
     }

@@ -27,10 +27,12 @@ export default function ChantierStatut({
     setMessage(null);
     setStatut(next);
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
     const { error } = await supabase
       .from("chantiers")
       .update({ statut: next })
-      .eq("id", chantierId);
+      .eq("id", chantierId)
+      .eq("proprietaire_id", user?.id ?? "");
     setSaving(false);
     if (error) {
       setMessage(error.message);

@@ -60,6 +60,7 @@ export default function ChantiersPage() {
       const { data } = await supabase
         .from("chantiers")
         .select("*")
+        .eq("proprietaire_id", user.id)
         .order("created_at", { ascending: false });
       setChantiers((data ?? []) as Chantier[]);
       setLoading(false);
