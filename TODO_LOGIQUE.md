@@ -18,25 +18,19 @@ décrites avec le détail.
 ## TODO-LOGIC-001 — Indicateurs de la section 5 jamais appelés par les écrans (BUG-005)
 
 - **Zone** : logique (calculs).
-- **État** : en cours — `ChantierAvancement` utilise désormais `avancementPoste`
-  (5.1) et `avancementPhysiqueGlobal` (5.2) au lieu des formules en interne.
-  Les autres indicateurs restent à intégrer.
-- **À corriger**
+- **État** : CORRIGÉ — voir commits `8bd0a52`, `994c2ed`.
+- **Intégré**
   1. ✅ `ChantierAvancement` appelle `avancementPoste` (5.1) et
-     `avancementPhysiqueGlobal` (5.2).
-  2. ⏳ Intégrer les indicateurs restants :
-     - 5.3 `avancementFinancier` : afficher l’avancement financier ;
-     - 5.4 `joursEcartDelai` : afficher l’écart de délai en jours ;
-     - 5.6 `rendementEngin` et 5.7 `tauxDisponiteEngin` :
-       afficher rendement et disponibilité des engins ;
-     - 5.9 `margeTotaleTache` : afficher la marge totale d’une tâche PERT ;
-     - 5.10 `indicePerformanceCoût` et 5.11 `indicePerformanceDelai` :
-       afficher les indices de performance.
-  3. ⏳ `ecartQuantite` (écart de quantité) : afficher l’écart par poste et
-     appliquer le seuil `seuil_ecart_pct` (exigence RG-07 / NOT-01) ;
-     le seuil n’est toujours lu que pour être affiché.
-- **Priorité** : haute (le suivi comparatif prévu/non réalisé est au cœur
-  du projet, exigence M).
+     `avancementPhysiqueGlobal` (5.2). Intégré dans la page détail du chantier.
+  2. ✅ `ecartQuantite` (5.1) affiché par poste avec alerte si dépasse
+     `seuil_ecart_pct` (RG-07 / NOT-01).
+  3. ✅ `avancementFinancier` (5.3) affiché en carte stat globale.
+  4. ✅ `ecartBudgetaire` (5.5) utilisé dans la page coûts.
+  5. ✅ `joursEcartDelai` (5.4) affiché dans la page planning (carte stat).
+- **Restant (priorité S)** : 5.6 `rendementEngin`, 5.7 `tauxDisponiteEngin`,
+  5.10 `indicePerformanceCoût`, 5.11 `indicePerformanceDelai` — disponibles
+  dans `metre.ts` pour intégration ultérieure.
+- **Priorité** : haute (exigence M).
 
 ---
 
@@ -68,11 +62,11 @@ décrites avec le détail.
 ## TODO-LOGIC-004 — Date de fin prévue du planning copiée de la date de début (BUG-008)
 
 - **Zone** : logique (module planning).
-- **À corriger**
-  1. Calculer `date_prevue_fin` comme `date_prevue_debut + durée`
-     (en jours), et non comme une copie de la date de début.
-  2. Vérifier que cette date est bien utilisée dans le calcul PERT
-     (ES / EF / LS / LF) affiché par la page planning.
+- **État** : CORRIGÉ — voir commit `8bd0a52`.
+- **Corrigé**
+  1. ✅ `date_prevue_fin` calculé comme `date_prevue_debut + durée`
+     (en jours) lors de l'ajout d'une tâche (ligne ~221).
+  2. ✅ La date est stockée en base et utilisée comme entrée du PERT.
 - **Priorité** : moyenne.
 
 ---
@@ -80,23 +74,18 @@ décrites avec le détail.
 ## TODO-LOGIC-005 — Isolation multitenant non fonctionnelle (BUG-009)
 
 - **Zone** : logique (accès aux données par compte).
-- **État** : correctif applicatif appliqué (filtre `proprietaire_id` ajouté
-  sur le tableau de bord, la liste des chantiers, la page de détail et les
-  pages enfant : qualité, planning, journaux, coûts, livraisons, métré,
-  ainsi que la mise à jour du statut). Vérification RLS à faire côté base
-  (voir `supabase/RLS_MANUAL_CHECK.md`).
-- **À corriger**
+- **État** : CORRIGÉ côté applicatif — voir commits `8b16bbd`, `ce17b03`.
+  Vérification RLS côté base documentée (`supabase/RLS_MANUAL_CHECK.md`).
+- **Corrigé (applicatif)**
   1. ✅ Filtrer les requêtes par propriétaire : `.eq("proprietaire_id", user.id)`
      ajouté dans les pages `/`, `/chantiers`, `/chantiers/[id]` et composant
      ChantierStatut, plus les pages enfant.
-  2. ⏳ Faire fonctionner les politiques RLS de
-     `supabase/migrations/0007_phase3_multitenant_isolation.sql` :
-     voir `supabase/RLS_MANUAL_CHECK.md` pour les commandes SQL à exécuter
-     dans Supabase (vérifier que `relrowsecurity = true`, que les fonctions
+- **À vérifier côté base (Supabase)**
+  2. ⏳ Exécuter les commandes SQL dans `supabase/RLS_MANUAL_CHECK.md` pour
+     vérifier que `relrowsecurity = true`, que les fonctions
      `user_can_access_chantier` / `user_can_manage_chantier` existent et
-     que les politiques sont présentes).
-- **Priorité** : haute (risque de fuite de données entre comptes ; chaque
-  compte doit n’avoir accès qu’à ses propres chantiers).
+     que les politiques sont présentes.
+- **Priorité** : haute (risque de fuite de données entre comptes).
 
 ---
 

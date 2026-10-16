@@ -139,24 +139,23 @@ listés dans `TODO_LOGIQUE.md`.
     indices de performance coût et de délai, sont affichés.
   - Seul l’indicateur **5.8** (`tauxConformite`, conforme aux essais)
     est utilisé par la page qualité ; les autres ne le sont pas.
-- **Résultat obtenu**
-  - Aucune requête dans le code n’appelle `ecartQuantite`,
-    `avancementFinancier`, `joursEcartDelai`, `ecartBudgetaire`,
-    `rendementEngin`, `tauxDisponiteEngin`, `margeTotaleTache`,
-    `indicePerformanceCoût` ou `indicePerformanceDelai` : tous ces
-    indicateurs sont **définis et testés mais jamais utilisés** par
-    les écrans.
-  - L’écart de quantité n’est donc jamais affiché, et le seuil
-    `seuil_ecart_pct` n’est lu que pour être affiché, jamais appliqué.
-  - Les écrans reproduisent les formules « à la main » en interne
-    (ex. `ChantierAvancement` calcule l’avancement physique global de
-    façon équivalente à la formule 5.2 sans appeler la fonction), mais
-    les indicateurs 5.1, 5.3, 5.4, 5.6, 5.7, 5.9, 5.10 et 5.11 n’existent
-    pas côté affichage.
+- **Résultat obtenu** (CORRIGÉ — voir commits `8bd0a52`, `994c2ed`)
+  - **5.1** : `ecartQuantite` appelé dans `ChantierAvancement` ; écart de quantité
+    affiché par poste avec alerte si dépasse le seuil `seuil_ecart_pct`.
+  - **5.2** : `avancementPhysiqueGlobal` appelé dans `ChantierAvancement`.
+  - **5.3** : `avancementFinancier` appelé dans `ChantierAvancement` (carte stat globale).
+  - **5.4** : `joursEcartDelai` appelé dans la page planning (écart vs `date_fin_prevue` du chantier).
+  - **5.5** : `ecartBudgetaire` utilisé dans la page coûts pour l'écart par poste.
+  - **5.9** : `margeTotaleTache` disponible dans `metre.ts` ; la marge PERT est calculée
+    dans la page planning (LS − ES).
+  - Les indicateurs 5.6, 5.7, 5.10, 5.11 restent disponibles dans `metre.ts` pour intégration
+    ultérieure (priorité S).
+  - `tsc --noEmit` et `next build` passent (18 routes).
 - **Référence de code** : `src/lib/calculs/metre.ts` (lignes 45–129),
   composant `src/components/ChantierAvancement.tsx`,
   `src/app/chantiers/[id]/couts/page.tsx`,
-  `src/app/chantiers/[id]/planning/page.tsx`.
+  `src/app/chantiers/[id]/planning/page.tsx`,
+  `src/app/chantiers/[id]/page.tsx` (intégration du composant).
 
 ---
 
