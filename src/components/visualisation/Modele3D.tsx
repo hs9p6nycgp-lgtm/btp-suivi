@@ -13,6 +13,10 @@ type SectionData = {
   niveau: string | null;
   lot: string | null;
   type_ouvrage: string | null;
+  longueur?: number | null;
+  largeur?: number | null;
+  hauteur?: number | null;
+  couleur?: string | null;
 };
 
 type ChantierData = {
@@ -183,23 +187,19 @@ export default function Modele3D({
     });
 
     sections.forEach((section, index) => {
-      const couleurSection = index % 2 === 0 ? "#4a90e2" : "#50c878";
+      const L = Number(section.longueur) > 0 ? Number(section.longueur) : 3;
+      const l = Number(section.largeur) > 0 ? Number(section.largeur) : 2;
+      const h = Number(section.hauteur) > 0 ? Number(section.hauteur) : 2;
+      const couleur = section.couleur || (index % 2 === 0 ? "#4a90e2" : "#50c878");
+      const x =
+        section.pk_debut !== null
+          ? section.pk_debut - longueur / 2 + L / 2
+          : index * (L + 1) - longueur / 2 + L / 2;
       const m = creerElement3D(
         "section",
-        new THREE.Vector3(
-          section.pk_debut !== null ? section.pk_debut - longueur / 2 + 5 : index * 5 - longueur / 2 + 5,
-          2,
-          0,
-        ),
-        {
-          x:
-            section.pk_fin !== null && section.pk_debut !== null
-              ? section.pk_fin - section.pk_debut
-              : 3,
-          y: 3,
-          z: 2,
-        },
-        couleurSection,
+        new THREE.Vector3(x, h / 2, 0),
+        { x: L, y: h, z: l },
+        couleur,
       );
       meshes.push(m);
     });
