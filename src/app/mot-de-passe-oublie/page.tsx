@@ -1,8 +1,11 @@
 "use client";
 
+import { Construction } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useState } from "react";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 export default function MotDePasseOubliePage() {
   const [email, setEmail] = useState("");
@@ -23,41 +26,48 @@ export default function MotDePasseOubliePage() {
       setMessage(error.message);
       return;
     }
-    setMessage("Un lien de reinitialisation a ete envoye par e-mail.");
+    setMessage("Un lien de réinitialisation a ete envoye par e-mail.");
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md card p-6">
-        <h1 className="mb-2 text-2xl font-semibold">Mot de passe oublie</h1>
-        <p className="mb-6 text-sm text-zinc-600">
-          Saisissez votre e-mail pour recevoir un lien de reinitialisation.
-        </p>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium">E-mail</label>
-            <input
-              className="w-full rounded border p-2"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          {message && <p className="text-sm text-red-600">{message}</p>}
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded bg-orange-600 px-4 py-2 text-white disabled:opacity-50"
-            >
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
+      <div className="w-full max-w-md">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
+            <Construction className="h-8 w-8 text-white" />
+          </span>
+          <h1 className="text-2xl font-bold text-foreground md:text-3xl">Mot de passe oublié</h1>
+          <p className="mt-2 text-sm text-muted">Saisissez votre e-mail pour recevoir un lien de réinitialisation.</p>
+        </div>
+
+        <Card variant="elevated" padding="lg">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="email" className="mb-1 block text-sm font-medium text-foreground">E-mail</label>
+              <input
+                id="email"
+                className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            {message && (
+              <div className="rounded-xl border border-rose-300 bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-950/30 dark:text-rose-300">
+                {message}
+              </div>
+            )}
+            <Button type="submit" size="lg" className="w-full" disabled={loading}>
               {loading ? "Envoi..." : "Envoyer le lien"}
-            </button>
-            <Link href="/login" className="rounded border px-4 py-2">
-              Retour
-            </Link>
-          </div>
-        </form>
+            </Button>
+            <div className="text-center">
+              <Link href="/login" className="text-sm font-medium text-primary hover:underline">
+                Retour
+              </Link>
+            </div>
+          </form>
+        </Card>
       </div>
     </div>
   );
