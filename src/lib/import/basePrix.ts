@@ -149,3 +149,23 @@ export function parseBasePrixWorkbook(workbook: WorkbookLike): BasePrixRow[] {
 
   return rows;
 }
+
+// ---------------------------------------------------------------------------
+// Règles de validation des prix (exigences REF-04 et section 16).
+// Chaque prix doit porter une source et une date.
+// ---------------------------------------------------------------------------
+
+/**
+ * Exigence REF-04 - Chaque prix doit porter une source et une date.
+ * Renvoie null lorsque la ligne est valide, sinon le message du premier
+ * problème rencontré.
+ */
+export function validerBasePrix(row: BasePrixRow): string | null {
+  if (!row.source) {
+    return "la ligne est sans source";
+  }
+  if (!row.date_source) {
+    return "la ligne est sans date de source";
+  }
+  return null;
+}

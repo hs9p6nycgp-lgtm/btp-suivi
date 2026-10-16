@@ -35,3 +35,95 @@ export function avancementPoste(qteRealisee: number, qteMarche: number): number 
 export function arrondir2Decimales(valeur: number): number {
   return Math.round(valeur * 100) / 100;
 }
+
+// ---------------------------------------------------------------------------
+// Fonctions complémentaires de la section 5 du cahier des charges.
+// Chaque fonction reprend la formule exactement telle qu'elle figure dans la
+// section 5, avec des entrées explicites et le calcul annoncé.
+// ---------------------------------------------------------------------------
+
+/** Indicateur 5.1 - Écart de quantité (%). Formule : (Qréelle − Qprévue) / Qprévue × 100. */
+export function ecartQuantite(qteRealisee: number, qtePrevue: number): number {
+  if (qtePrevue <= 0) return 0;
+  return ((qteRealisee - qtePrevue) / qtePrevue) * 100;
+}
+
+/** Indicateur 5.2 - Avancement physique global (%). Formule : Σ (avancement × montant) / montant total. */
+export function avancementPhysiqueGlobal(
+  avancements: Array<{ avancementPct: number; montant: number }>,
+  montantTotal: number,
+): number {
+  if (montantTotal <= 0) return 0;
+  const somme = avancements.reduce(
+    (total, poste) => total + poste.avancementPct * poste.montant,
+    0,
+  );
+  return somme / montantTotal;
+}
+
+/** Indicateur 5.3 - Avancement financier (%). Formule : Montant réalisé / montant du marché × 100. */
+export function avancementFinancier(montantRealise: number, montantMarché: number): number {
+  if (montantMarché <= 0) return 0;
+  return (montantRealise / montantMarché) * 100;
+}
+
+/** Indicateur 5.4 - Écart de délai (jours). Formule : fin prévue - fin contractuelle. */
+export function joursEcartDelai(
+  dateFinPrevue: string | null,
+  dateFinContractuelle: string | null,
+): number {
+  if (!dateFinPrevue || !dateFinContractuelle) return 0;
+  const prevue = new Date(`${dateFinPrevue}T00:00:00`).getTime();
+  const contractuelle = new Date(`${dateFinContractuelle}T00:00:00`).getTime();
+  if (Number.isNaN(prevue) || Number.isNaN(contractuelle)) return 0;
+  return Math.round((prevue - contractuelle) / 86400000);
+}
+
+/** Indicateur 5.5 - Écart budgétaire (FCFA). Formule : coût réel - coût prévu à date. */
+export function ecartBudgetaire(coûtRéel: number, coûtPrévu: number): number {
+  return coûtRéel - coûtPrévu;
+}
+
+/** Indicateur 5.6 - Rendement d'un engin (m³/h ou ml/h). Formule : quantité produite / heures de marche. */
+export function rendementEngin(quantiteProduite: number, heuresMarche: number): number {
+  if (heuresMarche <= 0) {
+    throw new Error("Les heures de marche doivent être supérieures à 0.");
+  }
+  return quantiteProduite / heuresMarche;
+}
+
+/** Indicateur 5.7 - Taux de disponibilité de l'engin (%). Formule : heures de marche / heures prévues × 100. */
+export function tauxDisponiteEngin(heuresMarchees: number, heuresPrevues: number): number {
+  if (heuresPrevues <= 0) return 0;
+  return (heuresMarchees / heuresPrevues) * 100;
+}
+
+/** Indicateur 5.8 - Taux de conformité qualité (%). Formule : contrôles conformes / contrôles réalisés × 100. */
+export function tauxConformite(conformes: number, réalisés: number): number {
+  if (réalisés <= 0) return 0;
+  return (conformes / réalisés) * 100;
+}
+
+/** Indicateur 5.9 - Marge totale d'une tâche (PERT) (jours). Formule : fin au plus tard - fin au plus tôt. */
+export function margeTotaleTache(
+  dateFinAuPlusTard: string | null,
+  dateFinAuPlusTôt: string | null,
+): number {
+  if (!dateFinAuPlusTard || !dateFinAuPlusTôt) return 0;
+  const auPlusTard = new Date(`${dateFinAuPlusTard}T00:00:00`).getTime();
+  const auPlusTôt = new Date(`${dateFinAuPlusTôt}T00:00:00}`).getTime();
+  if (Number.isNaN(auPlusTard) || Number.isNaN(auPlusTôt)) return 0;
+  return Math.round((auPlusTard - auPlusTôt) / 86400000);
+}
+
+/** Indicateur 5.10 - Indice de performance coût. Formule : valeur acquise / coût réel. */
+export function indicePerformanceCoût(valeurAcquise: number, coûtRéel: number): number {
+  if (coûtRéel <= 0) return 0;
+  return valeurAcquise / coûtRéel;
+}
+
+/** Indicateur 5.11 - Indice de performance du délai. Formule : valeur acquise / valeur planifiée. */
+export function indicePerformanceDelai(valeurAcquise: number, valeurPlanifiée: number): number {
+  if (valeurPlanifiée <= 0) return 0;
+  return valeurAcquise / valeurPlanifiée;
+}
