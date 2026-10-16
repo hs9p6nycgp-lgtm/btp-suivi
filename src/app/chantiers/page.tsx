@@ -2,10 +2,13 @@
 
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { cacheGet, cacheSet } from "@/lib/offline/storage";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { t, getLangue } from "@/lib/i18n";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { getLangue } from "@/lib/i18n";
 
 type Chantier = {
   id: string;
@@ -14,7 +17,14 @@ type Chantier = {
   maitre_ouvrage: string | null;
   montant_marche: number;
   statut: string;
-  date_debut: string | null;
+};
+
+const STATUT_LABELS: Record<string, { fr: string; en: string; variant: "success" | "warning" | "danger" | "info" | "primary" }> = {
+  en_preparation: { fr: "En préparation", en: "Preparation", variant: "info" },
+  en_cours: { fr: "En cours", en: "In Progress", variant: "success" },
+  suspendu: { fr: "Suspendu", en: "Suspended", variant: "warning" },
+  receptionne_provisoirement: { fr: "Réceptionné prov.", en: "Provisional Acceptance", variant: "info" },
+  cloture: { fr: "Clôturé", en: "Closed", variant: "danger" },
 };
 
 export default function ChantiersPage() {
@@ -22,37 +32,22 @@ export default function ChantiersPage() {
   const langue = getLangue();
   const [chantiers, setChantiers] = useState<Chantier[]>([]);
   const [loading, setLoading] = useState(true);
-  const [offline, setOffline] = useState(false);
   const [search, setSearch] = useState("");
-  const [filterType, setFilterType] = useState("");
-  const [filterStatut, setFilterStatut] = useState("");
 
   useEffect(() => {
     async function load() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.replace("/login"); return; }
-
-      const cacheKey = "chantiers";
-      if (typeof navigator !== "undefined" && !navigator.onLine) {
-        setOffline(true);
-        const cached = await cacheGet<Chantier[]>(cacheKey);
-        setChantiers(cached ?? []);
-        setLoading(false);
+      if (!user) {
+        router.replace("/login");
         return;
       }
 
-      const { data, error } = await supabase.from("chantiers").select("*").order("created_at", { ascending: false });
-      if (error) {
-        setOffline(true);
-        const cached = await cacheGet<Chantier[]>(cacheKey);
-        setChantiers(cached ?? []);
-      } else {
-        setOffline(false);
-        const list = (data ?? []) as Chantier[];
-        setChantiers(list);
-        await cacheSet(cacheKey, list);
-      }
+      const { data } = await supabase
+        .from("chantiers")
+        .select("*")
+        .order("created_at", { ascending: false });
+      setChantiers((data ?? []) as Chantier[]);
       setLoading(false);
     }
     load();
@@ -61,107 +56,120 @@ export default function ChantiersPage() {
   const filtered = chantiers.filter((c) => {
     const q = search.trim().toLowerCase();
     if (q && !c.nom.toLowerCase().includes(q) && !(c.maitre_ouvrage ?? "").toLowerCase().includes(q)) return false;
-    if (filterType && c.type !== filterType) return false;
-    if (filterStatut && c.statut !== filterStatut) return false;
     return true;
   });
 
-  const statutLabel = (s: string) => {
-    const labels: Record<string, string> = {
-      en_preparation: langue === "fr" ? "En préparation" : "Preparation",
-      en_cours: langue === "fr" ? "En cours" : "In Progress",
-      suspendu: langue === "fr" ? "Suspendu" : "Suspended",
-      receptionne_provisoirement: langue === "fr" ? "Réceptionné prov." : "Provisional Acceptance",
-      cloture: langue === "fr" ? "Clôturé" : "Closed",
-    };
-    return labels[s] || s;
-  };
-
-  const statutBadge = (s: string) => {
-    const map: Record<string, string> = {
-      en_preparation: "badge-info",
-      en_cours: "badge-success",
-      suspendu: "badge-warning",
-      receptionne_provisoirement: "badge-info",
-      cloture: "badge-danger",
-    };
-    return map[s] || "badge-info";
-  };
-
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-8">
-      <div className="mb-6 flex items-center justify-between">
+    <main className="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-6">
+      <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-primary">{t("chantiers.titre")}</h1>
-          <p className="text-muted text-sm">{t("chantiers.maitre_ouvrage")}</p>
+          <h1 className="text-2xl font-bold text-slate-900">Chantiers</h1>
+          <p className="text-sm text-slate-500">
+            Gérez tous vos chantiers en cours et terminés.
+          </p>
         </div>
-        <Link href="/chantiers/nouveau" className="btn-primary inline-block">{t("chantiers.nouveau")}</Link>
+        <Link
+          href="/chantiers/nouveau"
+          className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-4 py-2.5 text-white font-semibold hover:bg-orange-700 transition-all shadow-sm"
+        >
+          Nouveau chantier
+        </Link>
       </div>
 
-      {offline && (
-        <p className="mb-4 rounded-lg bg-warning/10 p-3 text-sm text-warning border border-warning/20">
-          Mode hors connexion : données lues depuis le cache local.
-        </p>
-      )}
-
-      {!loading && (
-        <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-3">
+      {/* Recherche */}
+      <div className="mb-6">
+        <div className="relative">
+          <svg
+            className="w-4 h-4 text-slate-400 absolute left-3 top-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
           <input
-            className="rounded-xl border p-2.5 text-sm focus:ring-2 focus:ring-primary outline-none"
-            placeholder={t("chantiers.rechercher")}
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+            placeholder="Rechercher un chantier..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <select className="rounded-xl border p-2.5 text-sm focus:ring-2 focus:ring-primary outline-none bg-white" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
-            <option value="">{t("chantiers.tous_types")}</option>
-            <option value="route">{t("chantiers.type_route")}</option>
-            <option value="batiment">{t("chantiers.type_batiment")}</option>
-          </select>
-          <select className="rounded-xl border p-2.5 text-sm focus:ring-2 focus:ring-primary outline-none bg-white" value={filterStatut} onChange={(e) => setFilterStatut(e.target.value)}>
-            <option value="">{t("chantiers.tous_statuts")}</option>
-            <option value="en_preparation">{statutLabel("en_preparation")}</option>
-            <option value="en_cours">{statutLabel("en_cours")}</option>
-            <option value="suspendu">{statutLabel("suspendu")}</option>
-            <option value="receptionne_provisoirement">{statutLabel("receptionne_provisoirement")}</option>
-            <option value="cloture">{statutLabel("cloture")}</option>
-          </select>
         </div>
-      )}
+      </div>
 
       {loading ? (
-        <div className="card p-12 text-center">
-          <p className="text-muted text-sm animate-pulse">Chargement des chantiers...</p>
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex gap-4 p-4 rounded-xl bg-white border border-slate-200">
+              <Skeleton className="w-10 h-10 rounded-lg" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
+                <Skeleton className="h-3 w-1/3" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="card p-12 text-center">
-          <p className="mb-4 text-muted text-sm">{chantiers.length === 0 ? t("home.aucun_chantier") : t("chantiers.aucun")}</p>
-          {chantiers.length === 0 && <Link href="/chantiers/nouveau" className="btn-primary inline-block">{t("home.creer_chantier")}</Link>}
-        </div>
+        <Card variant="outlined" padding="lg" className="text-center">
+          <p className="text-sm text-slate-500 mb-4">
+            Aucun chantier ne correspond à votre recherche.
+          </p>
+          <Link
+            href="/chantiers/nouveau"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-600 px-4 py-2 text-white font-semibold hover:bg-orange-700 transition-all"
+          >
+            Créer mon premier chantier
+          </Link>
+        </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-3">
           {filtered.map((c) => {
-            const progress = Math.min((c.id.split("-")[0]?.length || 5) * 7 % 100, 100);
+            const s = STATUT_LABELS[c.statut] || STATUT_LABELS.en_preparation;
             return (
-              <Link key={c.id} href={`/chantiers/${c.id}`} className="card p-5 transition-all hover:shadow-md border border-slate-100 group">
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div>
-                    <h3 className="font-bold text-primary text-lg group-hover:text-action transition-colors">{c.nom}</h3>
-                    <p className="text-xs text-muted mt-1">
-                      {c.type === "route" ? (langue === "fr" ? "🛣️ Route" : "🛣️ Road") : (langue === "fr" ? "🏢 Bâtiment" : "🏢 Building")} • {c.maitre_ouvrage ?? (langue === "fr" ? "sans maître d'ouvrage" : "without project owner")}
+              <Link key={c.id} href={`/chantiers/${c.id}`} className="block">
+                <Card
+                  padding="none"
+                  className="flex items-center gap-4 p-4 hover:bg-slate-50 transition-all border-b border-slate-100 last:border-0 group"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700 text-lg">
+                    {c.type === "route" ? "🛣️" : "🏢"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-slate-900 text-sm group-hover:text-orange-600 transition-colors">
+                      {c.nom}
+                    </h3>
+                    <p className="text-xs text-slate-500 truncate">
+                      {c.maitre_ouvrage ??
+                        (langue === "fr" ? "sans maître d'ouvrage" : "without project owner")}
                     </p>
                   </div>
-                  <span className={`badge ${statutBadge(c.statut)} text-xs`}>{statutLabel(c.statut)}</span>
-                </div>
-                <div className="mb-3">
-                  <div className="flex justify-between text-xs text-muted mb-1">
-                    <span>{t("chantiers.montant")}</span>
-                    <span className="font-semibold text-foreground">{Number(c.montant_marche || 0).toLocaleString(langue === "fr" ? "fr-FR" : "en-US")} FCFA</span>
+                  <div className="flex items-center gap-3">
+                    <Badge variant={s.variant}>{s[langue]}</Badge>
+                    <span className="text-xs font-medium text-slate-700">
+                      {Number(c.montant_marche || 0).toLocaleString(
+                        langue === "fr" ? "fr-FR" : "en-US",
+                      )} FCFA
+                    </span>
+                    <svg
+                      className="w-4 h-4 text-slate-400 group-hover:text-slate-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
                   </div>
-                  <div className="w-full progress-bar">
-                    <div className="progress-fill" style={{ width: `${progress}%` }}></div>
-                  </div>
-                  <p className="text-xs text-muted mt-1">{progress.toFixed(0)}% {langue === "fr" ? "d'avancement estimé" : "estimated progress"}</p>
-                </div>
+                </Card>
               </Link>
             );
           })}
