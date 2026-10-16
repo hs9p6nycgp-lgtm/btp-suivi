@@ -1,7 +1,7 @@
 -- ======================================================================
 -- supabase/seed/reload_bpu.sql
 -- Rechargement COMPLET du BPU (table bpu_postes) depuis le fichier
--- supabase/seed/prix_ci_complet.csv (postes de prix unitaires Cote d'Ivoire).
+-- data/BPU_posts_detailles.csv (278 postes, Cote d'Ivoire).
 --
 -- MISE EN GARDE : ce script SUPPRIME toutes les lignes existantes de
 -- bpu_postes avant de les recreer. N'executez PAS ce script si des
@@ -16,7 +16,6 @@ DELETE FROM bpu_postes;
 INSERT INTO bpu_postes
   (code, designation, unite, prix_unitaire, source, date_source, date_validite, statut)
 VALUES
-  ('INS-01', 'Levés topographiques', 'ha', 229594, 'BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd', '2026-10-14', NULL, 'valide'),
   ('INS-02', 'Implantation des ouvrages', 'ml', 2488, 'BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd', '2026-10-14', NULL, 'valide'),
   ('INS-03', 'Clôture en tôle ondulée, h = 2 m', 'ml', 23801, 'BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd', '2026-10-14', NULL, 'valide'),
   ('INS-04', 'Clôture en planche, h = 2 m', 'ml', 36256, 'BTP-PRIX (guide tarifaire ICOS Abidjan), via Scribd', '2026-10-14', NULL, 'valide'),
@@ -275,26 +274,26 @@ VALUES
   ('EPI-05', 'Lunettes de protection (u)', 'u', 4000, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-16', '2027-04-16', 'a_verifier'),
   ('EPI-06', 'Harnais de sécurité (u)', 'u', 35000, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-16', '2027-04-16', 'a_verifier'),
   ('EPI-07', 'Extincteur (u)', 'u', 25000, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-16', '2027-04-16', 'a_verifier'),
-  ('ACI-12', 'Bloc agglomere (u)', 'Agglos', u, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
-  ('BET-99', 'Betonne (concrete) (m3)', 'Béton prêt', m3, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
-  ('LTR-01', 'Laterite (m3)', 'Sols', m3, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
-  ('GRN-01', 'Granulat (m3)', 'Granulats', m3, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
-  ('TER-99', 'Terrassement (m3)', 'Terrassement', m3, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
-  ('EXC-01', 'Excavation (m3)', 'Excavation', m3, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
-  ('ENR-01', 'Enrobe bitumineux (t)', 'Enrobés', t, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
-  ('ASP-01', 'Asphalte (t)', 'Enrobés', t, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
-  ('COU-01', 'Couverture (m2)', 'Toiture', m2, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
-  ('ETN-01', 'Etancheite (m2)', 'Étanchéité', m2, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
-  ('MEM-01', 'Membrane etancheite (m2)', 'Étanchéité', m2, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
-  ('SOT-01', 'Sous-toiture (m2)', 'Toiture', m2, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
-  ('BRD-01', 'Bardage (m2)', 'Charpente', m2, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
-  ('CAR-01', 'Carrelage (m2)', 'Revêtement sol', m2, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
-  ('CRU-01', 'Carreau (u)', 'Revêtement sol', u, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
-  ('FAI-01', 'Faience (m2)', 'Revêtement mural', m2, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
-  ('COL-01', 'Colle a carrelage (kg)', 'Colles', kg, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
-  ('MTC-01', 'Mortier colle (kg)', 'Colles', kg, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
-  ('CHP-01', 'Chape (m3)', 'Chape', m3, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
-  ('RGR-01', 'Ragreage (m2)', 'Ragréage', m2, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier')
+  ('ACI-12', 'Bloc agglomere (u)', 'u', 15000, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
+  ('BET-99', 'Betonne (concrete) (m3)', 'm3', 87000, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
+  ('LTR-01', 'Laterite (m3)', 'm3', 40000, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
+  ('GRN-01', 'Granulat (m3)', 'm3', 55000, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
+  ('TER-99', 'Terrassement (m3)', 'm3', 45000, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
+  ('EXC-01', 'Excavation (m3)', 'm3', 50000, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
+  ('ENR-01', 'Enrobe bitumineux (t)', 't', 95000, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
+  ('ASP-01', 'Asphalte (t)', 't', 98000, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
+  ('COU-01', 'Couverture (m2)', 'm2', 9000, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
+  ('ETN-01', 'Etancheite (m2)', 'm2', 6000, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
+  ('MEM-01', 'Membrane etancheite (m2)', 'm2', 6000, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
+  ('SOT-01', 'Sous-toiture (m2)', 'm2', 7500, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
+  ('BRD-01', 'Bardage (m2)', 'm2', 8000, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
+  ('CAR-01', 'Carrelage (m2)', 'm2', 12000, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
+  ('CRU-01', 'Carreau (u)', 'u', 800, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
+  ('FAI-01', 'Faience (m2)', 'm2', 11000, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
+  ('COL-01', 'Colle a carrelage (kg)', 'kg', 5000, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
+  ('MTC-01', 'Mortier colle (kg)', 'kg', 4500, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
+  ('CHP-01', 'Chape (m3)', 'm3', 95000, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier'),
+  ('RGR-01', 'Ragreage (m2)', 'm2', 8000, 'Marché ivoirien 2026 (estimation) - à vérifier', '2026-10-14', '2027-04-16', 'a_verifier')
 ;
 
 SELECT count(*) AS postes_inseres FROM bpu_postes;
