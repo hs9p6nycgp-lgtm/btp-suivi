@@ -15,11 +15,15 @@ type Livraison = {
   materiau: string;
   fournisseur: string | null;
   quantite: number;
+  quantite_commandee: number;
+  quantite_mise_en_oeuvre: number;
   numero_bon: string | null;
   camion: string | null;
   photo_bon: string | null;
   date_livraison: string;
 };
+
+type RecapEntry = { commandee: number; livree: number; miseEnOeuvre: number };
 
 export default function LivraisonsPage() {
   const params = useParams();
@@ -31,6 +35,8 @@ export default function LivraisonsPage() {
   const [materiau, setMateriau] = useState("");
   const [fournisseur, setFournisseur] = useState("");
   const [quantite, setQuantite] = useState("");
+  const [quantiteCommandee, setQuantiteCommandee] = useState("");
+  const [quantiteMiseEnOeuvre, setQuantiteMiseEnOeuvre] = useState("");
   const [numeroBon, setNumeroBon] = useState("");
   const [camion, setCamion] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -78,6 +84,8 @@ export default function LivraisonsPage() {
       materiau,
       fournisseur: fournisseur || null,
       quantite: Number(quantite) || 0,
+      quantite_commandee: Number(quantiteCommandee) || 0,
+      quantite_mise_en_oeuvre: Number(quantiteMiseEnOeuvre) || 0,
       numero_bon: numeroBon || null,
       camion: camion || null,
       photo_bon: photoPath,
@@ -92,6 +100,8 @@ export default function LivraisonsPage() {
     setMateriau("");
     setFournisseur("");
     setQuantite("");
+    setQuantiteCommandee("");
+    setQuantiteMiseEnOeuvre("");
     setNumeroBon("");
     setCamion("");
     setFile(null);
@@ -110,10 +120,13 @@ export default function LivraisonsPage() {
     load();
   }
 
-  const recap = items.reduce<Record<string, number>>((acc, it) => {
-    acc[it.materiau] = (acc[it.materiau] ?? 0) + Number(it.quantite);
-    return acc;
-  }, {});
+  const recap: Record<string, RecapEntry> = {};
+  for (const it of items) {
+    if (!recap[it.materiau]) recap[it.materiau] = { commandee: 0, livree: 0, miseEnOeuvre: 0 };
+    recap[it.materiau].commandee += Number(it.quantite_commandee) || 0;
+    recap[it.materiau].livree += Number(it.quantite) || 0;
+    recap[it.materiau].miseEnOeuvre += Number(it.quantite_mise_en_oeuvre) || 0;
+  }
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
@@ -158,6 +171,28 @@ export default function LivraisonsPage() {
               value={quantite}
               onChange={(e) => setQuantite(e.target.value)}
               required
+            />
+          </div>
+          <div>
+            <label htmlFor="quantiteCommandee" className="mb-1 block text-sm font-medium text-foreground">Qté commandée (cumulé)</label>
+            <input
+              id="quantiteCommandee"
+              className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              type="number"
+              step="0.01"
+              value={quantiteCommandee}
+              onChange={(e) => setQuantiteCommandee(e.target.value)}
+            />
+          </div>
+          <div>
+            <label htmlFor="quantiteMiseEnOeuvre" className="mb-1 block text-sm font-medium text-foreground">Qté mise en œuvre (cumulé)</label>
+            <input
+              id="quantiteMiseEnOeuvre"
+              className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              type="number"
+              step="0.01"
+              value={quantiteMiseEnOeuvre}
+              onChange={(e) => setQuantiteMiseEnOeuvre(e.target.value)}
             />
           </div>
           <div>
@@ -210,22 +245,39 @@ export default function LivraisonsPage() {
       </Card>
 
       <section className="mt-8">
-        <h2 className="mb-4 text-lg font-bold text-foreground">Récapitulatif par matériau</h2>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-          {Object.entries(recap).map(([mat, q]) => (
-            <div key={mat} className="rounded-xl border border-border bg-surface p-4">
-              <p className="text-xs font-semibold text-muted uppercase tracking-wider">{mat}</p>
-              <div className="mt-1 flex items-end gap-1">
-                <span className="text-2xl font-bold text-foreground">{q.toFixed(2)}</span>
-                <span className="text-sm text-muted">u</span>
-              </div>
-            </div>
-          ))}
-          {Object.keys(recap).length === 0 && (
-            <div className="rounded-2xl border-2 border-dashed border-border p-10 text-center">
-              <p className="text-sm text-muted">Aucune livraison.</p>
-            </div>
-          )}
+        <h2 className="mb-4 text-lg font-bold text-foreground">Comparaison commandé / livré / mis en œuvre</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-left">
+                <th className="p-3 font-semibold text-muted">Matériau</th>
+                <th className="p-3 font-semibold text-muted text-right">Commandé</th>
+                <th className="p-3 font-semibold text-muted text-right">Livré</th>
+                <th className="p-3 font-semibold text-muted text-right">Mis en œuvre</th>
+                <th className="p-3 font-semibold text-muted text-right">Écart (livré - commandé)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(recap).map(([mat, q]) => (
+                <tr key={mat} className="border-b border-border last:border-0">
+                  <td className="p-3 font-medium text-foreground">{mat}</td>
+                  <td className="p-3 text-right text-muted">{q.commandee.toFixed(2)}</td>
+                  <td className="p-3 text-right text-muted">{q.livree.toFixed(2)}</td>
+                  <td className="p-3 text-right text-muted">{q.miseEnOeuvre.toFixed(2)}</td>
+                  <td className={`p-3 text-right font-semibold ${q.livree > q.commandee ? "text-danger" : "text-success"}`}>
+                    {(q.livree - q.commandee).toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+              {Object.keys(recap).length === 0 && (
+                <tr>
+                  <td className="p-6 text-center text-muted" colSpan={5}>
+                    Aucune livraison.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
 
