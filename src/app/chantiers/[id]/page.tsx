@@ -1,6 +1,6 @@
 "use client";
 
-import { Calculator, MapPin } from "lucide-react";
+import { Calendar, ClipboardList, MapPin, Calculator } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -10,7 +10,6 @@ import ChantierEquipe from "@/components/ChantierEquipe";
 import Modele3D from "@/components/visualisation/Modele3D";
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
-import { Badge } from "@/components/ui/Badge";
 import { getLangue } from "@/lib/i18n";
 
 type Chantier = {
@@ -66,6 +65,9 @@ export default function ChantierDetailPage() {
     async function load() {
       if (!chantierId) return;
       const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.replace("/login"); return; }
+
       const [cRes, pRes, mRes, sRes] = await Promise.all([
         supabase.from("chantiers").select("*").eq("id", chantierId).maybeSingle(),
         supabase.from("postes_dqe").select("*").eq("chantier_id", chantierId).order("created_at", { ascending: true }),
@@ -123,9 +125,53 @@ export default function ChantierDetailPage() {
             icon={<MapPin className="h-5 w-5" />}
             color="orange"
           />
-          <Badge variant={s.color}>{langue === "fr" ? s.fr : s.en}</Badge>
+          <StatCard
+            title={langue === "fr" ? "Statut" : "Status"}
+            value={langue === "fr" ? s.fr : s.en}
+            subtitle={chantier.statut}
+            icon={<ClipboardList className="h-5 w-5" />}
+            color={s.color as "blue" | "orange" | "emerald" | "rose" | "amber" | "slate"}
+          />
+          <StatCard
+            title={langue === "fr" ? "Date début" : "Start Date"}
+            value={chantier.date_debut ?? (langue === "fr" ? "Non définie" : "Not set")}
+            subtitle={langue === "fr" ? "Début du chantier" : "Start date"}
+            icon={<Calendar className="h-5 w-5" />}
+            color="slate"
+          />
         </div>
-      </div>
+        <select
+          value={statut}
+          onChange={(e) => {
+            setStatut(e.target.value);
+            const supabase = createClient();
+            supabase.from("chantiers").update({ statut: e.target.value }).eq("id", chantierId);
+          }}
+          className="rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-foreground focus:ring-2 focus:ring-action focus:border-action outline-none transition-all"
+        >
+          {Object.entries(STATUT_LABELS).map(([key, label]) => (
+            <option key={key} value={key}>{langue === "fr" ? label.fr : label.en}</option>
+          ))}
+        </select>
+        <Link
+          href={`/chantiers/${chantier.id}/planning`}
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          Planning & PERT
+        </Link>
+        <Link
+          href={`/chantiers/${chantier.id}/couts`}
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          Coûts & Budget
+        </Link>
+        <Link
+          href={`/chantiers/${chantier.id}/qualite`}
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          Qualité
+        </Link>
+        </div>
 
       {chantier.latitude !== null && chantier.longitude !== null && (
         <div className="mb-6">
@@ -139,6 +185,10 @@ export default function ChantierDetailPage() {
             <p className="mt-3 text-sm text-foreground">
               {chantier.latitude}, {chantier.longitude}
             </p>
+            <div className="mt-4 flex h-48 w-full items-center justify-center rounded-xl bg-muted text-sm text-muted-foreground">
+              <MapPin className="mr-2 h-4 w-4" />
+              Carte interactive (à venir)
+            </div>
           </Card>
         </div>
       )}
@@ -181,6 +231,11 @@ export default function ChantierDetailPage() {
               ? (langue === "fr" ? "Postes du DQE" : "DQE Items")
               : (langue === "fr" ? "Aucun poste importé" : "No items imported")}
           </h2>
+          {postes.length > 0 && (
+            <Link href="/bpu" className="text-sm font-medium text-primary hover:underline">
+              Gérer le BPU
+            </Link>
+          )}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
