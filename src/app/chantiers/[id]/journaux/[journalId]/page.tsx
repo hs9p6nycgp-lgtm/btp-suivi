@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { offlineInsert, offlineUpdate, offlineDelete } from "@/lib/offline/mutations";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -91,7 +92,7 @@ export default function JournalDetailPage() {
     setLoading(true);
     setMessage(null);
     const supabase = createClient();
-    const { error } = await supabase.from("journaux").update({ meteo: meteo || null, observations: observations || null }).eq("id", journalId);
+    const { error } = await offlineUpdate("journaux", journalId, { meteo: meteo || null, observations: observations || null });
     setLoading(false);
     if (error) { setMessage(error.message); return; }
     setMessage(langue === "fr" ? "En-tête enregistré." : "Header saved.");
@@ -102,7 +103,7 @@ export default function JournalDetailPage() {
     e.preventDefault();
     if (!editable) return;
     const supabase = createClient();
-    const { error } = await supabase.from("journal_effectifs").insert({ journal_id: journalId, corps_metier: effMetier, nombre: Number(effNombre) || 0 });
+    const { error } = await offlineInsert("journal_effectifs", { journal_id: journalId, corps_metier: effMetier, nombre: Number(effNombre) || 0 });
     if (error) { setMessage(error.message); return; }
     setEffMetier(""); setEffNombre("");
     loadAll();
@@ -112,7 +113,7 @@ export default function JournalDetailPage() {
     e.preventDefault();
     if (!editable) return;
     const supabase = createClient();
-    const { error } = await supabase.from("journal_engins").insert({
+    const { error } = await offlineInsert("journal_engins", {
       journal_id: journalId, type_engin: engType, immatriculation: engImmat || null,
       heures_marche: Number(engHeures) || 0, quantite_produite: engQte ? Number(engQte) : null,
     });
@@ -125,7 +126,7 @@ export default function JournalDetailPage() {
     e.preventDefault();
     if (!editable) return;
     const supabase = createClient();
-    const { error } = await supabase.from("incidents_journal").insert({
+    const { error } = await offlineInsert("incidents_journal", {
       journal_id: journalId, type: incType, description: incDesc || null, duree_heures: Number(incDuree) || 0,
     });
     if (error) { setMessage(error.message); return; }
@@ -137,7 +138,7 @@ export default function JournalDetailPage() {
     e.preventDefault();
     if (!editable) return;
     const supabase = createClient();
-    const { error } = await supabase.from("quantites_realisees").insert({
+    const { error } = await offlineInsert("quantites_realisees", {
       chantier_id: chantierId, poste_dqe_id: qtePoste, quantite: Number(qteValeur) || 0,
       journal_id: journalId, section_id: qteSection || null,
       date_saisie: journal?.date_journal,
@@ -150,7 +151,7 @@ export default function JournalDetailPage() {
   async function removeItem(table: string, id: string) {
     if (!editable) return;
     const supabase = createClient();
-    const { error } = await supabase.from(table).delete().eq("id", id);
+    const { error } = await offlineDelete(table, id);
     if (error) { setMessage(error.message); return; }
     loadAll();
   }
@@ -219,7 +220,7 @@ export default function JournalDetailPage() {
       console.error("Erreur génération alertes:", e);
     }
 
-    const { error } = await supabase.from("journaux").update({ statut: "valide", validated_at: new Date().toISOString() }).eq("id", journalId);
+    const { error } = await offlineUpdate("journaux", journalId, { statut: "valide", validated_at: new Date().toISOString() });
     setLoading(false);
     if (error) { setMessage(error.message); return; }
     setMessage(langue === "fr" ? "Journal validé." : "Journal validated.");

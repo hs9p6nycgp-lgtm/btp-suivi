@@ -2,6 +2,7 @@
 
 import { Construction } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { offlineInsert, offlineDelete } from "@/lib/offline/mutations";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -110,9 +111,11 @@ export default function LivraisonsPage() {
   }
 
   async function handleRemove(id: string, photoPath: string | null) {
-    const supabase = createClient();
-    if (photoPath) await supabase.storage.from("chantiers-documents").remove([photoPath]);
-    const { error } = await supabase.from("livraisons").delete().eq("id", id);
+    if (photoPath) {
+      const supabase = createClient();
+      await supabase.storage.from("chantiers-documents").remove([photoPath]);
+    }
+    const { error } = await offlineDelete("livraisons", id);
     if (error) {
       setMessage(error.message);
       return;

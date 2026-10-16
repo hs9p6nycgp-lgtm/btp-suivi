@@ -2,6 +2,7 @@
 
 import { Banknote, Coins, Receipt, Scale } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { offlineInsert, offlineDelete } from "@/lib/offline/mutations";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -158,7 +159,7 @@ export default function CoutsPage() {
     setMessage(null);
     const supabase = createClient();
     const montantTotal = Math.round(Number(quantite) * Number(prixUnitaire));
-    const { error } = await supabase.from("depenses_reelles").insert({
+    const { error } = await offlineInsert("depenses_reelles", {
       chantier_id: chantierId,
       categorie,
       designation: designation.trim(),
@@ -196,8 +197,7 @@ export default function CoutsPage() {
   }
 
   async function supprimerDepense(id: string) {
-    const supabase = createClient();
-    const { error } = await supabase.from("depenses_reelles").delete().eq("id", id);
+    const { error } = await offlineDelete("depenses_reelles", id);
     if (error) { setMessage(error.message); return; }
     setDepenses((prev) => prev.filter((d) => d.id !== id));
   }
