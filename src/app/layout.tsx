@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Sidebar from "@/components/layout/Sidebar";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
@@ -13,6 +13,9 @@ export const metadata: Metadata = {
   title: "BTP Suivi Pro",
   description: "Gestion et suivi de chantiers routiers et de bâtiment",
   manifest: "/manifest.json",
+};
+
+export const viewport: Viewport = {
   themeColor: "#1e3a5f",
 };
 
