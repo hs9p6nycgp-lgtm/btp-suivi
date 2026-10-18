@@ -149,8 +149,9 @@ export default function LoginPage() {
       {/* Partie visuelle : bleu nuit avec dégradé */}
       <div className="relative hidden flex-1 flex-col items-center justify-center overflow-hidden bg-primary md:flex">
         <div className="absolute inset-0 bg-gradient-to-br from-primary-light/40 via-primary/60 to-primary" />
+        <div className="bg-grid absolute inset-0 opacity-30" aria-hidden />
         <IllustrationChantier />
-        <div className="absolute bottom-8 left-8 max-w-sm text-white">
+        <div className="absolute bottom-8 left-8 right-8 max-w-sm text-white">
           <h2 className="text-2xl font-bold md:text-3xl">
             {langue === "fr" ? "Le chantier, suivi en temps réel" : "Site management in real time"}
           </h2>
@@ -159,6 +160,16 @@ export default function LoginPage() {
               ? "Suivez planning, coûts, qualité et livraisons de vos chantiers."
               : "Track planning, costs, quality and deliveries of your sites."}
           </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {["Planning", langue === "fr" ? "Coûts" : "Costs", langue === "fr" ? "Qualité" : "Quality", langue === "fr" ? "Livraisons" : "Deliveries"].map((etiquette) => (
+              <span
+                key={etiquette}
+                className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold backdrop-blur"
+              >
+                {etiquette}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -166,11 +177,11 @@ export default function LoginPage() {
       <div className="flex w-full items-center justify-center px-4 py-10 md:w-1/2">
         <div className="w-full max-w-md">
           <div className="mb-8 text-center">
-            <div className="mb-4 flex items-center justify-center gap-2">
-              <span className="text-2xl">
-                <Construction className="h-8 w-8 text-primary" />
+            <div className="mb-4 flex items-center justify-center gap-3">
+              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-primary to-primary-deep text-white shadow-lg shadow-primary/25">
+                <Construction className="h-6 w-6" />
               </span>
-              <span className="text-2xl font-bold text-foreground">BTP Suivi Pro</span>
+              <span className="text-2xl font-bold tracking-tight text-foreground">BTP Suivi Pro</span>
             </div>
             <p className="text-sm text-muted">
               {langue === "fr" ? "Gestion et suivi de chantiers" : "Site management and tracking"}
@@ -186,17 +197,17 @@ export default function LoginPage() {
                 <p className="text-sm text-muted">{signup ? t("subtitle_signup") : t("subtitle_signin")}</p>
               </div>
               {!signup && (
-                <div className="flex gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+                <div className="flex gap-1 rounded-xl border border-border/80 bg-surface-2 p-1">
                   <button
                     type="button"
                     onClick={() => {
                       setMode("email");
                       setMessage(null);
                     }}
-                    className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                    className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
                       mode === "email"
                         ? "bg-primary text-white shadow-sm"
-                        : "text-muted hover:bg-slate-200 dark:hover:bg-slate-700"
+                        : "text-muted hover:bg-surface hover:text-foreground"
                     }`}
                   >
                     {t("email")}
@@ -207,10 +218,10 @@ export default function LoginPage() {
                       setMode("telephone");
                       setMessage(null);
                     }}
-                    className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                    className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
                       mode === "telephone"
                         ? "bg-primary text-white shadow-sm"
-                        : "text-muted hover:bg-slate-200 dark:hover:bg-slate-700"
+                        : "text-muted hover:bg-surface hover:text-foreground"
                     }`}
                   >
                     {t("telephone")}
@@ -225,7 +236,7 @@ export default function LoginPage() {
                   <div>
                     <label className="mb-1 block text-sm font-medium text-foreground">{t("full_name")}</label>
                     <input
-                      className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                      className="w-full rounded-xl border border-border/80 bg-surface px-3.5 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                       type="text"
                       value={nom}
                       onChange={(e) => setNom(e.target.value)}
@@ -234,7 +245,7 @@ export default function LoginPage() {
                   <div>
                     <label className="mb-1 block text-sm font-medium text-foreground">{t("email")} *</label>
                     <input
-                      className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                      className="w-full rounded-xl border border-border/80 bg-surface px-3.5 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -244,7 +255,7 @@ export default function LoginPage() {
                   <div>
                     <label className="mb-1 block text-sm font-medium text-foreground">{t("telephone")}</label>
                     <input
-                      className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                      className="w-full rounded-xl border border-border/80 bg-surface px-3.5 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                       type="tel"
                       value={telInscription}
                       onChange={(e) => setTelInscription(e.target.value)}
@@ -255,7 +266,7 @@ export default function LoginPage() {
                 <div>
                   <label className="mb-1 block text-sm font-medium text-foreground">{t("email")}</label>
                   <input
-                    className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                    className="w-full rounded-xl border border-border/80 bg-surface px-3.5 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -266,7 +277,7 @@ export default function LoginPage() {
                 <div>
                   <label className="mb-1 block text-sm font-medium text-foreground">{t("telephone")}</label>
                   <input
-                    className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                    className="w-full rounded-xl border border-border/80 bg-surface px-3.5 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                     type="tel"
                     value={telephone}
                     onChange={(e) => setTelephone(e.target.value)}
