@@ -289,7 +289,7 @@ export default function LoginPage() {
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">{t("password")}</label>
                 <input
-                  className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                  className="w-full rounded-xl border border-border/80 bg-surface px-3.5 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

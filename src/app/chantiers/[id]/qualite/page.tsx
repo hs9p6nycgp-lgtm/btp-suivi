@@ -9,9 +9,10 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatCard } from "@/components/ui/StatCard";
-import { getLangue } from "@/lib/i18n";
+import { getLangue, traduireErreur } from "@/lib/i18n";
 
 type PlanControle = {
   id: string;
@@ -151,7 +152,7 @@ export default function QualitePage() {
     }
 
     setLoading(false);
-    if (error) { setMessage(error.message); return; }
+    if (error) { setMessage(traduireErreur(error)); return; }
     setNouvelEssaiType("");
     setNouvelleValeur("");
     setNouvelleSection("");
@@ -164,7 +165,7 @@ export default function QualitePage() {
   async function cloturerNC(id: string) {
     const supabase = createClient();
     const { error } = await supabase.from("non_conformites").update({ statut: "cloturee", date_cloture: new Date().toISOString().slice(0, 10) }).eq("id", id);
-    if (error) { setMessage(error.message); return; }
+    if (error) { setMessage(traduireErreur(error)); return; }
     setMessage(langue === "fr" ? "Non-conformite cloturee." : "Non-conformity closed.");
     load();
   }
@@ -176,25 +177,34 @@ export default function QualitePage() {
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <Link href={`/chantiers/${chantierId}`} className="text-sm font-medium text-primary hover:underline">
-            &larr; Retour chantier
+      <PageHeader
+        eyebrow={langue === "fr" ? "Suivi de chantier" : "Site tracking"}
+        title={langue === "fr" ? "Qualité & Contrôle" : "Quality & Control"}
+        description={
+          langue === "fr"
+            ? "Essais de contrôle, non-conformités et suivi des éprouvettes béton."
+            : "Control tests, non-conformities and concrete sample tracking."
+        }
+        icon={<ClipboardCheck className="h-5 w-5" />}
+        actions={
+          <Link
+            href={`/chantiers/${chantierId}`}
+            className="inline-flex items-center gap-2 rounded-xl border border-border/80 bg-surface px-3.5 py-2 text-sm font-semibold text-muted shadow-sm transition hover:border-primary-light/50 hover:text-foreground"
+          >
+            <span>←</span>
+            {langue === "fr" ? "Retour au chantier" : "Back to site"}
           </Link>
-          <h1 className="mt-2 text-2xl font-bold text-foreground md:text-3xl">
-            {langue === "fr" ? "Qualité & Contrôle" : "Quality & Control"}
-          </h1>
-        </div>
-      </div>
+        }
+      />
 
       {message && (
-        <div className="mb-4 rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
+        <div className="anim-fade-up mb-4 rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
           {message}
         </div>
       )}
 
       {/* Statistiques */}
-      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="anim-fade-up anim-delay-1 mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title={langue === "fr" ? "Essais" : "Tests"}
           value={nbEssais}
@@ -222,7 +232,7 @@ export default function QualitePage() {
       </div>
 
       {/* Taux de conformité */}
-      <section className="mb-6">
+      <section className="anim-fade-up anim-delay-2 mb-6">
         <Card padding="lg">
           <h2 className="mb-4 text-lg font-bold text-foreground">
             {langue === "fr" ? "Taux de conformité" : "Compliance rate"}
@@ -232,14 +242,14 @@ export default function QualitePage() {
       </section>
 
       {/* Formulaire d'un nouvel essai */}
-      <section className="mb-6">
+      <section className="anim-fade-up anim-delay-3 mb-6">
         <Card padding="lg">
           <h2 className="mb-4 text-lg font-bold text-foreground">
             {langue === "fr" ? "Nouvel essai de contrôle" : "New control test"}
           </h2>
           <form onSubmit={ajouterEssai} className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <select
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               value={nouvelEssaiType}
               onChange={(e) => setNouvelEssaiType(e.target.value)}
               required
@@ -252,7 +262,7 @@ export default function QualitePage() {
               ))}
             </select>
             <input
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               type="number"
               step="0.01"
               placeholder={langue === "fr" ? "Valeur mesurée" : "Measured value"}
@@ -261,19 +271,19 @@ export default function QualitePage() {
               required
             />
             <input
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               placeholder={langue === "fr" ? "Section (optionnel)" : "Section (optional)"}
               value={nouvelleSection}
               onChange={(e) => setNouvelleSection(e.target.value)}
             />
             <input
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               placeholder={langue === "fr" ? "Responsable (optionnel)" : "Owner (optional)"}
               value={nouveauResponsable}
               onChange={(e) => setNouveauResponsable(e.target.value)}
             />
             <textarea
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200 md:col-span-4"
+              className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10 md:col-span-4"
               rows={2}
               placeholder={langue === "fr" ? "Observations (optionnel)" : "Observations (optional)"}
               value={nouvellesObservations}
@@ -287,137 +297,146 @@ export default function QualitePage() {
       </section>
 
       {/* Essais */}
-      <section className="mb-6">
-        <h2 className="mb-4 text-lg font-bold text-foreground">
+      <section className="anim-fade-up anim-delay-4 mb-6">
+        <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+          <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
           {langue === "fr" ? "Essais de contrôle" : "Control tests"}
         </h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-left">
-                <th className="p-3 font-semibold text-muted">Date</th>
-                <th className="p-3 font-semibold text-muted">Paramètre</th>
-                <th className="p-3 text-center font-semibold text-muted">Mesure</th>
-                <th className="p-3 text-center font-semibold text-muted">Exige</th>
-                <th className="p-3 text-center font-semibold text-muted">Unité</th>
-                <th className="p-3 text-center font-semibold text-muted">Statut</th>
-              </tr>
-            </thead>
-            <tbody>
-              {essais.map((e) => (
-                <tr key={e.id} className={`border-b border-border last:border-0 ${!e.conforme ? "bg-danger/5" : ""}`}>
-                  <td className="p-3">{new Date(e.date_controle).toLocaleDateString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                  <td className="p-3 font-medium text-foreground">{e.type_controle}</td>
-                  <td className="p-3 text-center">{e.valeur_mesuree}</td>
-                  <td className="p-3 text-center">{e.valeur_exigee}</td>
-                  <td className="p-3 text-center text-muted">{e.unite}</td>
-                  <td className="p-3 text-center">
-                    <Badge variant={e.conforme ? "success" : "danger"}>
-                      {e.conforme ? (langue === "fr" ? "Conforme" : "Conforming") : (langue === "fr" ? "NON CONFORME" : "NON CONFORMING")}
-                    </Badge>
-                  </td>
+        <Card padding="none">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/80 bg-surface-2 text-left">
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Date</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Paramètre</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Mesure</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Exigé</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Unité</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Statut</th>
                 </tr>
-              ))}
-              {essais.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="p-4 text-center text-muted">Aucun essai saisi.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {essais.map((e) => (
+                  <tr key={e.id} className={`border-b border-border/60 transition last:border-0 hover:bg-surface-2/70 ${!e.conforme ? "bg-danger/5" : ""}`}>
+                    <td className="px-4 py-3">{new Date(e.date_controle).toLocaleDateString(langue === "fr" ? "fr-FR" : "en-US")}</td>
+                    <td className="px-4 py-3 font-medium text-foreground">{e.type_controle}</td>
+                    <td className="px-4 py-3 text-center tabular-nums">{e.valeur_mesuree}</td>
+                    <td className="px-4 py-3 text-center tabular-nums">{e.valeur_exigee}</td>
+                    <td className="px-4 py-3 text-center text-muted">{e.unite}</td>
+                    <td className="px-4 py-3 text-center">
+                      <Badge variant={e.conforme ? "success" : "danger"}>
+                        {e.conforme ? (langue === "fr" ? "Conforme" : "Conforming") : (langue === "fr" ? "NON CONFORME" : "NON CONFORMING")}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+                {essais.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="p-4 text-center text-muted">Aucun essai saisi.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       </section>
 
       {/* Non-conformités */}
-      <section className="mb-6">
-        <h2 className="mb-4 text-lg font-bold text-foreground">
+      <section className="anim-fade-up anim-delay-5 mb-6">
+        <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+          <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
           {langue === "fr" ? "Fiches de non-conformité" : "Non-conformity sheets"}
         </h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-left">
-                <th className="p-3 font-semibold text-muted">Description</th>
-                <th className="p-3 font-semibold text-muted text-center">Gravité</th>
-                <th className="p-3 font-semibold text-muted text-center">Statut</th>
-                <th className="p-3 font-semibold text-muted text-center">Responsable</th>
-                <th className="p-3 font-semibold text-muted text-center">Échéance</th>
-                <th className="p-3 font-semibold text-muted text-center">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {nonConformites.map((nc) => (
-                <tr key={nc.id} className={`border-b border-border last:border-0 ${nc.statut !== "cloturee" ? "bg-warning/10" : ""}`}>
-                  <td className="p-3">{nc.description}</td>
-                  <td className="p-3 text-center">
-                    <Badge variant={nc.gravite === "critique" ? "danger" : nc.gravite === "majeure" ? "warning" : "info"}>
-                      {nc.gravite}
-                    </Badge>
-                  </td>
-                  <td className="p-3 text-center">
-                    <Badge variant={nc.statut === "cloturee" ? "success" : "warning"}>
-                      {nc.statut}
-                    </Badge>
-                  </td>
-                  <td className="p-3 text-center text-muted">{nc.responsable ?? "-"}</td>
-                  <td className="p-3 text-center text-muted">{nc.echeance ?? "-"}</td>
-                  <td className="p-3 text-center">
-                    {nc.statut !== "cloturee" && (
-                      <Button variant="secondary" size="sm" onClick={() => cloturerNC(nc.id)}>
-                        {langue === "fr" ? "Cloturer" : "Close"}
-                      </Button>
-                    )}
-                  </td>
+        <Card padding="none">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/80 bg-surface-2 text-left">
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Description</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Gravité</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Statut</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Responsable</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Échéance</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Action</th>
                 </tr>
-              ))}
-              {nonConformites.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="p-4 text-center text-muted">Aucune non-conformité.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {nonConformites.map((nc) => (
+                  <tr key={nc.id} className={`border-b border-border/60 transition last:border-0 hover:bg-surface-2/70 ${nc.statut !== "cloturee" ? "bg-warning/10" : ""}`}>
+                    <td className="px-4 py-3">{nc.description}</td>
+                    <td className="px-4 py-3 text-center">
+                      <Badge variant={nc.gravite === "critique" ? "danger" : nc.gravite === "majeure" ? "warning" : "info"}>
+                        {nc.gravite}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <Badge variant={nc.statut === "cloturee" ? "success" : "warning"}>
+                        {nc.statut}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-center text-muted">{nc.responsable ?? "-"}</td>
+                    <td className="px-4 py-3 text-center text-muted">{nc.echeance ?? "-"}</td>
+                    <td className="px-4 py-3 text-center">
+                      {nc.statut !== "cloturee" && (
+                        <Button variant="secondary" size="sm" onClick={() => cloturerNC(nc.id)}>
+                          {langue === "fr" ? "Clôturer" : "Close"}
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {nonConformites.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="p-4 text-center text-muted">Aucune non-conformité.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       </section>
 
       {/* Éprouvettes béton */}
-      <section>
-        <h2 className="mb-4 text-lg font-bold text-foreground">
+      <section className="anim-fade-up anim-delay-6">
+        <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+          <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
           {langue === "fr" ? "Suivi des éprouvettes béton" : "Concrete samples tracking"}
         </h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-left">
-                <th className="p-3 font-semibold text-muted">Date de coulage</th>
-                <th className="p-3 font-semibold text-muted text-center">Âge (jours)</th>
-                <th className="p-3 font-semibold text-muted text-center">Résistance mesurée</th>
-                <th className="p-3 font-semibold text-muted text-center">Résistance exigée</th>
-                <th className="p-3 font-semibold text-muted text-center">Statut</th>
-              </tr>
-            </thead>
-            <tbody>
-              {epreuves.map((ep) => (
-                <tr key={ep.id} className={`border-b border-border last:border-0 ${!ep.conforme ? "bg-danger/5" : ""}`}>
-                  <td className="p-3">{new Date(ep.date_coulage).toLocaleDateString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                  <td className="p-3 text-center">{ep.age_jours}</td>
-                  <td className="p-3 text-center">{ep.resistance_mesuree ?? "-"}</td>
-                  <td className="p-3 text-center">{ep.resistance_exigee}</td>
-                  <td className="p-3 text-center">
-                    <Badge variant={ep.conforme ? "success" : "danger"}>
-                      {ep.conforme ? (langue === "fr" ? "Conforme" : "Conforming") : (langue === "fr" ? "NON CONFORME" : "NON CONFORMING")}
-                    </Badge>
-                  </td>
+        <Card padding="none">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/80 bg-surface-2 text-left">
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Date de coulage</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Âge (jours)</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Résistance mesurée</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Résistance exigée</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Statut</th>
                 </tr>
-              ))}
-              {epreuves.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="p-4 text-center text-muted">Aucune éprouvette enregistrée.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {epreuves.map((ep) => (
+                  <tr key={ep.id} className={`border-b border-border/60 transition last:border-0 hover:bg-surface-2/70 ${!ep.conforme ? "bg-danger/5" : ""}`}>
+                    <td className="px-4 py-3">{new Date(ep.date_coulage).toLocaleDateString(langue === "fr" ? "fr-FR" : "en-US")}</td>
+                    <td className="px-4 py-3 text-center tabular-nums">{ep.age_jours}</td>
+                    <td className="px-4 py-3 text-center tabular-nums">{ep.resistance_mesuree ?? "-"}</td>
+                    <td className="px-4 py-3 text-center tabular-nums">{ep.resistance_exigee}</td>
+                    <td className="px-4 py-3 text-center">
+                      <Badge variant={ep.conforme ? "success" : "danger"}>
+                        {ep.conforme ? (langue === "fr" ? "Conforme" : "Conforming") : (langue === "fr" ? "NON CONFORME" : "NON CONFORMING")}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+                {epreuves.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="p-4 text-center text-muted">Aucune éprouvette enregistrée.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       </section>
     </main>
   );

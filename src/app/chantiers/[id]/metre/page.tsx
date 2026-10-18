@@ -10,9 +10,15 @@ import {
   arrondir2Decimales,
 } from "@/lib/calculs/metre";
 import { createClient } from "@/lib/supabase/client";
+import { Ruler } from "lucide-react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
+
+const CLASSE_CHAMP =
+  "rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10";
 
 export default function MetrePage() {
   const params = useParams();
@@ -73,79 +79,129 @@ export default function MetrePage() {
     : null;
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 py-8">
-      <div className="mb-6">
-        <a href={`/chantiers/${chantierId}`} className="text-sm font-medium text-primary hover:underline">
-          &larr; Retour chantier
-        </a>
-        <h1 className="mt-2 text-2xl font-bold text-foreground md:text-3xl">Métré &amp; DQE</h1>
+    <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
+      <div className="mx-auto w-full max-w-4xl">
+        <PageHeader
+          eyebrow="Calculateur"
+          title="Métré & DQE"
+          description="Volumes, foisonnement, nombre de bennes et ratio d'acier. Les formules du cahier des charges sont appliquées à l'identique."
+          icon={<Ruler className="h-5 w-5" />}
+          actions={
+            <Link
+              href={`/chantiers/${chantierId}`}
+              className="inline-flex items-center gap-2 rounded-xl border border-border/80 bg-surface px-3.5 py-2 text-sm font-semibold text-muted shadow-sm transition hover:border-primary-light/50 hover:text-foreground"
+            >
+              <span>←</span>
+              Retour au chantier
+            </Link>
+          }
+        />
+
+        <section className="anim-fade-up anim-delay-1 mb-6">
+          <Card padding="lg">
+            <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+              <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+              Volume de couche (L × l × e)
+            </h2>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <input
+                className={CLASSE_CHAMP}
+                placeholder="Longueur (m)"
+                value={l}
+                onChange={(e) => setL(e.target.value)}
+              />
+              <input
+                className={CLASSE_CHAMP}
+                placeholder="Largeur (m)"
+                value={la}
+                onChange={(e) => setLa(e.target.value)}
+              />
+              <input
+                className={CLASSE_CHAMP}
+                placeholder="Épaisseur (m)"
+                value={e}
+                onChange={(e) => setE(e.target.value)}
+              />
+            </div>
+            <div className="mt-4 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+              {volCouche !== null && (
+                <p className="flex items-center justify-between gap-3 rounded-xl bg-surface-2 px-3 py-2">
+                  <span className="text-muted">Volume en place</span>
+                  <span className="font-semibold tabular-nums text-foreground">{volCouche} m³</span>
+                </p>
+              )}
+              {volFoisonne !== null && (
+                <p className="flex items-center justify-between gap-3 rounded-xl bg-surface-2 px-3 py-2">
+                  <span className="text-muted">Volume foisonné (×{foisonnement})</span>
+                  <span className="font-semibold tabular-nums text-foreground">{volFoisonne} m³</span>
+                </p>
+              )}
+              {nbBennes !== null && (
+                <p className="flex items-center justify-between gap-3 rounded-xl bg-surface-2 px-3 py-2">
+                  <span className="text-muted">Nombre de bennes (cap. {capaciteBenne} m³)</span>
+                  <span className="font-semibold tabular-nums text-foreground">{nbBennes}</span>
+                </p>
+              )}
+              {surface !== null && (
+                <p className="flex items-center justify-between gap-3 rounded-xl bg-surface-2 px-3 py-2">
+                  <span className="text-muted">Surface</span>
+                  <span className="font-semibold tabular-nums text-foreground">{surface} m²</span>
+                </p>
+              )}
+            </div>
+          </Card>
+        </section>
+
+        <section className="anim-fade-up anim-delay-2 mb-6">
+          <Card padding="lg">
+            <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+              <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+              Béton : ratio d&apos;acier
+            </h2>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <input
+                className={CLASSE_CHAMP}
+                placeholder="Masse d'acier (kg)"
+                value={masseAcier}
+                onChange={(e) => setMasseAcier(e.target.value)}
+              />
+              <input
+                className={CLASSE_CHAMP}
+                placeholder="Volume de béton (m³)"
+                value={volBetonRatio}
+                onChange={(e) => setVolBetonRatio(e.target.value)}
+              />
+            </div>
+            {acierRatio !== null && (
+              <p className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-surface-2 px-3 py-2 text-sm">
+                <span className="text-muted">Ratio d&apos;acier</span>
+                <span className="font-semibold tabular-nums text-foreground">{acierRatio} kg/m³</span>
+              </p>
+            )}
+          </Card>
+        </section>
+
+        <section className="anim-fade-up anim-delay-3">
+          <Card padding="lg">
+            <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+              <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+              Béton simple (un élément)
+            </h2>
+            <input
+              className={`w-full ${CLASSE_CHAMP}`}
+              placeholder="Longueur de l'élément (m) pour volume unitaire"
+              value={volumeBetonEl}
+              onChange={(e) => setVolumeBetonEl(e.target.value)}
+            />
+            {volBetonCalc !== null && (
+              <p className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-surface-2 px-3 py-2 text-sm">
+                <span className="text-muted">Volume</span>
+                <span className="font-semibold tabular-nums text-foreground">{volBetonCalc} m³</span>
+              </p>
+            )}
+          </Card>
+        </section>
       </div>
-
-      <section className="mb-6">
-        <Card padding="lg">
-          <h2 className="mb-4 text-lg font-bold text-foreground">Volume de couche (L x l x e)</h2>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            <input
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
-              placeholder="Longueur (m)"
-              value={l}
-              onChange={(e) => setL(e.target.value)}
-            />
-            <input
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
-              placeholder="Largeur (m)"
-              value={la}
-              onChange={(e) => setLa(e.target.value)}
-            />
-            <input
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
-              placeholder="Epaisseur (m)"
-              value={e}
-              onChange={(e) => setE(e.target.value)}
-            />
-          </div>
-          <div className="mt-4 space-y-1 text-sm text-foreground">
-            {volCouche !== null && <p>Volume en place : {volCouche} m³</p>}
-            {volFoisonne !== null && <p>Volume foisonné (x{foisonnement}) : {volFoisonne} m³</p>}
-            {nbBennes !== null && <p>Nombre de bennes (cap. {capaciteBenne} m³) : {nbBennes}</p>}
-            {surface !== null && <p>Surface : {surface} m²</p>}
-          </div>
-        </Card>
-      </section>
-
-      <section className="mb-6">
-        <Card padding="lg">
-          <h2 className="mb-4 text-lg font-bold text-foreground">Béton : ratio d&apos;acier</h2>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <input
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
-              placeholder="Masse d'acier (kg)"
-              value={masseAcier}
-              onChange={(e) => setMasseAcier(e.target.value)}
-            />
-            <input
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
-              placeholder="Volume de béton (m³)"
-              value={volBetonRatio}
-              onChange={(e) => setVolBetonRatio(e.target.value)}
-            />
-          </div>
-          {acierRatio !== null && <p className="mt-3 text-sm text-foreground">Ratio : {acierRatio} kg/m³</p>}
-        </Card>
-      </section>
-
-      <section>
-        <Card padding="lg">
-          <h2 className="mb-4 text-lg font-bold text-foreground">Béton simple (un élément)</h2>
-          <input
-            className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
-            placeholder="Longueur de l'élément (m) pour volume unitaire"
-            value={volumeBetonEl}
-            onChange={(e) => setVolumeBetonEl(e.target.value)}
-          />
-          {volBetonCalc !== null && <p className="mt-3 text-sm text-foreground">Volume : {volBetonCalc} m³</p>}
-        </Card>
-      </section>
     </main>
   );
 }

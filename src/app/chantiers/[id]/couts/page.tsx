@@ -8,9 +8,10 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatCard } from "@/components/ui/StatCard";
-import { getLangue } from "@/lib/i18n";
+import { getLangue, traduireErreur } from "@/lib/i18n";
 import { ecartBudgetaire } from "@/lib/calculs/metre";
 
 type PosteDQE = {
@@ -97,10 +98,10 @@ export default function CoutsPage() {
       supabase.from("bpu_postes").select("*").order("created_at", { ascending: true }),
       supabase.from("depenses_reelles").select("*").eq("chantier_id", chantierId).order("date_depense", { ascending: true }),
     ]);
-    if (pRes.error) { setMessage(pRes.error.message); return; }
-    if (qRes.error) { setMessage(qRes.error.message); return; }
-    if (bRes.error) { setMessage(bRes.error.message); return; }
-    if (dRes.error) { setMessage(dRes.error.message); return; }
+    if (pRes.error) { setMessage(traduireErreur(pRes.error)); return; }
+    if (qRes.error) { setMessage(traduireErreur(qRes.error)); return; }
+    if (bRes.error) { setMessage(traduireErreur(bRes.error)); return; }
+    if (dRes.error) { setMessage(traduireErreur(dRes.error)); return; }
     setPostes((pRes.data ?? []) as PosteDQE[]);
     setQtes((qRes.data ?? []) as QteRealisee[]);
     setBpu((bRes.data ?? []) as BpuPoste[]);
@@ -171,7 +172,7 @@ export default function CoutsPage() {
       date_depense: dateDepense,
     });
     setLoading(false);
-    if (error) { setMessage(error.message); return; }
+    if (error) { setMessage(traduireErreur(error)); return; }
     setDepenses((prev) => [...prev, { id: "", chantier_id: chantierId, categorie, designation: designation.trim(), quantite: Number(quantite), unite: unite || null, prix_unitaire: Math.round(Number(prixUnitaire)), montant_total: montantTotal, date_depense: dateDepense, reference: reference || null } as unknown as DepenseReelle]);
     setDesignation(""); setQuantite(""); setUnite(""); setPrixUnitaire(""); setReference("");
     setMessage(langue === "fr" ? "Dépense ajoutée." : "Expense added.");
@@ -198,7 +199,7 @@ export default function CoutsPage() {
 
   async function supprimerDepense(id: string) {
     const { error } = await offlineDelete("depenses_reelles", id);
-    if (error) { setMessage(error.message); return; }
+    if (error) { setMessage(traduireErreur(error)); return; }
     setDepenses((prev) => prev.filter((d) => d.id !== id));
   }
 
@@ -209,17 +210,28 @@ export default function CoutsPage() {
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <Link href={`/chantiers/${chantierId}`} className="text-sm font-medium text-primary hover:underline">
-            &larr; Retour chantier
+      <PageHeader
+        eyebrow={langue === "fr" ? "Suivi de chantier" : "Site tracking"}
+        title={langue === "fr" ? "Coûts & Budget" : "Costs & Budget"}
+        description={
+          langue === "fr"
+            ? "Coût prévu et réalisé par poste du DQE, dépenses réelles saisies et alertes budgétaires."
+            : "Planned and realized cost per bill item, recorded expenses and budget alerts."
+        }
+        icon={<Coins className="h-5 w-5" />}
+        actions={
+          <Link
+            href={`/chantiers/${chantierId}`}
+            className="inline-flex items-center gap-2 rounded-xl border border-border/80 bg-surface px-3.5 py-2 text-sm font-semibold text-muted shadow-sm transition hover:border-primary-light/50 hover:text-foreground"
+          >
+            <span>←</span>
+            {langue === "fr" ? "Retour au chantier" : "Back to site"}
           </Link>
-          <h1 className="mt-2 text-2xl font-bold text-foreground md:text-3xl">Coûts &amp; Budget</h1>
-        </div>
-      </div>
+        }
+      />
 
       {/* Cartes de synthèse */}
-      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="anim-fade-up anim-delay-1 mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title={langue === "fr" ? "Coût prévu" : "Planned cost"}
           value={totalCoutPrevu.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
@@ -251,15 +263,18 @@ export default function CoutsPage() {
       </div>
 
       {message && (
-        <div className="mb-4 rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
+        <div className="anim-fade-up mb-4 rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
           {message}
         </div>
       )}
 
       {/* Comparaison coût par poste DQE */}
-      <section className="mb-6">
+      <section className="anim-fade-up anim-delay-2 mb-6">
         <Card padding="lg">
-          <h2 className="mb-4 text-lg font-bold text-foreground">Coût par poste DQE</h2>
+          <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+            <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+            {langue === "fr" ? "Coût par poste DQE" : "Cost per bill item"}
+          </h2>
           <p className="mb-4 text-sm text-muted">
             {langue === "fr"
               ? "Coût réalisé = Quantités réalisées × Prix du BPU. Écart = Coût réalisé − Coût prévu."
@@ -268,15 +283,15 @@ export default function CoutsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border text-left">
-                  <th className="p-3 font-semibold text-muted">Poste</th>
-                  <th className="p-3 text-center font-semibold text-muted">Qté marché</th>
-                  <th className="p-3 text-center font-semibold text-muted">Qté réalisée</th>
-                  <th className="p-3 text-center font-semibold text-muted">Prix unitaire</th>
-                  <th className="p-3 text-right font-semibold text-muted">Coût prévu</th>
-                  <th className="p-3 text-right font-semibold text-muted">Coût réalisé</th>
-                  <th className="p-3 text-right font-semibold text-muted">Écart</th>
-                  <th className="p-3 text-center font-semibold text-muted">Avancement</th>
+                <tr className="border-b border-border/80 bg-surface-2 text-left">
+                  <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted">Poste</th>
+                  <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">Qté marché</th>
+                  <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">Qté réalisée</th>
+                  <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">Prix unitaire</th>
+                  <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wider text-muted">Coût prévu</th>
+                  <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wider text-muted">Coût réalisé</th>
+                  <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wider text-muted">Écart</th>
+                  <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">Avancement</th>
                 </tr>
               </thead>
               <tbody>
@@ -285,27 +300,29 @@ export default function CoutsPage() {
                   return (
                     <tr
                       key={c.designation}
-                      className={`border-b border-border last:border-0 ${c.ecart > c.cout_prevu * 0.05 ? "bg-danger/5" : ""}`}
+                      className={`border-b border-border/60 transition last:border-0 hover:bg-surface-2/70 ${c.ecart > c.cout_prevu * 0.05 ? "bg-danger/5" : ""}`}
                     >
-                      <td className="p-3">
+                      <td className="px-3 py-2.5">
                         {c.designation} <span className="text-xs text-muted">({c.code ?? "-"})</span>
                       </td>
-                      <td className="p-3 text-center">{c.qte_marche.toFixed(2)}</td>
-                      <td className="p-3 text-center">{c.qte_reelle.toFixed(2)}</td>
-                      <td className="p-3 text-center">{c.prix_unitaire.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                      <td className="p-3 text-right">{c.cout_prevu.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                      <td className="p-3 text-right font-semibold">{c.cout_reel.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                      <td className={`p-3 text-right font-semibold ${c.ecart > 0 ? "text-danger" : "text-success"}`}>
+                      <td className="px-3 py-2.5 text-center tabular-nums">{c.qte_marche.toFixed(2)}</td>
+                      <td className="px-3 py-2.5 text-center tabular-nums">{c.qte_reelle.toFixed(2)}</td>
+                      <td className="px-3 py-2.5 text-center tabular-nums">{c.prix_unitaire.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{c.cout_prevu.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
+                      <td className="px-3 py-2.5 text-right font-semibold tabular-nums">{c.cout_reel.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
+                      <td className={`px-3 py-2.5 text-right font-semibold tabular-nums ${c.ecart > 0 ? "text-danger" : "text-success"}`}>
                         {c.ecart >= 0 ? "+" : ""}{c.ecart.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
                       </td>
-                      <td className="p-3 text-center">
-                        <ProgressBar
-                          value={c.avancement_pct}
-                          color={couleurAvancement}
-                          size="sm"
-                          showValue={false}
-                        />
-                        <span className="ml-2 text-xs font-semibold text-muted">{c.avancement_pct.toFixed(0)}%</span>
+                      <td className="px-3 py-2.5">
+                        <div className="mx-auto flex w-32 items-center gap-2">
+                          <ProgressBar
+                            value={c.avancement_pct}
+                            color={couleurAvancement}
+                            size="sm"
+                            showValue={false}
+                          />
+                          <span className="shrink-0 text-xs font-semibold tabular-nums text-muted">{c.avancement_pct.toFixed(0)}%</span>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -317,17 +334,17 @@ export default function CoutsPage() {
                 )}
               </tbody>
               <tfoot>
-                <tr className="border-t border-border bg-surface-2 font-bold">
-                  <td className="p-3">TOTAL</td>
-                  <td className="p-3 text-center"></td>
-                  <td className="p-3 text-center"></td>
-                  <td className="p-3 text-center"></td>
-                  <td className="p-3 text-right">{totalCoutPrevu.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                  <td className="p-3 text-right">{totalCoutReel.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                  <td className={`p-3 text-right ${totalEcart > 0 ? "text-danger" : "text-success"}`}>
+                <tr className="border-t border-border/80 bg-surface-2 font-bold">
+                  <td className="px-3 py-2.5">TOTAL</td>
+                  <td className="px-3 py-2.5 text-center"></td>
+                  <td className="px-3 py-2.5 text-center"></td>
+                  <td className="px-3 py-2.5 text-center"></td>
+                  <td className="px-3 py-2.5 text-right tabular-nums">{totalCoutPrevu.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
+                  <td className="px-3 py-2.5 text-right tabular-nums">{totalCoutReel.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
+                  <td className={`px-3 py-2.5 text-right tabular-nums ${totalEcart > 0 ? "text-danger" : "text-success"}`}>
                     {totalEcart >= 0 ? "+" : ""}{totalEcart.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
                   </td>
-                  <td className="p-3 text-center"></td>
+                  <td className="px-3 py-2.5 text-center"></td>
                 </tr>
               </tfoot>
             </table>
@@ -349,12 +366,15 @@ export default function CoutsPage() {
       </section>
 
       {/* Dépenses réelles */}
-      <section>
+      <section className="anim-fade-up anim-delay-3">
         <Card padding="lg">
-          <h2 className="mb-4 text-lg font-bold text-foreground">Dépenses réelles</h2>
+          <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+            <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+            {langue === "fr" ? "Dépenses réelles" : "Real expenses"}
+          </h2>
           <form onSubmit={ajouterDepense} className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-6">
             <select
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               value={categorie}
               onChange={(e) => setCategorie(e.target.value as typeof categorie)}
             >
@@ -366,14 +386,14 @@ export default function CoutsPage() {
               <option value="autre">Autre</option>
             </select>
             <input
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               placeholder="Désignation *"
               value={designation}
               onChange={(e) => setDesignation(e.target.value)}
               required
             />
             <input
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               type="number"
               step="0.01"
               placeholder="Qté"
@@ -382,13 +402,13 @@ export default function CoutsPage() {
               required
             />
             <input
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               placeholder="Unité"
               value={unite}
               onChange={(e) => setUnite(e.target.value)}
             />
             <input
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               type="number"
               step="0.01"
               placeholder="Prix unitaire (FCFA)"
@@ -398,7 +418,7 @@ export default function CoutsPage() {
             />
             <input
               type="date"
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               value={dateDepense}
               onChange={(e) => setDateDepense(e.target.value)}
             />
@@ -410,30 +430,30 @@ export default function CoutsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border text-left">
-                  <th className="p-3 font-semibold text-muted">Date</th>
-                  <th className="p-3 font-semibold text-muted">Catégorie</th>
-                  <th className="p-3 font-semibold text-muted">Désignation</th>
-                  <th className="p-3 text-center font-semibold text-muted">Qté</th>
-                  <th className="p-3 text-center font-semibold text-muted">Unité</th>
-                  <th className="p-3 text-right font-semibold text-muted">Prix unitaire</th>
-                  <th className="p-3 text-right font-semibold text-muted">Montant</th>
-                  <th className="p-3 text-right font-semibold text-muted">Référence</th>
-                  <th className="p-3" />
+                <tr className="border-b border-border/80 bg-surface-2 text-left">
+                  <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted">Date</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted">Catégorie</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted">Désignation</th>
+                  <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">Qté</th>
+                  <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">Unité</th>
+                  <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wider text-muted">Prix unitaire</th>
+                  <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wider text-muted">Montant</th>
+                  <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wider text-muted">Référence</th>
+                  <th className="px-3 py-2.5" />
                 </tr>
               </thead>
               <tbody>
                 {depenses.map((d) => (
-                  <tr key={d.id} className="border-b border-border last:border-0">
-                    <td className="p-3">{new Date(d.date_depense).toLocaleDateString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                    <td className="p-3">{libelleCategorie(d.categorie)}</td>
-                    <td className="p-3 font-medium text-foreground">{d.designation}</td>
-                    <td className="p-3 text-center">{d.quantite.toFixed(2)}</td>
-                    <td className="p-3 text-center text-muted">{d.unite ?? "-"}</td>
-                    <td className="p-3 text-right">{d.prix_unitaire.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                    <td className="p-3 text-right font-semibold">{d.montant_total.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
-                    <td className="p-3 text-right text-muted">{d.reference ?? "-"}</td>
-                    <td className="p-3 text-right">
+                  <tr key={d.id} className="border-b border-border/60 transition last:border-0 hover:bg-surface-2/70">
+                    <td className="px-3 py-2.5">{new Date(d.date_depense).toLocaleDateString(langue === "fr" ? "fr-FR" : "en-US")}</td>
+                    <td className="px-3 py-2.5">{libelleCategorie(d.categorie)}</td>
+                    <td className="px-3 py-2.5 font-medium text-foreground">{d.designation}</td>
+                    <td className="px-3 py-2.5 text-center tabular-nums">{d.quantite.toFixed(2)}</td>
+                    <td className="px-3 py-2.5 text-center text-muted">{d.unite ?? "-"}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">{d.prix_unitaire.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
+                    <td className="px-3 py-2.5 text-right font-semibold tabular-nums">{d.montant_total.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}</td>
+                    <td className="px-3 py-2.5 text-right text-muted">{d.reference ?? "-"}</td>
+                    <td className="px-3 py-2.5 text-right">
                       <button type="button" onClick={() => supprimerDepense(d.id)} className="text-danger text-xs font-medium hover:underline">
                         Supprimer
                       </button>

@@ -8,7 +8,8 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { getLangue } from "@/lib/i18n";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { getLangue, traduireErreur } from "@/lib/i18n";
 
 type Journal = {
   id: string;
@@ -38,6 +39,7 @@ export default function JournauxPage() {
   const [observations, setObservations] = useState("");
   const [loading, setLoading] = useState(false);
   const [etape, setEtape] = useState<Etape>(0);
+  const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (chantierId) load();
@@ -54,7 +56,10 @@ export default function JournauxPage() {
       .select("*")
       .eq("chantier_id", chantierId)
       .order("date_journal", { ascending: false });
-    if (error) return;
+    if (error) {
+      setMessage(traduireErreur(error));
+      return;
+    }
     setItems((data ?? []) as Journal[]);
   }
 
@@ -70,7 +75,10 @@ export default function JournauxPage() {
       .select()
       .single();
     setLoading(false);
-    if (error) return;
+    if (error) {
+      setMessage(traduireErreur(error));
+      return;
+    }
     router.push(`/chantiers/${chantierId}/journaux/${data.id}`);
   }
 
@@ -82,15 +90,34 @@ export default function JournauxPage() {
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
-      <div className="mb-6">
-        <Link href={`/chantiers/${chantierId}`} className="text-sm font-medium text-primary hover:underline">
-          &larr; Retour chantier
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold text-foreground md:text-3xl">Journal de chantier</h1>
-      </div>
+      <PageHeader
+        eyebrow={langue === "fr" ? "Suivi de chantier" : "Site tracking"}
+        title={langue === "fr" ? "Journal de chantier" : "Site log"}
+        description={
+          langue === "fr"
+            ? "Créez la fiche journalière : météo, observations et validation."
+            : "Create the daily sheet: weather, observations and validation."
+        }
+        icon={<CalendarDays className="h-5 w-5" />}
+        actions={
+          <Link
+            href={`/chantiers/${chantierId}`}
+            className="inline-flex items-center gap-2 rounded-xl border border-border/80 bg-surface px-3.5 py-2 text-sm font-semibold text-muted shadow-sm transition hover:border-primary-light/50 hover:text-foreground"
+          >
+            <span>←</span>
+            {langue === "fr" ? "Retour au chantier" : "Back to site"}
+          </Link>
+        }
+      />
+
+      {message && (
+        <div className="anim-fade-up mb-4 rounded-xl border border-danger/40 bg-danger/10 p-3 text-sm text-foreground">
+          {message}
+        </div>
+      )}
 
       {/* Barre d'étapes */}
-      <div className="mb-6 flex items-center gap-2 rounded-xl border border-border bg-surface p-3">
+      <div className="anim-fade-up anim-delay-1 mb-6 flex items-center gap-2 rounded-xl border border-border/80 bg-surface p-3 shadow-soft">
         {([0, 1, 2] as Etape[]).map((etapeCourante) => (
           <div
             key={etapeCourante}
@@ -102,7 +129,7 @@ export default function JournauxPage() {
           >
             <span
               className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${
-                etape === etapeCourante ? "bg-white text-primary" : "bg-slate-200 dark:bg-slate-700"
+                etape === etapeCourante ? "bg-white text-primary" : "bg-surface-2 text-muted"
               }`}
             >
               {etapeCourante + 1}
@@ -114,7 +141,7 @@ export default function JournauxPage() {
 
       {/* Étape 1 : saisie */}
       {etape === 0 && (
-        <Card padding="lg">
+        <Card padding="lg" className="anim-fade-up">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-foreground">
             <CalendarDays className="h-5 w-5 text-primary" />
             {langue === "fr" ? "Saisir le jour" : "Enter the day"}
@@ -129,7 +156,7 @@ export default function JournauxPage() {
               <label className="mb-1 block text-sm font-medium text-foreground">Date</label>
               <input
                 type="date"
-                className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 required
@@ -138,7 +165,7 @@ export default function JournauxPage() {
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground">Météo</label>
               <input
-                className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 placeholder="Ensoleillé, pluvieux..."
                 value={meteo}
                 onChange={(e) => setMeteo(e.target.value)}
@@ -147,7 +174,7 @@ export default function JournauxPage() {
             <div className="md:col-span-2">
               <label className="mb-1 block text-sm font-medium text-foreground">Observations</label>
               <textarea
-                className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 rows={3}
                 placeholder="Travaux réalisés, incidents, heures supplémentaires..."
                 value={observations}
@@ -165,7 +192,7 @@ export default function JournauxPage() {
 
       {/* Étape 2 : vérification */}
       {etape === 1 && (
-        <Card padding="lg">
+        <Card padding="lg" className="anim-fade-up">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-foreground">
             <ClipboardCheck className="h-5 w-5 text-primary" />
             {langue === "fr" ? "Vérifier le jour saisi" : "Review the entered day"}
@@ -195,7 +222,7 @@ export default function JournauxPage() {
 
       {/* Étape 3 : création */}
       {etape === 2 && (
-        <Card padding="lg">
+        <Card padding="lg" className="anim-fade-up">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-foreground">
             <FilePlus2 className="h-5 w-5 text-primary" />
             {langue === "fr" ? "Créer la fiche" : "Create the sheet"}
@@ -232,8 +259,11 @@ export default function JournauxPage() {
       )}
 
       {/* Liste des journaux existants */}
-      <div className="mt-10">
-        <h2 className="mb-4 text-lg font-bold text-foreground">Journaux existants</h2>
+      <div className="anim-fade-up anim-delay-2 mt-10">
+        <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+          <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+          {langue === "fr" ? "Journaux existants" : "Existing logs"}
+        </h2>
         {items.length === 0 ? (
           <Card padding="lg" className="text-center">
             <p className="text-sm text-muted">Aucun journal pour le moment.</p>

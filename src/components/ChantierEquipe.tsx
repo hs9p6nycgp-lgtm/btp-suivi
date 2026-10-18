@@ -2,6 +2,9 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { traduireErreur } from "@/lib/i18n";
 
 type Member = {
   chantier_id: string;
@@ -14,8 +17,8 @@ type Member = {
 const ROLES = [
   { value: "administrateur", label: "Administrateur" },
   { value: "conducteur", label: "Conducteur de travaux" },
-  { value: "chef_equipe", label: "Chef d'equipe" },
-  { value: "qualite", label: "Qualite" },
+  { value: "chef_equipe", label: "Chef d'équipe" },
+  { value: "qualite", label: "Qualité" },
   { value: "lecture", label: "Lecture seule" },
 ];
 
@@ -46,7 +49,7 @@ export default function ChantierEquipe({
 
     if (pErr || !profil) {
       setMessage(
-        "Utilisateur introuvable. Il doit d'abord se connecter pour creer son profil.",
+        "Utilisateur introuvable. Il doit d'abord se connecter pour créer son profil.",
       );
       setLoading(false);
       return;
@@ -60,7 +63,7 @@ export default function ChantierEquipe({
 
     setLoading(false);
     if (error) {
-      setMessage(error.message);
+      setMessage(traduireErreur(error));
       return;
     }
     setMembers((prev) => {
@@ -77,7 +80,7 @@ export default function ChantierEquipe({
       ];
     });
     setEmail("");
-    setMessage("Utilisateur ajoute.");
+    setMessage("Utilisateur ajouté.");
   }
 
   async function handleRoleChange(userId: string, newRole: string) {
@@ -88,7 +91,7 @@ export default function ChantierEquipe({
       .eq("chantier_id", chantierId)
       .eq("utilisateur_id", userId);
     if (error) {
-      setMessage(error.message);
+      setMessage(traduireErreur(error));
       return;
     }
     setMembers((prev) =>
@@ -106,21 +109,24 @@ export default function ChantierEquipe({
       .eq("chantier_id", chantierId)
       .eq("utilisateur_id", userId);
     if (error) {
-      setMessage(error.message);
+      setMessage(traduireErreur(error));
       return;
     }
     setMembers((prev) => prev.filter((m) => m.utilisateur_id !== userId));
   }
 
   return (
-    <section className="mb-8 card p-4">
-      <h2 className="mb-3 text-lg font-medium">Equipe du chantier</h2>
+    <Card padding="lg">
+      <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+        <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+        Équipe du chantier
+      </h2>
 
       <form onSubmit={handleAdd} className="mb-4 flex flex-wrap items-end gap-3">
-        <div className="flex-1 min-w-[200px]">
-          <label className="block text-sm font-medium">E-mail utilisateur</label>
+        <div className="min-w-[200px] flex-1">
+          <label className="mb-1 block text-sm font-medium text-foreground">E-mail utilisateur</label>
           <input
-            className="w-full rounded border p-2"
+            className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -128,9 +134,9 @@ export default function ChantierEquipe({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium">Role</label>
+          <label className="mb-1 block text-sm font-medium text-foreground">Rôle</label>
           <select
-            className="rounded border p-2"
+            className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
             value={role}
             onChange={(e) => setRole(e.target.value)}
           >
@@ -141,39 +147,37 @@ export default function ChantierEquipe({
             ))}
           </select>
         </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn-primary disabled:opacity-50"
-        >
+        <Button type="submit" disabled={loading}>
           {loading ? "Ajout..." : "Ajouter"}
-        </button>
+        </Button>
       </form>
 
-      {message && <p className="mb-3 text-sm text-zinc-600">{message}</p>}
+      {message && (
+        <div className="mb-3 rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
+          {message}
+        </div>
+      )}
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b text-left">
-              <th className="p-2">Nom</th>
-              <th className="p-2">E-mail</th>
-              <th className="p-2">Role</th>
-              <th className="p-2"></th>
+            <tr className="border-b border-border/80 bg-surface-2 text-left">
+              <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted">Nom</th>
+              <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted">E-mail</th>
+              <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted">Rôle</th>
+              <th className="px-3 py-2" />
             </tr>
           </thead>
           <tbody>
             {members.map((m) => (
-              <tr key={m.utilisateur_id} className="border-b">
-                <td className="p-2">{m.profil?.nom || "-"}</td>
-                <td className="p-2">{m.profil?.email || "-"}</td>
-                <td className="p-2">
+              <tr key={m.utilisateur_id} className="border-b border-border/60 transition last:border-0 hover:bg-surface-2/70">
+                <td className="px-3 py-2.5 font-medium text-foreground">{m.profil?.nom || "-"}</td>
+                <td className="px-3 py-2.5 text-muted">{m.profil?.email || "-"}</td>
+                <td className="px-3 py-2.5">
                   <select
-                    className="rounded border p-1"
+                    className="rounded-xl border border-border/80 bg-surface px-2 py-1 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light"
                     value={m.role}
-                    onChange={(e) =>
-                      handleRoleChange(m.utilisateur_id, e.target.value)
-                    }
+                    onChange={(e) => handleRoleChange(m.utilisateur_id, e.target.value)}
                   >
                     {ROLES.map((r) => (
                       <option key={r.value} value={r.value}>
@@ -182,10 +186,10 @@ export default function ChantierEquipe({
                     ))}
                   </select>
                 </td>
-                <td className="p-2">
+                <td className="px-3 py-2.5 text-right">
                   <button
                     type="button"
-                    className="text-red-600"
+                    className="text-xs font-medium text-danger hover:underline"
                     onClick={() => handleRemove(m.utilisateur_id)}
                   >
                     Retirer
@@ -195,14 +199,14 @@ export default function ChantierEquipe({
             ))}
             {members.length === 0 && (
               <tr>
-                <td className="p-2 text-zinc-600" colSpan={4}>
-                  Aucun membre affecte.
+                <td className="p-4 text-center text-muted" colSpan={4}>
+                  Aucun membre affecté.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
-    </section>
+    </Card>
   );
 }

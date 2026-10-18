@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { StatCard } from "@/components/ui/StatCard";
 import { Card } from "@/components/ui/Card";
-import { getLangue } from "@/lib/i18n";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { getLangue, traduireErreur } from "@/lib/i18n";
 import { joursEcartDelai } from "@/lib/calculs/metre";
 
 type Tache = {
@@ -81,9 +82,9 @@ export default function PlanningPage() {
       supabase.from("dependances_planning").select("*").eq("chantier_id", chantierId),
       supabase.from("chantiers").select("date_fin_prevue").eq("id", chantierId).maybeSingle(),
     ]);
-    if (tRes.error) { setMessage(tRes.error.message); return; }
-    if (dRes.error) { setMessage(dRes.error.message); return; }
-    if (cRes.error) { setMessage(cRes.error.message); return; }
+    if (tRes.error) { setMessage(traduireErreur(tRes.error)); return; }
+    if (dRes.error) { setMessage(traduireErreur(dRes.error)); return; }
+    if (cRes.error) { setMessage(traduireErreur(cRes.error)); return; }
     setTaches((tRes.data ?? []) as Tache[]);
     setDependances((dRes.data ?? []) as Dependance[]);
     setDateFinPrevue(cRes.data?.date_fin_prevue ?? null);
@@ -242,7 +243,7 @@ export default function PlanningPage() {
       statut: "a_faire",
     }).select().single();
     setLoading(false);
-    if (error) { setMessage(error.message); return; }
+    if (error) { setMessage(traduireErreur(error)); return; }
     setTaches((prev) => [...prev, data as Tache]);
     setNomTache("");
     setDureeTache("1");
@@ -260,29 +261,40 @@ export default function PlanningPage() {
       date_reelle_fin: nouveauStatut === "termine" ? new Date().toISOString().slice(0, 10) : null,
     };
     const { error } = await supabase.from("taches_planning").update(updates).eq("id", t.id);
-    if (error) { setMessage(error.message); return; }
+    if (error) { setMessage(traduireErreur(error)); return; }
     setTaches((prev) => prev.map((x) => x.id === t.id ? { ...x, ...updates } : x));
   }
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <Link href={`/chantiers/${chantierId}`} className="text-sm font-medium text-primary hover:underline">
-            &larr; Retour chantier
+      <PageHeader
+        eyebrow={langue === "fr" ? "Suivi de chantier" : "Site tracking"}
+        title={langue === "fr" ? "Planning & PERT" : "Schedule & PERT"}
+        description={
+          langue === "fr"
+            ? "Tâches, chemin critique, marges et diagramme de Gantt."
+            : "Tasks, critical path, float and Gantt chart."
+        }
+        icon={<CalendarClock className="h-5 w-5" />}
+        actions={
+          <Link
+            href={`/chantiers/${chantierId}`}
+            className="inline-flex items-center gap-2 rounded-xl border border-border/80 bg-surface px-3.5 py-2 text-sm font-semibold text-muted shadow-sm transition hover:border-primary-light/50 hover:text-foreground"
+          >
+            <span>←</span>
+            {langue === "fr" ? "Retour au chantier" : "Back to site"}
           </Link>
-          <h1 className="mt-2 text-2xl font-bold text-foreground md:text-3xl">Planning &amp; PERT</h1>
-        </div>
-      </div>
+        }
+      />
 
       {message && (
-        <div className="mb-4 rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
+        <div className="anim-fade-up mb-4 rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
           {message}
         </div>
       )}
 
       {/* Statistiques rapides */}
-      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div className="anim-fade-up anim-delay-1 mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <StatCard
           title={langue === "fr" ? "Tâches" : "Tasks"}
           value={taches.length}
@@ -317,31 +329,33 @@ export default function PlanningPage() {
       </div>
 
       {/* Formulaire d'ajout de tâche */}
-      <section className="mb-6">
+      <section className="anim-fade-up anim-delay-2 mb-6">
         <Card padding="lg">
-          <h2 className="mb-4 text-lg font-bold text-foreground">Nouvelle tâche</h2>
+          <h2 className="mb-4 text-lg font-bold text-foreground">
+            {langue === "fr" ? "Nouvelle tâche" : "New task"}
+          </h2>
           <form onSubmit={ajouterTache} className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <input
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
-              placeholder="Nom de la tâche *"
+              className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+              placeholder={langue === "fr" ? "Nom de la tâche *" : "Task name *"}
               value={nomTache}
               onChange={(e) => setNomTache(e.target.value)}
               required
             />
             <input
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               type="number"
-              placeholder="Durée (j)"
+              placeholder={langue === "fr" ? "Durée (j)" : "Duration (d)"}
               value={dureeTache}
               onChange={(e) => setDureeTache(e.target.value)}
             />
             <input
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               type="date"
               value={dateDebutTache}
               onChange={(e) => setDateDebutTache(e.target.value)}
             />
-            <div className="flex items-end">
+            <div className="flex items-center">
               <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
                 <input
                   type="checkbox"
@@ -360,42 +374,45 @@ export default function PlanningPage() {
       </section>
 
       {/* Tableau PERT */}
-      <section className="mb-6">
-        <h2 className="mb-4 text-lg font-bold text-foreground">Calcul PERT</h2>
+      <section className="anim-fade-up anim-delay-3 mb-6">
+        <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+          <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+          {langue === "fr" ? "Calcul PERT" : "PERT calculation"}
+        </h2>
         <Card padding="lg">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border text-left">
-                  <th className="p-3 font-semibold text-muted">Tâche</th>
-                  <th className="p-3 text-center font-semibold text-muted">Durée</th>
-                  <th className="p-3 text-center font-semibold text-muted">ES</th>
-                  <th className="p-3 text-center font-semibold text-muted">EF</th>
-                  <th className="p-3 text-center font-semibold text-muted">LS</th>
-                  <th className="p-3 text-center font-semibold text-muted">LF</th>
-                  <th className="p-3 text-center font-semibold text-muted">Marge</th>
-                  <th className="p-3 text-center font-semibold text-muted">Critique</th>
+                <tr className="border-b border-border/80 bg-surface-2 text-left">
+                  <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted">Tâche</th>
+                  <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">Durée</th>
+                  <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">ES</th>
+                  <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">EF</th>
+                  <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">LS</th>
+                  <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">LF</th>
+                  <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">Marge</th>
+                  <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">Critique</th>
                 </tr>
               </thead>
               <tbody>
                 {pert.map((p) => (
                   <tr
                     key={p.tache_id}
-                    className={`border-b border-border last:border-0 ${p.est_critique ? "bg-primary/10" : ""}`}
+                    className={`border-b border-border/60 transition last:border-0 hover:bg-surface-2/70 ${p.est_critique ? "bg-primary/10" : ""}`}
                   >
-                    <td className="p-3">
+                    <td className="px-3 py-2.5">
                       {p.nom}
                       {p.est_jalon && <span className="ml-1 text-xs font-semibold text-primary">◊</span>}
                     </td>
-                    <td className="p-3 text-center">{p.duree_jours}</td>
-                    <td className="p-3 text-center">{p.es}</td>
-                    <td className="p-3 text-center">{p.ef}</td>
-                    <td className="p-3 text-center">{p.ls}</td>
-                    <td className="p-3 text-center">{p.lf}</td>
-                    <td className={`p-3 text-center font-semibold ${p.est_critique ? "text-action" : "text-muted"}`}>
+                    <td className="px-3 py-2.5 text-center tabular-nums">{p.duree_jours}</td>
+                    <td className="px-3 py-2.5 text-center tabular-nums">{p.es}</td>
+                    <td className="px-3 py-2.5 text-center tabular-nums">{p.ef}</td>
+                    <td className="px-3 py-2.5 text-center tabular-nums">{p.ls}</td>
+                    <td className="px-3 py-2.5 text-center tabular-nums">{p.lf}</td>
+                    <td className={`px-3 py-2.5 text-center font-semibold tabular-nums ${p.est_critique ? "text-action" : "text-muted"}`}>
                       {p.marge}
                     </td>
-                    <td className="p-3 text-center">
+                    <td className="px-3 py-2.5 text-center">
                       {p.est_critique ? (
                         <Badge variant="danger">OUI</Badge>
                       ) : (
@@ -416,46 +433,58 @@ export default function PlanningPage() {
       </section>
 
       {/* Diagramme de Gantt */}
-      <section className="mb-6">
-        <h2 className="mb-4 text-lg font-bold text-foreground">Diagramme de Gantt</h2>
+      <section className="anim-fade-up anim-delay-4 mb-6">
+        <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+          <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+          {langue === "fr" ? "Diagramme de Gantt" : "Gantt chart"}
+        </h2>
         <Card padding="lg">
           <div className="overflow-x-auto">
             <div className="min-w-[600px]">
               <div className="flex items-start border-r border-border">
+                {/* Colonne des noms — hauteur de ligne alignée sur la colonne du temps (h-10) */}
                 <div className="w-48 shrink-0">
+                  <div className="h-8 border-b border-border" />
                   {pert.map((p) => (
-                    <div key={p.tache_id} className="truncate p-2 text-sm border-b border-border" title={p.nom}>
-                      {p.nom}
+                    <div
+                      key={p.tache_id}
+                      className="flex h-10 items-center border-b border-border px-2 text-sm"
+                      title={p.nom}
+                    >
+                      <span className="truncate">{p.nom}</span>
                     </div>
                   ))}
                 </div>
+                {/* Colonne du temps */}
                 <div className="flex flex-col">
-                  <div className="flex items-center border-b border-border">
+                  <div className="flex h-8 items-center border-b border-border">
                     {Array.from({ length: dureeProjet + 1 }, (_, i) => (
                       <div
                         key={i}
-                        className="h-8 w-[30px] shrink-0 border-r border-border text-[10px] text-muted"
+                        className="flex h-8 w-[30px] shrink-0 items-center border-r border-border pl-1 text-[10px] text-muted"
                       >
                         J{i}
                       </div>
                     ))}
                   </div>
                   {pert.map((p) => {
-                    const largeur = p.ef - p.es;
+                    const largeur = Math.max((p.ef - p.es) * 30 - 4, 20);
                     const debut = p.es * 30;
                     return (
-                      <div key={p.tache_id} className="relative flex border-b border-border">
+                      <div key={p.tache_id} className="relative h-10 border-b border-border">
                         <div
-                          className="absolute left-0 h-24 w-full"
-                          style={{ marginLeft: `${debut}px` }}
+                          className={`absolute top-1/2 h-5 -translate-y-1/2 rounded-full shadow-sm ${
+                            p.est_critique
+                              ? "bg-gradient-to-r from-action to-action-strong"
+                              : "bg-gradient-to-r from-primary to-primary-deep"
+                          }`}
+                          style={{ left: `${debut}px`, width: `${largeur}px` }}
+                          title={`${p.nom} — J${p.es} → J${p.ef}`}
+                        />
+                        <span
+                          className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[10px] text-muted"
+                          style={{ left: `${debut + largeur + 6}px` }}
                         >
-                          <div
-                            className={`h-6 rounded-full ${p.est_critique ? "bg-action" : "bg-primary"}`}
-                            style={{ width: `${Math.max(largeur * 30 - 4, 20)}px` }}
-                          />
-                        </div>
-                        {p.est_critique && <div className="absolute top-0 left-0 h-24 w-1 bg-action/70" />}
-                        <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] text-muted">
                           {p.duree_jours}j
                         </span>
                       </div>
@@ -466,8 +495,8 @@ export default function PlanningPage() {
             </div>
             <p className="mt-3 text-xs text-muted">
               {langue === "fr"
-                ? "J0 = début du projet. La barre orange pointée = tâche critique (marge = 0)."
-                : "J0 = start of project. The dotted orange bar marks the critical task (zero float)."}
+                ? "J0 = début du projet. La barre orange = tâche critique (marge = 0) ; la barre bleue = tâche avec marge."
+                : "J0 = project start. The orange bar is a critical task (zero float); the blue bar has float."}
             </p>
           </div>
         </Card>

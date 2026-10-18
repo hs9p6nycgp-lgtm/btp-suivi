@@ -3,6 +3,9 @@
 import { createClient } from "@/lib/supabase/client";
 import * as XLSX from "xlsx";
 import { useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { traduireErreur } from "@/lib/i18n";
 
 type ParsedRow = {
   code: string | null;
@@ -34,6 +37,7 @@ export default function DqeImport({ chantierId }: { chantierId: string }) {
   const [errors, setErrors] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
+  const [summaryOk, setSummaryOk] = useState(false);
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -51,7 +55,7 @@ export default function DqeImport({ chantierId }: { chantierId: string }) {
     });
 
     if (json.length === 0) {
-      setErrors(["Fichier vide ou aucune ligne de donnees."]);
+      setErrors(["Fichier vide ou aucune ligne de données."]);
       return;
     }
 
@@ -73,15 +77,15 @@ export default function DqeImport({ chantierId }: { chantierId: string }) {
       const prix = parseNumber(prixCol ? raw[prixCol] : 0);
 
       if (!designation) {
-        errs.push(`Ligne ${line} : designation manquante.`);
+        errs.push(`Ligne ${line} : désignation manquante.`);
         return;
       }
       if (!unite) {
-        errs.push(`Ligne ${line} : unite manquante.`);
+        errs.push(`Ligne ${line} : unité manquante.`);
         return;
       }
       if (!Number.isFinite(qte) || qte < 0) {
-        errs.push(`Ligne ${line} : quantite invalide.`);
+        errs.push(`Ligne ${line} : quantité invalide.`);
         return;
       }
       if (!Number.isFinite(prix) || prix < 0) {
@@ -111,21 +115,26 @@ export default function DqeImport({ chantierId }: { chantierId: string }) {
     const { error } = await supabase.from("postes_dqe").insert(payload);
     setImporting(false);
     if (error) {
-      setSummary(`Erreur d'import : ${error.message}`);
+      setSummaryOk(false);
+      setSummary(`Erreur d'import : ${traduireErreur(error)}`);
       return;
     }
-    setSummary(`${rows.length} poste(s) importe(s) avec succes.`);
+    setSummaryOk(true);
+    setSummary(`${rows.length} poste(s) importé(s) avec succès.`);
     setRows([]);
   }
 
   return (
-    <section className="card p-5">
-      <h2 className="mb-1 text-lg font-bold text-foreground">Import du DQE</h2>
+    <Card padding="lg">
+      <h2 className="mb-1 flex items-center gap-2.5 text-lg font-bold text-foreground">
+        <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+        Import du DQE
+      </h2>
       <p className="mb-4 text-sm text-muted">
-        Format attendu (premiere feuille) : colonnes Code, Designation, Unite,
-        Quantite, Prix unitaire (FCFA). Les lignes invalides sont ignorees.
+        Format attendu (première feuille) : colonnes Code, Désignation, Unité,
+        Quantité, Prix unitaire (FCFA). Les lignes invalides sont ignorées.
       </p>
-      <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-surface-2 px-4 py-6 text-center transition hover:border-primary-light/60">
+      <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border/80 bg-surface-2 px-4 py-6 text-center transition hover:border-primary-light/60">
         <span className="text-sm font-medium text-foreground">
           {fileName ?? "Choisir un fichier Excel (.xlsx, .xls, .csv)"}
         </span>
@@ -138,7 +147,7 @@ export default function DqeImport({ chantierId }: { chantierId: string }) {
         />
       </label>
       {errors.length > 0 && (
-        <ul className="mt-4 space-y-1 rounded-xl border border-rose-600/20 bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
+        <ul className="mt-4 space-y-1 rounded-xl border border-danger/30 bg-danger/10 p-3 text-sm text-foreground">
           {errors.map((e, i) => (
             <li key={i}>{e}</li>
           ))}
@@ -146,17 +155,17 @@ export default function DqeImport({ chantierId }: { chantierId: string }) {
       )}
       {rows.length > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <p className="text-sm text-foreground">{rows.length} ligne(s) prete(s) a importer.</p>
-          <button
-            onClick={handleImport}
-            disabled={importing}
-            className="btn-primary disabled:opacity-50"
-          >
+          <p className="text-sm text-foreground">{rows.length} ligne(s) prête(s) à importer.</p>
+          <Button onClick={handleImport} disabled={importing}>
             {importing ? "Import en cours..." : "Importer dans le chantier"}
-          </button>
+          </Button>
         </div>
       )}
-      {summary && <p className="mt-3 text-sm font-medium text-foreground">{summary}</p>}
-    </section>
+      {summary && (
+        <p className={`mt-3 text-sm font-medium ${summaryOk ? "text-success" : "text-danger"}`}>
+          {summary}
+        </p>
+      )}
+    </Card>
   );
 }

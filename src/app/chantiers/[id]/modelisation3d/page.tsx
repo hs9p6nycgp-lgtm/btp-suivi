@@ -3,9 +3,12 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { getLangue } from "@/lib/i18n";
+import { getLangue, traduireErreur } from "@/lib/i18n";
 import Modele3D from "@/components/visualisation/Modele3D";
+import { Box, X } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
 import Link from "next/link";
 
 type Chantier = {
@@ -49,6 +52,7 @@ export default function Modelisation3DPage() {
   const [sections, setSections] = useState<Section3D[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
   // Form state
   const [nom, setNom] = useState("");
@@ -83,6 +87,7 @@ export default function Modelisation3DPage() {
     e.preventDefault();
     if (!chantierId || !nom.trim()) return;
     setSubmitting(true);
+    setMessage(null);
     const supabase = createClient();
     const L = parseFloat(longueur) || 0;
     const l = parseFloat(largeur) || 0;
@@ -100,7 +105,9 @@ export default function Modelisation3DPage() {
       })
       .select()
       .single();
-    if (data && !error) {
+    if (error) {
+      setMessage(traduireErreur(error));
+    } else if (data) {
       setSections((prev) => [...prev, data as Section3D]);
       setNom("");
       setCouleur("");
@@ -111,9 +118,11 @@ export default function Modelisation3DPage() {
   async function handleDelete(id: string) {
     const supabase = createClient();
     const { error } = await supabase.from("sections_chantier").delete().eq("id", id);
-    if (!error) {
-      setSections((prev) => prev.filter((s) => s.id !== id));
+    if (error) {
+      setMessage(traduireErreur(error));
+      return;
     }
+    setSections((prev) => prev.filter((s) => s.id !== id));
   }
 
   if (loading) {
@@ -136,20 +145,38 @@ export default function Modelisation3DPage() {
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
-      <div className="mb-6 flex items-center gap-3">
-        <Link href={`/chantiers/${chantier.id}`} className="text-sm font-medium text-primary hover:underline">
-          &larr; Retour au chantier
-        </Link>
-        <h1 className="text-2xl font-bold text-foreground md:text-3xl">
-          {langue === "fr" ? "Modélisation 3D" : "3D Modeling"} — {chantier.nom}
-        </h1>
-      </div>
+      <PageHeader
+        eyebrow={langue === "fr" ? "Suivi de chantier" : "Site tracking"}
+        title={langue === "fr" ? "Modélisation 3D" : "3D Modeling"}
+        description={
+          langue === "fr"
+            ? `${chantier.nom} — ajoutez des éléments (murs, dalles, piliers…) et visualisez le volume en 3D.`
+            : `${chantier.nom} — add elements (walls, slabs, pillars…) and view the volume in 3D.`
+        }
+        icon={<Box className="h-5 w-5" />}
+        actions={
+          <Link
+            href={`/chantiers/${chantier.id}`}
+            className="inline-flex items-center gap-2 rounded-xl border border-border/80 bg-surface px-3.5 py-2 text-sm font-semibold text-muted shadow-sm transition hover:border-primary-light/50 hover:text-foreground"
+          >
+            <span>←</span>
+            {langue === "fr" ? "Retour au chantier" : "Back to site"}
+          </Link>
+        }
+      />
+
+      {message && (
+        <div className="anim-fade-up mb-4 rounded-xl border border-danger/40 bg-danger/10 p-3 text-sm text-foreground">
+          {message}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Formulaire d'ajout */}
         <div className="lg:col-span-1">
-          <Card padding="lg">
-            <h2 className="mb-4 text-lg font-bold text-foreground">
+          <Card padding="lg" className="anim-fade-up anim-delay-1">
+            <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+              <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
               {langue === "fr" ? "Ajouter un élément" : "Add an element"}
             </h2>
             <form onSubmit={handleAdd} className="space-y-3">
@@ -162,7 +189,7 @@ export default function Modelisation3DPage() {
                   value={nom}
                   onChange={(e) => setNom(e.target.value)}
                   required
-                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground"
+                  className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                   placeholder={langue === "fr" ? "Ex. Mur de façade" : "e.g. Front wall"}
                 />
               </div>
@@ -173,7 +200,7 @@ export default function Modelisation3DPage() {
                 <select
                   value={typeOuvrage}
                   onChange={(e) => setTypeOuvrage(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground"
+                  className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 >
                   {TYPES_OUVRAGE.map((t) => (
                     <option key={t.value} value={t.value}>
@@ -190,7 +217,7 @@ export default function Modelisation3DPage() {
                     step="0.01"
                     value={longueur}
                     onChange={(e) => setLongueur(e.target.value)}
-                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground"
+                    className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                   />
                 </div>
                 <div>
@@ -200,7 +227,7 @@ export default function Modelisation3DPage() {
                     step="0.01"
                     value={largeur}
                     onChange={(e) => setLargeur(e.target.value)}
-                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground"
+                    className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                   />
                 </div>
                 <div>
@@ -210,7 +237,7 @@ export default function Modelisation3DPage() {
                     step="0.01"
                     value={hauteur}
                     onChange={(e) => setHauteur(e.target.value)}
-                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground"
+                    className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                   />
                 </div>
               </div>
@@ -222,19 +249,15 @@ export default function Modelisation3DPage() {
                   type="text"
                   value={couleur}
                   onChange={(e) => setCouleur(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground"
+                  className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                   placeholder="#4a90e2"
                 />
               </div>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full rounded-xl bg-action px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
-              >
+              <Button type="submit" className="w-full" disabled={submitting}>
                 {submitting
                   ? (langue === "fr" ? "Ajout..." : "Adding...")
                   : (langue === "fr" ? "Ajouter l'élément" : "Add element")}
-              </button>
+              </Button>
             </form>
 
             {/* Liste des éléments */}
@@ -261,10 +284,10 @@ export default function Modelisation3DPage() {
                       </div>
                       <button
                         onClick={() => handleDelete(s.id)}
-                        className="text-rose-500 hover:text-rose-700"
+                        className="rounded-lg p-1 text-muted transition hover:bg-danger/10 hover:text-danger"
                         title={langue === "fr" ? "Supprimer" : "Delete"}
                       >
-                        ×
+                        <X className="h-4 w-4" />
                       </button>
                     </li>
                   ))}
@@ -276,7 +299,7 @@ export default function Modelisation3DPage() {
 
         {/* Vue 3D */}
         <div className="lg:col-span-2">
-          <Card padding="lg">
+          <Card padding="lg" className="anim-fade-up anim-delay-2">
             <Modele3D chantier={chantier} sections={sections} />
           </Card>
         </div>

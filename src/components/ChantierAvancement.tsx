@@ -3,6 +3,8 @@
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { avancementPoste, avancementPhysiqueGlobal, avancementFinancier, ecartQuantite } from "@/lib/calculs/metre";
+import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 
 type Poste = {
   id: string;
@@ -72,46 +74,58 @@ export default function ChantierAvancement({
   }, [chantierId]);
 
   return (
-    <section className="card p-4">
-      <h2 className="mb-3 text-lg font-medium text-primary">Avancement</h2>
+    <Card padding="lg">
+      <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+        <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+        Avancement
+      </h2>
+
       <div className="mb-2 flex items-center justify-between text-sm">
-        <span>Avancement physique global</span>
-        <span className="font-semibold">{global} %</span>
+        <span className="text-muted">Avancement physique global</span>
+        <span className="font-semibold tabular-nums text-foreground">{global} %</span>
       </div>
-      <div className="mb-4 h-3 w-full overflow-hidden rounded-full bg-slate-200">
+      <div className="mb-4 h-2.5 w-full overflow-hidden rounded-full bg-surface-2">
         <div
-          className="h-full rounded-full bg-action transition-all"
+          className="h-full rounded-full bg-gradient-to-r from-action to-action-strong transition-all"
           style={{ width: `${Math.min(global, 100)}%` }}
         />
       </div>
+
       <div className="mb-2 flex items-center justify-between text-sm">
-        <span>Avancement financier</span>
-        <span className="font-semibold">{financier} %</span>
+        <span className="text-muted">Avancement financier</span>
+        <span className="font-semibold tabular-nums text-foreground">{financier} %</span>
       </div>
-      <div className="mb-4 h-3 w-full overflow-hidden rounded-full bg-slate-200">
+      <div className="mb-4 h-2.5 w-full overflow-hidden rounded-full bg-surface-2">
         <div
-          className="h-full rounded-full bg-emerald transition-all"
+          className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all"
           style={{ width: `${Math.min(financier, 100)}%` }}
         />
       </div>
 
       {postes.length > 0 ? (
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           {postes.map((p) => (
             <li key={p.id}>
-              <div className="mb-1 flex justify-between text-xs">
-                <span className="truncate">{p.code ?? "-"} {p.designation}</span>
-                <span>{Math.round(p.avancement)} %</span>
+              <div className="mb-1 flex justify-between gap-2 text-xs">
+                <span className="truncate text-foreground">
+                  {p.code ?? "-"} {p.designation}
+                </span>
+                <span className="shrink-0 font-semibold tabular-nums text-foreground">
+                  {Math.round(p.avancement)} %
+                </span>
               </div>
-              <div className="mb-1 flex justify-between text-xs text-muted">
-                <span>Écart quantité : {p.ecartQte >= 0 ? "+" : ""}{Math.round(p.ecartQte)} %</span>
+              <div className="mb-1 flex items-center justify-between gap-2 text-xs text-muted">
+                <span className="tabular-nums">
+                  Écart quantité : {p.ecartQte >= 0 ? "+" : ""}
+                  {Math.round(p.ecartQte)} %
+                </span>
                 {Math.abs(p.ecartQte) > (seuilEcartPct ?? 10) && (
-                  <span className="text-rose-600 text-xs font-semibold">⚠️ Seuil dépassé</span>
+                  <Badge variant="danger">Seuil dépassé</Badge>
                 )}
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2">
                 <div
-                  className="h-full rounded-full bg-primary transition-all"
+                  className="h-full rounded-full bg-gradient-to-r from-primary to-primary-deep transition-all"
                   style={{ width: `${Math.min(p.avancement, 100)}%` }}
                 />
               </div>
@@ -119,8 +133,8 @@ export default function ChantierAvancement({
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-slate-600">Aucun poste DQE importe.</p>
+        <p className="text-sm text-muted">Aucun poste DQE importé.</p>
       )}
-    </section>
+    </Card>
   );
 }
