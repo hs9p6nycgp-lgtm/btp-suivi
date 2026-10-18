@@ -18,7 +18,7 @@
 
 | Réf | Tâche | Propriétaire | Fichiers concernés | Code exigence | Priorité |
 |-----|-------|--------------|--------------------|---------------|----------|
-| T-DEP-01 | **BLOQUANT SITE** — Le site déployé (`7w2i.vercel.app`) ne répond plus : Vercel renvoie `DEPLOYMENT_NOT_FOUND` (le déploiement/projet a été supprimé). Les données sont saines (chantier « B » créé le 18/10 à 19h03 en base) ; build local vérifié OK. Recréer/redéployer le projet Vercel depuis le dépôt GitHub — variables nécessaires : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Utilisateur (compte Vercel) | `vercel.json` | — | Haute |
+| T-DEP-02 | Facultatif — nettoyer les projets Vercel en double : `btp-suivi-6wxl` (erreur 500 au chargement) et projet `btpsuivi` (protection SSO active ; ce n'est pas le site utilisé) ; conserver `btp-suivi-7w2i` (site vérifié en ligne) et au besoin `btp-suivi-cd4w` en secours | Utilisateur (compte Vercel) | `vercel.json` | — | Basse |
 
 ---
 
@@ -62,6 +62,7 @@
 | T-MIG-01 | Vérifier et activer les politiques RLS d'isolation multitenant côté base | 3 | `supabase/migrations/0007_phase3_multitenant_isolation.sql`, `supabase/RLS_MANUAL_CHECK.md` | 16/10/2026 |
 | T-MIG-02 | Appliquer la migration `0015` (réparation des colonnes chantiers) : appliquée par l'utilisateur, vérifiée (« Base à jour ») — création de chantier débloquée | Utilisateur | `supabase/migrations/0015_reparation_colonnes_chantiers.sql` | 18/10/2026 |
 | T-DATA-01 | Nettoyage des doublons BPU : 443 → 289 lignes (154 copies supprimées, aucune anomalie ; sauvegarde JSON avant suppression ; devis revérifiés) | 2 | `scripts/nettoyer-doublons-bpu.mjs`, `supabase/seed/nettoyer_doublons_bpu.sql` | 18/10/2026 |
+| T-DEP-01 | Levée par vérification (Session 3, 18/10 à 19h25-19h30) : les sites `btp-suivi-7w2i.vercel.app` et `btp-suivi-cd4w.vercel.app` répondent de nouveau (redirection `/login`, page « Connexion » « BTP Suivi Pro ») — rien à recréer ; les déploiements GitHub → Vercel fonctionnent (dernier statut : succès) | 3 | `vercel.json` | 18/10/2026 |
 | T-TEST-01 | Maintenir `BUGS.md` à jour (ajouter les nouveaux bugs, fermer les corrigés) | 4 | `BUGS.md` | 16/10/2026 |
 | T-UI-05 | Refonte esthétique générale : design system (ombres, dégradés, animations), composants UI, navigation (sidebar/topbar/mobile), tableau de bord, chantiers, connexion, détail chantier, BPU, import DQE, en-têtes unifiés | 1 | `src/app/globals.css`, `src/components/ui/*`, `src/components/layout/*`, `src/components/DqeImport.tsx`, `src/components/SignOutButton.tsx`, `src/app/page.tsx`, `src/app/chantiers/page.tsx`, `src/app/chantiers/[id]/page.tsx`, `src/app/login/page.tsx`, `src/app/bpu/page.tsx`, `src/app/fournisseurs/page.tsx`, `src/app/rapports/page.tsx`, `src/app/export/page.tsx`, `src/app/referentiel/page.tsx` | 18/10/2026 |
 | T-UI-06 | Formulaire « Nouveau chantier » : champ « Sous-type (phase de travaux) » alimenté par `typesDetaillesPour` (s'adapte au type Route/Bâtiment), enregistré dans `type_detail` ; sous-type affiché dans la fiche chantier et la liste | 1 | `src/app/chantiers/nouveau/page.tsx`, `src/app/chantiers/[id]/page.tsx`, `src/app/chantiers/page.tsx` | 18/10/2026 |
@@ -94,10 +95,10 @@
 
 ## Prochaine tâche à assigner
 
-- **Utilisateur (bloquant)** : T-DEP-01 — restaurer le site sur Vercel : le déploiement `7w2i.vercel.app` a été supprimé (Vercel renvoie `DEPLOYMENT_NOT_FOUND`). Recréer le projet depuis le dépôt GitHub `hs9p6nycgp-lgtm/btp-suivi` (voir la ligne T-DEP-01 ci-dessus). Alternative : lancer `npx vercel login` sur le Mac, puis un agent pourra redéployer lui-même. Le reste est réglé : migration `0015` appliquée, doublons BPU nettoyés, création de chantier OK (chantier « B » bien enregistré).
+- **Utilisateur** : ✅ T-DEP-01 levée — vérifié en ligne par la Session 3 (le site `btp-suivi-7w2i.vercel.app` répond de nouveau ; migration `0015` appliquée ; création de chantier OK, chantier « B » bien en base). Sur le téléphone : rouvrir `https://btp-suivi-7w2i.vercel.app` ; si l'écran reste bloqué sur l'ancienne version, fermer complètement l'appli (ou effacer les données du site) pour vider le cache PWA. Si le site rebuguait un jour : `npx vercel login` sur le Mac, puis un agent pourra redéployer. Facultatif : T-DEP-02 (nettoyage des projets Vercel en double).
 - **Session 1 (apparence)** : ✅ T-UI-08 terminée (vue 3D du projet dans le calculateur de devis). En continu : harmonisation des sous-pages de chantier (planning, qualité, coûts, livraisons, journaux, métré, modélisation 3D) — même design system que le reste de l'application.
 - **Session 2 (logique)** : ✅ T-DATA-01 terminée (doublons BPU nettoyés : 443 → 289 lignes, devis revérifiés). Rien en attente.
-- **Session 3 (migrations/déploiement)** : rien à faire pour l'instant (migration `0015` appliquée).
+- **Session 3 (migrations/déploiement)** : ✅ Vérifications du 18/10 terminées : base Supabase « Base à jour » (audit `scripts/audit-base.mjs`) ; déploiements Vercel vérifiés en ligne (`btp-suivi-7w2i` et `btp-suivi-cd4w` répondent). Reste : T-DEP-02 (facultatif, côté utilisateur).
 - **Session 4 (tests)** : aucun test rouge ; suite `npm test` = 141 tests verts.
 
 > Mise à jour du 18/10/2026 (Session 2) : la cause de « je n'arrive pas à créer un chantier » est identifiée et réparée côté code (migration `0015`). **Il reste à appliquer cette migration dans Supabase** pour débloquer l'utilisateur. Le compte de test utilisé pour le diagnostic a été supprimé.
@@ -107,3 +108,5 @@
 > Mise à jour du 18/10/2026 (Session 2, suite 2) : vérification demandée par l'utilisateur → migration `0015` **appliquée** par l'utilisateur (audit « Base à jour », création de chantier débloquée) ; doublons BPU **nettoyés** avec son accord (443 → 289 lignes, 154 copies supprimées, aucune anomalie, sauvegarde JSON avant suppression). Plus rien en attente côté utilisateur.
 >
 > Mise à jour du 18/10/2026 (Session 2, suite 3) : diagnostic « la page ne charge pas après la création d'un chantier » → le chantier est bien créé en base ; c'est le **déploiement Vercel qui n'existe plus** (`7w2i.vercel.app` → `DEPLOYMENT_NOT_FOUND`). Le téléphone affichait l'appli depuis le cache (PWA). À faire : recréer le projet Vercel (tâche T-DEP-01). Build local vérifié OK.
+>
+> Mise à jour du 18/10/2026 (Session 3) : vérification directe des sites → **le site `btp-suivi-7w2i.vercel.app` répond de nouveau** (redirection `/login`, page « Connexion » « BTP Suivi Pro », testé 3 fois entre 19h23 et 19h30) ; `btp-suivi-cd4w.vercel.app` répond aussi. Les déploiements automatiques GitHub → Vercel fonctionnent (dernier : succès). Constats : `btp-suivi-6wxl` renvoie une erreur 500 (middleware — projet en double, variables probablement absentes) ; `btpsuivi.vercel.app` n'appartient pas à ce projet (site tiers). Base Supabase revérifiée « Base à jour » (audit `scripts/audit-base.mjs`) — **rien à recréer côté Vercel**.
