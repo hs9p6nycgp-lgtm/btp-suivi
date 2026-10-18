@@ -203,6 +203,7 @@ export default function LoginPage() {
 
   return (
     // Écran partagé : image de chantier à gauche, formulaire à droite
+    // (sur les pages de connexion, la coquille de l'application est masquée : voir AppShell)
     <div className="flex min-h-screen bg-background">
       {/* Partie visuelle : bleu nuit avec dégradé */}
       <div className="relative hidden flex-1 flex-col items-center justify-center overflow-hidden bg-primary md:flex">
@@ -247,7 +248,7 @@ export default function LoginPage() {
           </div>
 
           <Card variant="elevated" padding="lg">
-            <div className="mb-6 flex items-center justify-between">
+            <div className="mb-6 space-y-4">
               <div>
                 <h2 className="text-xl font-bold text-foreground md:text-2xl">
                   {signup ? t("title_signup") : t("title_signin")}
@@ -255,11 +256,15 @@ export default function LoginPage() {
                 <p className="text-sm text-muted">{signup ? t("subtitle_signup") : t("subtitle_signin")}</p>
               </div>
               {!signup && (
-                <div className="flex gap-1 rounded-xl border border-border/80 bg-surface-2 p-1">
+                <div
+                  role="group"
+                  aria-label={langue === "fr" ? "Choisir le moyen de connexion" : "Choose sign-in method"}
+                  className="grid grid-cols-2 gap-1 rounded-xl border border-border/80 bg-surface-2 p-1"
+                >
                   <button
                     type="button"
                     onClick={() => choisirMode("email")}
-                    className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
+                    className={`whitespace-nowrap rounded-lg px-3 py-2.5 text-sm font-semibold transition ${
                       mode === "email"
                         ? "bg-primary text-white shadow-sm"
                         : "text-muted hover:bg-surface hover:text-foreground"
@@ -270,7 +275,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => choisirMode("telephone")}
-                    className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
+                    className={`whitespace-nowrap rounded-lg px-3 py-2.5 text-sm font-semibold transition ${
                       mode === "telephone"
                         ? "bg-primary text-white shadow-sm"
                         : "text-muted hover:bg-surface hover:text-foreground"
@@ -301,6 +306,8 @@ export default function LoginPage() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      placeholder="vous@exemple.com"
+                      autoComplete="email"
                       required
                     />
                     <p className="mt-1 text-xs text-muted">
@@ -316,6 +323,8 @@ export default function LoginPage() {
                       type="tel"
                       value={telInscription}
                       onChange={(e) => setTelInscription(e.target.value)}
+                      placeholder="+225 07 00 00 00 00 00"
+                      autoComplete="tel"
                     />
                   </div>
                 </>
@@ -327,6 +336,8 @@ export default function LoginPage() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    placeholder="vous@exemple.com"
+                    autoComplete="email"
                     required
                   />
                 </div>
@@ -338,6 +349,8 @@ export default function LoginPage() {
                     type="tel"
                     value={telephone}
                     onChange={(e) => setTelephone(e.target.value)}
+                    placeholder="+225 07 00 00 00 00 00"
+                    autoComplete="tel"
                     required
                   />
                 </div>
@@ -351,6 +364,7 @@ export default function LoginPage() {
                     type={voirMotDePasse ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete={signup ? "new-password" : "current-password"}
                     required
                     minLength={6}
                   />
@@ -408,37 +422,35 @@ export default function LoginPage() {
             </form>
 
             {!signup && (
-              <div className="mt-6 border-t border-border pt-6">
-                <p className="text-center text-sm text-muted">
-                  {t("no_account")} &nbsp;
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSignup(true);
-                      setMessage(null);
-                    }}
-                    className="font-semibold text-primary hover:underline"
-                  >
-                    {t("create_account")}
-                  </button>
-                </p>
+              <div className="mt-6 space-y-3 border-t border-border pt-6">
+                <p className="text-center text-sm text-muted">{t("no_account")}</p>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full"
+                  onClick={() => {
+                    setSignup(true);
+                    setMessage(null);
+                  }}
+                >
+                  {t("create_account")}
+                </Button>
               </div>
             )}
             {signup && (
-              <div className="mt-6 border-t border-border pt-6">
-                <p className="text-center text-sm text-muted">
-                  {t("has_account")} &nbsp;
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSignup(false);
-                      setMessage(null);
-                    }}
-                    className="font-semibold text-primary hover:underline"
-                  >
-                    {t("signin")}
-                  </button>
-                </p>
+              <div className="mt-6 space-y-3 border-t border-border pt-6">
+                <p className="text-center text-sm text-muted">{t("has_account")}</p>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full"
+                  onClick={() => {
+                    setSignup(false);
+                    setMessage(null);
+                  }}
+                >
+                  {t("signin")}
+                </Button>
               </div>
             )}
           </Card>

@@ -1,11 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-import Sidebar from "@/components/layout/Sidebar";
+import AppShell from "@/components/layout/AppShell";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import NetworkStatus from "@/components/NetworkStatus";
-import TopBar from "@/components/layout/TopBar";
-import MobileNavigation from "@/components/layout/MobileNavigation";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -33,18 +31,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="light">
           <ServiceWorkerRegister />
           <NetworkStatus />
-          <div className="flex h-screen overflow-hidden">
-            <Sidebar />
-            {/* md:ml-60 : la barre latérale occupe 240 px dès le md (voir globals.css) */}
-            <div data-contenu className="flex flex-1 flex-col overflow-hidden md:ml-60">
-              <TopBar />
-              <main className="flex-1 overflow-y-auto bg-background p-4 pb-28 md:p-6 md:pb-6">
-                {children}
-              </main>
-            </div>
-          </div>
-          {/* Navigation mobile en bas de l'écran */}
-          <MobileNavigation />
+          {/* La coquille masque la navigation sur les pages de connexion (voir AppShell) */}
+          <AppShell>{children}</AppShell>
         </ThemeProvider>
       </body>
     </html>
