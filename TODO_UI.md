@@ -55,7 +55,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 - **Ce qui reste à votre responsabilité (Session 1 — interface)** : ✅ FAIT (18/10/2026).
   1. Le formulaire propose désormais un champ **« Sous-type (phase de travaux) »** (`src/app/chantiers/nouveau/page.tsx`) : la liste vient de `typesDetaillesPour` (`@/lib/chantiers/types`) et s'adapte au type choisi (Route/Bâtiment) ; le choix est enregistré dans `type_detail` (protection `estTypeDetailValide` avant l'envoi).
   2. Fait aussi : le sous-type s'affiche dans le **bandeau de la fiche chantier** (pastille à côté du statut) et dans la **liste des chantiers** (sous le type, et sous le nom en vue cartes).
-- **Rappel** : la migration `0015` doit toujours être appliquée dans le SQL Editor de Supabase pour que la création de chantier fonctionne ; le champ `type_detail` en fait partie.
+- **Rappel (mis à jour le 18/10/2026)** : ✅ la migration `0015` a été appliquée dans le SQL Editor de Supabase et vérifiée (`node scripts/audit-base.mjs` → « Base à jour »). La création de chantier est débloquée ; le champ `type_detail` fonctionne.
 - **Priorité** : haute (bloquant pour l'utilisateur).
 
 ---

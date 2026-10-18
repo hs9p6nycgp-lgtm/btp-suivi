@@ -18,8 +18,7 @@
 
 | Réf | Tâche | Propriétaire | Fichiers concernés | Code exigence | Priorité |
 |-----|-------|--------------|--------------------|---------------|----------|
-| T-MIG-02 | **BLOQUANT** — Appliquer la migration `0015_reparation_colonnes_chantiers.sql` dans le SQL Editor de Supabase (sans quoi la création de chantier échoue toujours). L'utilisateur a choisi de l'appliquer lui-même. Vérification possible avec `node scripts/audit-base.mjs`. | Utilisateur | `supabase/migrations/0015_reparation_colonnes_chantiers.sql` | CHA-01 | Haute |
-| T-DATA-01 | Doublons dans `bpu_postes` (154 doublons exacts) : **script prêt** (`supabase/seed/nettoyer_doublons_bpu.sql`) ; **exécution à confirmer** par l'utilisateur (suppression de données) | 2 | `supabase/seed/nettoyer_doublons_bpu.sql` | REF-05 | Moyenne |
+| — | Aucune tâche en attente. T-MIG-02 et T-DATA-01 sont terminées (voir la section « Terminé »). | — | — | — | — |
 
 ---
 
@@ -58,8 +57,11 @@
 | T-LOG-17 | Tests exécutables : `npm test` opérationnel (imports `.ts` + `tsconfig`), 123 tests verts | 2 | `package.json`, `tsconfig.json`, `src/lib/**/__tests__/` | 18/10/2026 |
 | T-LOG-18 | Outils de contrôle : audit de la base distante (colonnes/tables manquantes) + vérification que chaque ligne de devis trouve un poste du BPU (132 lignes vérifiées) | 2 | `scripts/audit-base.mjs`, `scripts/verifier-devis-bpu.mjs` | 18/10/2026 |
 | T-LOG-19 | Modélisation 3D des devis : géométrie générée depuis les entrées (15 modèles → boîtes/cylindres prêtes pour three.js, sol à Y=0, mètres) + 18 tests automatiques | 2 | `src/lib/devis/model3d.ts`, `src/lib/devis/__tests__/model3d.test.ts` | 18/10/2026 |
+| T-LOG-20 | Nettoyage des doublons du BPU exécuté sur la base distante (443 → 289 postes ; sauvegarde JSON avant suppression ; devis revérifiés : 132 lignes OK) | 2 | `supabase/seed/nettoyer_doublons_bpu.sql`, `scripts/nettoyer-doublons-bpu.mjs` | 18/10/2026 |
 | T-SEED | Données de départ prix (seed CSV + script idempotent) | 2 | `supabase/seed/prix_ci.csv`, `supabase/seed/load_prix_ci.mjs` | 16/10/2026 |
 | T-MIG-01 | Vérifier et activer les politiques RLS d'isolation multitenant côté base | 3 | `supabase/migrations/0007_phase3_multitenant_isolation.sql`, `supabase/RLS_MANUAL_CHECK.md` | 16/10/2026 |
+| T-MIG-02 | Appliquer la migration `0015` (réparation des colonnes chantiers) : appliquée par l'utilisateur, vérifiée (« Base à jour ») — création de chantier débloquée | Utilisateur | `supabase/migrations/0015_reparation_colonnes_chantiers.sql` | 18/10/2026 |
+| T-DATA-01 | Nettoyage des doublons BPU : 443 → 289 lignes (154 copies supprimées, aucune anomalie ; sauvegarde JSON avant suppression ; devis revérifiés) | 2 | `scripts/nettoyer-doublons-bpu.mjs`, `supabase/seed/nettoyer_doublons_bpu.sql` | 18/10/2026 |
 | T-TEST-01 | Maintenir `BUGS.md` à jour (ajouter les nouveaux bugs, fermer les corrigés) | 4 | `BUGS.md` | 16/10/2026 |
 | T-UI-05 | Refonte esthétique générale : design system (ombres, dégradés, animations), composants UI, navigation (sidebar/topbar/mobile), tableau de bord, chantiers, connexion, détail chantier, BPU, import DQE, en-têtes unifiés | 1 | `src/app/globals.css`, `src/components/ui/*`, `src/components/layout/*`, `src/components/DqeImport.tsx`, `src/components/SignOutButton.tsx`, `src/app/page.tsx`, `src/app/chantiers/page.tsx`, `src/app/chantiers/[id]/page.tsx`, `src/app/login/page.tsx`, `src/app/bpu/page.tsx`, `src/app/fournisseurs/page.tsx`, `src/app/rapports/page.tsx`, `src/app/export/page.tsx`, `src/app/referentiel/page.tsx` | 18/10/2026 |
 | T-UI-06 | Formulaire « Nouveau chantier » : champ « Sous-type (phase de travaux) » alimenté par `typesDetaillesPour` (s'adapte au type Route/Bâtiment), enregistré dans `type_detail` ; sous-type affiché dans la fiche chantier et la liste | 1 | `src/app/chantiers/nouveau/page.tsx`, `src/app/chantiers/[id]/page.tsx`, `src/app/chantiers/page.tsx` | 18/10/2026 |
@@ -90,12 +92,14 @@
 
 ## Prochaine tâche à assigner
 
-- **Utilisateur (bloquant)** : T-MIG-02 — appliquer la migration `0015` dans le SQL Editor de Supabase (l'utilisateur s'en charge lui-même). Vérification : `node scripts/audit-base.mjs`.
+- **Utilisateur (bloquant)** : ✅ T-MIG-02 terminée (migration `0015` appliquée par l'utilisateur, audit « Base à jour »). Rien en attente. Vous pouvez réessayer de créer un chantier.
 - **Session 1 (apparence)** : T-UI-08 — afficher la « Vue 3D du projet » dans le calculateur de devis (consignes complètes dans `TODO_UI.md` → TODO-UI-007). La logique est déjà prête (Session 2).
-- **Session 2 (logique)** : T-DATA-01 — script de nettoyage des doublons BPU **prêt** (`supabase/seed/nettoyer_doublons_bpu.sql`), à exécuter après confirmation de l'utilisateur.
-- **Session 3 (migrations/déploiement)** : rien à faire pour l'instant (migration `0015` prise en charge par l'utilisateur).
-- **Session 4 (tests)** : aucun test rouge ; suite `npm test` = 123 tests verts.
+- **Session 2 (logique)** : ✅ T-DATA-01 terminée (doublons BPU nettoyés : 443 → 289 lignes, devis revérifiés). Rien en attente.
+- **Session 3 (migrations/déploiement)** : rien à faire pour l'instant (migration `0015` appliquée).
+- **Session 4 (tests)** : aucun test rouge ; suite `npm test` = 141 tests verts.
 
 > Mise à jour du 18/10/2026 (Session 2) : la cause de « je n'arrive pas à créer un chantier » est identifiée et réparée côté code (migration `0015`). **Il reste à appliquer cette migration dans Supabase** pour débloquer l'utilisateur. Le compte de test utilisé pour le diagnostic a été supprimé.
 >
 > Mise à jour du 18/10/2026 (Session 2, suite) : nouvelle fonctionnalité « modèle 3D d'un devis » — la logique de géométrie est prête (`src/lib/devis/model3d.ts`, 18 nouveaux tests, total 141 verts) ; l'affichage dans la page devis est assigné à la Session 1 (TODO-UI-007).
+>
+> Mise à jour du 18/10/2026 (Session 2, suite 2) : vérification demandée par l'utilisateur → migration `0015` **appliquée** par l'utilisateur (audit « Base à jour », création de chantier débloquée) ; doublons BPU **nettoyés** avec son accord (443 → 289 lignes, 154 copies supprimées, aucune anomalie, sauvegarde JSON avant suppression). Plus rien en attente côté utilisateur.
