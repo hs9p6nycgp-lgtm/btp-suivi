@@ -217,7 +217,7 @@ export default function Sidebar() {
               {langue === "fr" ? "English" : "Français"}
             </button>
           )}
-          <SignOutButton compact={collapsed} />
+          <SignOutButton compact={collapsed} pleineLargeur={!collapsed} />
         </div>
       </div>
     </aside>

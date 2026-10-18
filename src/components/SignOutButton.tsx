@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { getLangue, setLangue, t, Langue } from "@/lib/i18n";
 
-export default function SignOutButton({ compact = false }: { compact?: boolean }) {
+export default function SignOutButton({
+  compact = false,
+  pleineLargeur = false,
+}: {
+  compact?: boolean;
+  pleineLargeur?: boolean;
+}) {
   const router = useRouter();
   const [menuOuvert, setMenuOuvert] = useState(false);
   const [langue, setLangueState] = useState<Langue>(getLangue());
@@ -24,13 +30,15 @@ export default function SignOutButton({ compact = false }: { compact?: boolean }
     window.location.reload();
   };
 
+  const etire = compact || pleineLargeur;
+
   return (
-    <div className="relative inline-block w-full">
+    <div className={`relative inline-block ${etire ? "w-full" : ""}`}>
       <button
         onClick={() => setMenuOuvert(!menuOuvert)}
         title={compact ? (langue === "fr" ? "Français" : "English") : undefined}
         className={`inline-flex items-center justify-center gap-2 rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:border-primary-light/50 hover:bg-slate-50 dark:hover:bg-white/10 ${
-          compact ? "w-full" : ""
+          etire ? "w-full" : ""
         }`}
       >
         <span className="text-xs leading-none">{langue === "fr" ? "🇫🇷" : "🇬🇧"}</span>

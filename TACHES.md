@@ -54,6 +54,16 @@
 | T-SEED | Données de départ prix (seed CSV + script idempotent) | 2 | `supabase/seed/prix_ci.csv`, `supabase/seed/load_prix_ci.mjs` | 16/10/2026 |
 | T-MIG-01 | Vérifier et activer les politiques RLS d'isolation multitenant côté base | 3 | `supabase/migrations/0007_phase3_multitenant_isolation.sql`, `supabase/RLS_MANUAL_CHECK.md` | 16/10/2026 |
 | T-TEST-01 | Maintenir `BUGS.md` à jour (ajouter les nouveaux bugs, fermer les corrigés) | 4 | `BUGS.md` | 16/10/2026 |
+| T-UI-05 | Refonte esthétique générale : design system (ombres, dégradés, animations), composants UI, navigation (sidebar/topbar/mobile), tableau de bord, chantiers, connexion, détail chantier, BPU, import DQE, en-têtes unifiés | 1 | `src/app/globals.css`, `src/components/ui/*`, `src/components/layout/*`, `src/components/DqeImport.tsx`, `src/components/SignOutButton.tsx`, `src/app/page.tsx`, `src/app/chantiers/page.tsx`, `src/app/chantiers/[id]/page.tsx`, `src/app/login/page.tsx`, `src/app/bpu/page.tsx`, `src/app/fournisseurs/page.tsx`, `src/app/rapports/page.tsx`, `src/app/export/page.tsx`, `src/app/referentiel/page.tsx` | 18/10/2026 |
+
+---
+
+## Notes de la Session 1 (refonte esthétique du 18/10/2026)
+
+- La barre latérale affiche désormais **tous** les écrans de navigation (avant : seul l'onglet actif) et un **bouton réduire/étendre** rend le mode compact accessible (mémorisé par navigateur).
+- Tableau de bord : la carte « Chantiers » affiche le nombre total (elle dupliquait le nombre « en cours »).
+- Mode sombre : les variantes `dark:` suivent maintenant la classe du thème (bouton clair/sombre), et non le réglage système.
+- Aucune modification de `src/lib`, ni des migrations, ni des calculs.
 
 ---
 
