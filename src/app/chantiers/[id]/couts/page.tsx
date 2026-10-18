@@ -12,7 +12,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatCard } from "@/components/ui/StatCard";
 import { getLangue, traduireErreur } from "@/lib/i18n";
-import { ecartBudgetaire, calculValeurAcquise } from "@/lib/calculs/metre";
+import { ecartBudgetaire, calculValeurAcquise, projectionCoutFinal } from "@/lib/calculs/metre";
 
 type PosteDQE = {
   id: string;
@@ -162,6 +162,9 @@ export default function CoutsPage() {
   const ev = totalCoutReel;                                                       // Valeur acquise (travail réalisé aux prix de référence)
   const ac = totalCoutReel + totalDepenses;                                       // Coût réel engagé (quantités réalisées + dépenses)
   const va = calculValeurAcquise(bac, pv, ev, ac);
+  const eac = projectionCoutFinal(bac, ev, ac); // EAC = AC + (BAC − EV)
+  const ecartEacBac = eac - bac;
+  const ecartEacBacFormate = ecartEacBac.toLocaleString(langue === "fr" ? "fr-FR" : "en-US");
 
   async function ajouterDepense(e: React.FormEvent) {
     e.preventDefault();
@@ -283,7 +286,7 @@ export default function CoutsPage() {
               ? "Méthode de la valeur acquise : compare le travail planifié, le travail réalisé et le coût réel engagé."
               : "Earned Value method: compares planned work, completed work and actual cost incurred."}
           </p>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-7">
             <StatCard
               title={langue === "fr" ? "BAC — Budget achèvement" : "BAC — Budget at completion"}
               value={bac.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
@@ -326,6 +329,13 @@ export default function CoutsPage() {
               icon={<TimerReset className="h-5 w-5" />}
               color={va.indicePerformanceDelai >= 1 ? "emerald" : "rose"}
             />
+            <StatCard
+              title={langue === "fr" ? "EAC — Coût final projeté" : "EAC — Estimate at completion"}
+              value={eac.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
+              subtitle="FCFA"
+              icon={<TimerReset className="h-5 w-5" />}
+              color={eac > bac ? "rose" : "blue"}
+            />
           </div>
 
           <div className="mt-4 rounded-xl border border-border bg-surface p-3">
@@ -335,6 +345,9 @@ export default function CoutsPage() {
               </span>
               <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${va.ecartDelai >= 0 ? "bg-emerald/10 text-emerald" : "bg-rose/10 text-rose"}`}>
                 SV = {va.ecartDelai >= 0 ? "+" : ""}{va.ecartDelai.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")} FCFA
+              </span>
+              <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${eac > bac ? "bg-rose/10 text-rose" : "bg-emerald/10 text-emerald"}`}>
+                EAC − BAC = {(ecartEacBac >= 0 ? "+" : "")}{ecartEacBacFormate} FCFA
               </span>
             </div>
             <p className="text-sm text-muted">
@@ -354,6 +367,13 @@ export default function CoutsPage() {
                       ? "⚠️ Project over budget."
                       : "⚠️ Project behind schedule."}
             </p>
+            {eac > bac && (
+              <p className="text-sm text-rose-600">
+                {langue === "fr"
+                  ? `⚠️ Dépassement de budget prévu à l'achèvement : ${ecartEacBacFormate} FCFA au-delà du BAC.`
+                  : `⚠️ Budget overrun projected at completion: ${ecartEacBacFormate} FCFA above BAC.`}
+              </p>
+            )}
           </div>
         </Card>
       </section>
