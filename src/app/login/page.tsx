@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Construction } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Construction, Eye, EyeOff, WifiOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
@@ -10,6 +10,10 @@ import { Button } from "@/components/ui/Button";
 import { getLangue, traduireErreur } from "@/lib/i18n";
 
 type Mode = "email" | "telephone";
+
+// Clés de mémorisation locale : le mode choisi et le dernier identifiant saisi
+const CLE_MODE = "btp.connexion.mode";
+const CLE_IDENTIFIANT = "btp.connexion.identifiant";
 
 // Illustration décorative d'un chantier (monochrome, fond bleu nuit)
 function IllustrationChantier() {
@@ -74,6 +78,55 @@ export default function LoginPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [signup, setSignup] = useState(false);
+  const [voirMotDePasse, setVoirMotDePasse] = useState(false);
+  const [horsLigne, setHorsLigne] = useState(false);
+  const [connexionLente, setConnexionLente] = useState(false);
+
+  // Si la connexion dépasse 8 secondes, on rassure l'utilisateur : le réseau
+  // est lent mais l'application travaille toujours (pas besoin de recliquer).
+  useEffect(() => {
+    if (!loading) {
+      setConnexionLente(false);
+      return;
+    }
+    const minuteur = setTimeout(() => setConnexionLente(true), 8000);
+    return () => clearTimeout(minuteur);
+  }, [loading]);
+
+  // Retrouve le mode de connexion utilisé la dernière fois sur cet appareil
+  // (e-mail ou téléphone) et surveille l'état du réseau.
+  useEffect(() => {
+    try {
+      const modeSauve = localStorage.getItem(CLE_MODE) as Mode | null;
+      if (modeSauve === "email" || modeSauve === "telephone") setMode(modeSauve);
+      const identifiantSauve = localStorage.getItem(CLE_IDENTIFIANT);
+      if (identifiantSauve) {
+        if (modeSauve === "telephone") setTelephone(identifiantSauve);
+        else setEmail(identifiantSauve);
+      }
+    } catch {
+      // stockage indisponible : on ignore
+    }
+    const majReseau = () => setHorsLigne(!navigator.onLine);
+    majReseau();
+    window.addEventListener("online", majReseau);
+    window.addEventListener("offline", majReseau);
+    return () => {
+      window.removeEventListener("online", majReseau);
+      window.removeEventListener("offline", majReseau);
+    };
+  }, []);
+
+  // Change de mode (e-mail / téléphone) et le mémorise pour la prochaine fois
+  function choisirMode(nouveau: Mode) {
+    setMode(nouveau);
+    setMessage(null);
+    try {
+      localStorage.setItem(CLE_MODE, nouveau);
+    } catch {
+      // stockage indisponible : on ignore
+    }
+  }
 
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
@@ -89,6 +142,11 @@ export default function LoginPage() {
     if (error) {
       setMessage(traduireErreur(error));
       return;
+    }
+    try {
+      localStorage.setItem(CLE_IDENTIFIANT, mode === "email" ? email : telephone);
+    } catch {
+      // stockage indisponible : on ignore
     }
     router.replace("/");
     router.refresh();
@@ -200,10 +258,7 @@ export default function LoginPage() {
                 <div className="flex gap-1 rounded-xl border border-border/80 bg-surface-2 p-1">
                   <button
                     type="button"
-                    onClick={() => {
-                      setMode("email");
-                      setMessage(null);
-                    }}
+                    onClick={() => choisirMode("email")}
                     className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
                       mode === "email"
                         ? "bg-primary text-white shadow-sm"
@@ -214,10 +269,7 @@ export default function LoginPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setMode("telephone");
-                      setMessage(null);
-                    }}
+                    onClick={() => choisirMode("telephone")}
                     className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
                       mode === "telephone"
                         ? "bg-primary text-white shadow-sm"
@@ -251,6 +303,11 @@ export default function LoginPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                     />
+                    <p className="mt-1 text-xs text-muted">
+                      {langue === "fr"
+                        ? "L'inscription se fait par e-mail. Le téléphone sert à vous joindre sur le chantier."
+                        : "Sign-up uses an email. The phone number is used to reach you on site."}
+                    </p>
                   </div>
                   <div>
                     <label className="mb-1 block text-sm font-medium text-foreground">{t("telephone")}</label>
@@ -288,14 +345,28 @@ export default function LoginPage() {
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">{t("password")}</label>
-                <input
-                  className="w-full rounded-xl border border-border/80 bg-surface px-3.5 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                />
+                <div className="relative">
+                  <input
+                    className="w-full rounded-xl border border-border/80 bg-surface px-3.5 py-2.5 pr-11 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                    type={voirMotDePasse ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setVoirMotDePasse((v) => !v)}
+                    className="absolute inset-y-0 right-0 grid w-11 place-items-center text-muted transition hover:text-foreground"
+                    aria-label={
+                      voirMotDePasse
+                        ? (langue === "fr" ? "Masquer le mot de passe" : "Hide password")
+                        : (langue === "fr" ? "Afficher le mot de passe" : "Show password")
+                    }
+                  >
+                    {voirMotDePasse ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
               </div>
 
               {!signup && mode === "email" && (
@@ -306,15 +377,34 @@ export default function LoginPage() {
                 </div>
               )}
 
+              {horsLigne && !signup && (
+                <div className="flex items-start gap-3 rounded-xl border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">
+                  <WifiOff className="mt-0.5 h-4 w-4 shrink-0" />
+                  <p>
+                    {langue === "fr"
+                      ? "Pas de réseau pour le moment. La connexion a besoin d'Internet : réessayez dès que les barres reviennent."
+                      : "No network right now. Sign-in needs Internet: try again as soon as you get signal."}
+                  </p>
+                </div>
+              )}
+
               {message && (
-                <div className="rounded-xl border border-rose-300 bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-950/30 dark:text-rose-300">
+                <div className="rounded-xl border border-danger/40 bg-danger/10 p-3 text-sm text-foreground">
                   {message}
                 </div>
               )}
 
-              <Button type="submit" size="lg" disabled={loading} className="w-full">
+              <Button type="submit" size="lg" disabled={loading || (horsLigne && !signup)} className="w-full">
                 {loading ? t("waiting") : signup ? t("signup_btn") : t("signin")}
               </Button>
+
+              {connexionLente && (
+                <p className="text-center text-xs text-muted">
+                  {langue === "fr"
+                    ? "Le réseau est lent : la connexion continue, inutile de recliquer."
+                    : "Slow network: sign-in is still running, no need to tap again."}
+                </p>
+              )}
             </form>
 
             {!signup && (

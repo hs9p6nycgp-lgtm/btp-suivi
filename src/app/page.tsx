@@ -8,7 +8,6 @@ import { useEffect, useState } from "react";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
-import { Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { getLangue } from "@/lib/i18n";
 
@@ -44,6 +43,19 @@ type PhotoJournal = {
   chemin: string;
   legende: string | null;
   created_at: string;
+  /** URL signée temporaire pour afficher la photo (bucket privé). */
+  url?: string | null;
+};
+
+// Libellés humains des types d'alerte générés par l'application
+const TYPES_ALERTES: Record<string, { fr: string; en: string }> = {
+  quantite: { fr: "Écart de quantité", en: "Quantity difference" },
+  delai: { fr: "Retard de planning", en: "Schedule delay" },
+  budget: { fr: "Dépassement de budget", en: "Budget overrun" },
+  qualite: { fr: "Non-conformité qualité", en: "Quality non-conformity" },
+  stock: { fr: "Stock bas", en: "Low stock" },
+  hse: { fr: "Alerte sécurité (HSE)", en: "Safety alert (HSE)" },
+  eprouvette: { fr: "Échéance éprouvette béton", en: "Concrete sample due" },
 };
 
 const STATUT_LABELS: Record<string, { fr: string; en: string; color: "success" | "warning" | "danger" | "info" }> = {
@@ -238,7 +250,18 @@ export default function Home() {
           .order("created_at", { ascending: false })
           .limit(12);
         if (!actif) return;
-        setPhotos((photosData.data ?? []) as PhotoJournal[]);
+        const liste = (photosData.data ?? []) as PhotoJournal[];
+        if (liste.length === 0) {
+          setPhotos([]);
+          return;
+        }
+        // Le bucket est privé : on génère des URL signées (valables 1 heure) pour l'affichage
+        const { data: signees } = await supabase.storage
+          .from("chantiers-documents")
+          .createSignedUrls(liste.map((p) => p.chemin), 60 * 60);
+        if (!actif) return;
+        const urlParChemin = new Map((signees ?? []).map((s) => [s.path, s.signedUrl]));
+        setPhotos(liste.map((p) => ({ ...p, url: urlParChemin.get(p.chemin) ?? null })));
       } catch {
         // Les données secondaires sont remplies à la volée ; on continue sans elles
       }
@@ -359,8 +382,124 @@ export default function Home() {
         />
       </div>
 
+      {/* Mes chantiers : montant du marché et dépenses engagées */}
+      <section className="anim-fade-up anim-delay-2 mb-6">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
+              <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+              {langue === "fr" ? "Mes chantiers" : "My sites"}
+            </h2>
+            <p className="mt-1 text-sm text-muted">
+              {langue === "fr"
+                ? "Montant du marché et dépenses engagées. Touchez un chantier pour l'ouvrir."
+                : "Contract amount and committed expenses. Tap a site to open it."}
+            </p>
+          </div>
+          <Link href="/chantiers" className="shrink-0 text-sm font-semibold text-primary hover:underline">
+            {langue === "fr" ? "Voir tout" : "View all"} →
+          </Link>
+        </div>
+        <div className="overflow-x-auto rounded-2xl border border-border/80 bg-surface shadow-soft">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border/80 bg-surface-2 text-left">
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Chantier</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">Montant marché (FCFA)</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">Dépenses réelles (FCFA)</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">Écart (FCFA)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {comparaison.map(({ chantier, realiseTotal }) => {
+                const ecart = realiseTotal - Number(chantier.montant_marche || 0);
+                return (
+                  <tr key={chantier.id} className="border-b border-border/60 transition last:border-0 hover:bg-surface-2/70">
+                    <td className="px-4 py-3">
+                      <Link href={`/chantiers/${chantier.id}`} className="font-medium text-foreground hover:text-primary-light">
+                        {chantier.nom}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono tabular-nums text-foreground">
+                      {Number(chantier.montant_marche || 0).toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono tabular-nums text-foreground">
+                      {realiseTotal.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
+                    </td>
+                    <td className={`px-4 py-3 text-right font-mono tabular-nums ${ecart > 0 ? "text-danger" : "text-success"}`}>
+                      {ecart > 0 ? "+" : ""}
+                      {ecart.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Alertes en cours : touchables pour ouvrir le chantier concerné */}
+      <section className="anim-fade-up anim-delay-3 mb-6">
+        <div className="mb-4 flex items-start justify-between">
+          <div>
+            <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
+              <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+              {langue === "fr" ? "Alertes en cours" : "Open alerts"}
+            </h2>
+            <p className="mt-1 text-sm text-muted">
+              {langue === "fr"
+                ? "Touchez une alerte pour ouvrir le chantier et corriger le problème."
+                : "Tap an alert to open the site and fix the issue."}
+            </p>
+          </div>
+        </div>
+        {alertes.length === 0 ? (
+          <Card padding="lg" className="text-center">
+            <span className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-slate-100 text-muted dark:bg-white/5">
+              <TriangleAlert className="h-7 w-7" />
+            </span>
+            <p className="text-sm font-semibold text-foreground">Aucune alerte en cours.</p>
+            <p className="mt-0.5 text-xs text-muted">Tout est sous contrôle.</p>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {alertes.map((alerte) => {
+              const chantier = nomDesChantiers.get(alerte.chantier_id);
+              const libelle = TYPES_ALERTES[alerte.type] ?? { fr: alerte.type, en: alerte.type };
+              return (
+                <Link key={alerte.id} href={`/chantiers/${alerte.chantier_id}`} className="block">
+                  <Card padding="md" className="hover-lift flex items-start gap-4 border-l-4 border-l-warning">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
+                      <TriangleAlert className="h-5 w-5" />
+                    </span>
+                    <div className="flex-1">
+                      <p className="font-semibold text-foreground">
+                        {chantier ? `${chantier} — ` : ""}
+                        {langue === "fr" ? libelle.fr : libelle.en}
+                      </p>
+                      <p className="text-sm text-muted">
+                        {alerte.type === "quantite"
+                          ? langue === "fr"
+                            ? `Écart constaté : ${alerte.valeur} % (seuil du chantier : ${alerte.seuil} %)`
+                            : `Measured difference: ${alerte.valeur}% (site threshold: ${alerte.seuil}%)`
+                          : langue === "fr"
+                            ? `Valeur : ${alerte.valeur} / Seuil : ${alerte.seuil}`
+                            : `Value: ${alerte.valeur} / Threshold: ${alerte.seuil}`}
+                      </p>
+                    </div>
+                    <span className="shrink-0 self-center text-xs font-semibold text-primary">
+                      {langue === "fr" ? "Ouvrir" : "Open"} →
+                    </span>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
       {/* Outils rapides */}
-      <section className="anim-fade-up anim-delay-5 mb-6">
+      <section className="anim-fade-up anim-delay-4 mb-6">
         <div className="mb-4">
           <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
             <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
@@ -480,94 +619,8 @@ export default function Home() {
         </Card>
       </section>
 
-      {/* Comparatif prévu / réalisé par chantier */}
-      <section className="anim-fade-up anim-delay-6 mb-6">
-        <div className="mb-4 flex items-start justify-between">
-          <div>
-            <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
-              <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
-              Prévu / réalisé par chantier
-            </h2>
-            <p className="mt-1 text-sm text-muted">Montant du marché et dépenses réellement engagées.</p>
-          </div>
-        </div>
-        <div className="overflow-x-auto rounded-2xl border border-border/80 bg-surface shadow-soft">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border/80 bg-surface-2 text-left">
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Chantier</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">Montant marché (FCFA)</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">Dépenses réelles (FCFA)</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">Écart (FCFA)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {comparaison.map(({ chantier, realiseTotal }) => (
-                <tr key={chantier.id} className="border-b border-border/60 transition last:border-0 hover:bg-surface-2/70">
-                  <td className="px-4 py-3 font-medium text-foreground">{chantier.nom}</td>
-                  <td className="px-4 py-3 text-right font-mono tabular-nums text-foreground">
-                    {Number(chantier.montant_marche || 0).toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono tabular-nums text-foreground">
-                    {realiseTotal.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono tabular-nums text-danger">
-                    {(realiseTotal - Number(chantier.montant_marche || 0)).toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* Alertes en cours */}
-      <section className="anim-fade-up anim-delay-7 mb-6">
-        <div className="mb-4 flex items-start justify-between">
-          <div>
-            <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
-              <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
-              Alertes en cours
-            </h2>
-            <p className="mt-1 text-sm text-muted">Non-conformités et écarts encore ouverts.</p>
-          </div>
-        </div>
-        {alertes.length === 0 ? (
-          <Card padding="lg" className="text-center">
-            <span className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-slate-100 text-muted dark:bg-white/5">
-              <TriangleAlert className="h-7 w-7" />
-            </span>
-            <p className="text-sm font-semibold text-foreground">Aucune alerte en cours.</p>
-            <p className="mt-0.5 text-xs text-muted">Tout est sous contrôle.</p>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {alertes.map((alerte) => {
-              const chantier = nomDesChantiers.get(alerte.chantier_id);
-              return (
-                <Card key={alerte.id} padding="md" className="flex items-start gap-4 border-l-4 border-l-warning">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
-                    <TriangleAlert className="h-5 w-5" />
-                  </span>
-                  <div className="flex-1">
-                    <p className="font-semibold text-foreground">
-                      {chantier ? `${chantier} — ` : ""}
-                      {alerte.type}
-                    </p>
-                    <p className="text-sm text-muted">
-                      Valeur : {alerte.valeur} / Seuil : {alerte.seuil}
-                    </p>
-                  </div>
-                  <Badge variant="warning">{alerte.statut}</Badge>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
       {/* Galerie photos */}
-      <section className="anim-fade-up anim-delay-8">
+      <section className="anim-fade-up anim-delay-5">
         <div className="mb-4 flex items-start justify-between">
           <div>
             <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
@@ -587,15 +640,25 @@ export default function Home() {
           </Card>
         ) : (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {photos.map((photo) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={photo.chemin}
-                src={photo.chemin}
-                alt={photo.legende ?? "Photo de chantier"}
-                className="h-40 w-full rounded-2xl border border-border/80 object-cover shadow-soft transition duration-500 hover:scale-[1.03] hover:shadow-soft-lg"
-              />
-            ))}
+            {photos.map((photo) =>
+              photo.url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={photo.chemin}
+                  src={photo.url}
+                  alt={photo.legende ?? "Photo de chantier"}
+                  loading="lazy"
+                  className="h-40 w-full rounded-2xl border border-border/80 object-cover shadow-soft transition duration-500 hover:scale-[1.03] hover:shadow-soft-lg"
+                />
+              ) : (
+                <div
+                  key={photo.chemin}
+                  className="grid h-40 w-full place-items-center rounded-2xl border border-dashed border-border/80 bg-surface-2 p-3 text-center text-xs text-muted"
+                >
+                  {langue === "fr" ? "Photo indisponible" : "Photo unavailable"}
+                </div>
+              ),
+            )}
           </div>
         )}
       </section>

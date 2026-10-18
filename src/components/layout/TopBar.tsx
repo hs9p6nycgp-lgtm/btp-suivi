@@ -3,25 +3,47 @@
 import { Search } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { t } from "@/lib/i18n";
+import { getLangue, t } from "@/lib/i18n";
 import AlertsBadge from "@/components/layout/AlertsBadge";
 import CommandPalette from "@/components/layout/CommandPalette";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import SignOutButton from "@/components/SignOutButton";
 
-// Correspondance entre le chemin courant et une clé du dictionnaire
-const CLE_PAR_ROUTE: Record<string, string> = {
-  "/": "home.titre",
-  "/chantiers": "chantiers.titre",
-  "/bpu": "nav.bpu",
-  "/calculateurs/devis": "nav.devis",
-  "/calculateurs/mur": "nav.mur",
-  "/login": "auth.connexion",
-};
+// Titre affiché selon la page courante : du plus précis au plus général.
+// `cle` renvoie au dictionnaire bilingue ; `fr`/`en` servent de secours.
+const TITRES_PAR_ROUTE: Array<{ motif: RegExp; cle?: string; fr: string; en?: string }> = [
+  { motif: /^\/chantiers\/[^/]+\/journaux/, cle: "detail.journal", fr: "Journal de chantier" },
+  { motif: /^\/chantiers\/[^/]+\/planning/, cle: "detail.planning", fr: "Planning" },
+  { motif: /^\/chantiers\/[^/]+\/qualite/, fr: "Qualité & Contrôle", en: "Quality & Control" },
+  { motif: /^\/chantiers\/[^/]+\/couts/, cle: "detail.couts", fr: "Coûts & Budget" },
+  { motif: /^\/chantiers\/[^/]+\/livraisons/, cle: "detail.livraisons", fr: "Livraisons" },
+  { motif: /^\/chantiers\/[^/]+\/metre/, cle: "detail.metre", fr: "Métré" },
+  { motif: /^\/chantiers\/[^/]+\/modelisation3d/, fr: "Modélisation 3D", en: "3D Modeling" },
+  { motif: /^\/chantiers\/nouveau/, cle: "nouveau_chantier.titre", fr: "Nouveau chantier" },
+  { motif: /^\/chantiers\/[^/]+/, fr: "Fiche chantier", en: "Site sheet" },
+  { motif: /^\/chantiers/, cle: "chantiers.titre", fr: "Chantiers" },
+  { motif: /^\/bpu/, cle: "nav.bpu", fr: "BPU" },
+  { motif: /^\/calculateurs\/devis/, cle: "nav.devis", fr: "Calcul de devis" },
+  { motif: /^\/calculateurs\/mur/, cle: "nav.mur", fr: "Calcul de murs" },
+  { motif: /^\/fournisseurs/, cle: "nav.fournisseurs", fr: "Fournisseurs" },
+  { motif: /^\/rapports/, cle: "nav.rapports", fr: "Rapports" },
+  { motif: /^\/export/, cle: "nav.export", fr: "Export" },
+  { motif: /^\/referentiel/, cle: "nav.referentiel", fr: "Référentiel" },
+  { motif: /^\/(login|mot-de-passe-oublie|reinitialiser-mot-de-passe)/, cle: "auth.connexion", fr: "Connexion" },
+  { motif: /^\/offline/, fr: "Hors connexion", en: "Offline" },
+  { motif: /^\/$/, cle: "home.titre", fr: "Tableau de bord" },
+];
+
+function titreDeLaPage(chemin: string): string {
+  const regle = TITRES_PAR_ROUTE.find((r) => r.motif.test(chemin));
+  if (!regle) return t("home.titre");
+  if (regle.cle && getLangue() !== "en") return t(regle.cle);
+  return getLangue() === "en" ? (regle.en ?? regle.fr) : regle.fr;
+}
 
 export default function TopBar() {
   const chemin = usePathname() ?? "/";
-  const cleTitre = CLE_PAR_ROUTE[chemin] ?? "home.titre";
+  const titre = titreDeLaPage(chemin);
   const [paletteOuverte, setPaletteOuverte] = useState(false);
 
   // Raccourci ⌘K / Ctrl + K pour la recherche globale
@@ -41,7 +63,7 @@ export default function TopBar() {
       {/* Titre de la page courante */}
       <div className="flex min-w-0 items-center gap-2">
         <h1 className="truncate text-lg font-bold tracking-tight text-foreground md:text-xl">
-          {t(cleTitre)}
+          {titre}
         </h1>
       </div>
 

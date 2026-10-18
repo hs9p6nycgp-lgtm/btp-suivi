@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, ChevronLeft, ChevronRight, ClipboardCheck, FilePlus2 } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -21,7 +21,14 @@ type Journal = {
   created_at: string;
 };
 
-type Etape = 0 | 1 | 2;
+// Choix rapides de météo : un seul bouton à toucher sur le terrain
+const METEO_CHOIX = ["Soleil", "Nuageux", "Pluie", "Harmattan"];
+
+// JJ/MM/AAAA sans risque de décalage de fuseau (chaîne « AAAA-MM-JJ »)
+function formaterDate(dateIso: string): string {
+  const [a, m, j] = dateIso.split("-");
+  return a && m && j ? `${j}/${m}/${a}` : dateIso;
+}
 
 const STATUT_LABELS: Record<string, { fr: string; en: string }> = {
   brouillon: { fr: "Brouillon", en: "Draft" },
@@ -38,8 +45,10 @@ export default function JournauxPage() {
   const [meteo, setMeteo] = useState("");
   const [observations, setObservations] = useState("");
   const [loading, setLoading] = useState(false);
-  const [etape, setEtape] = useState<Etape>(0);
   const [message, setMessage] = useState<string | null>(null);
+
+  // Un seul journal par jour : si celui de la date choisie existe déjà, on propose de l'ouvrir
+  const journalDuJour = items.find((j) => j.date_journal === date) ?? null;
 
   useEffect(() => {
     if (chantierId) load();
@@ -63,15 +72,24 @@ export default function JournauxPage() {
     setItems((data ?? []) as Journal[]);
   }
 
-  // La création de la fiche reste exactement la même action que précédemment :
-  // le bouton final d'étape 3 insère le journal comme avant.
+  // Création du journal du jour : les observations sont désormais enregistrées
+  // (avant, elles étaient saisies puis perdues) et l'insertion est protégée
+  // contre les doublons (un seul journal par date).
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
+    if (journalDuJour) return;
     setLoading(true);
+    setMessage(null);
     const supabase = createClient();
     const { data, error } = await supabase
       .from("journaux")
-      .insert({ chantier_id: chantierId, date_journal: date, meteo: meteo || null, statut: "brouillon" })
+      .insert({
+        chantier_id: chantierId,
+        date_journal: date,
+        meteo: meteo || null,
+        observations: observations || null,
+        statut: "brouillon",
+      })
       .select()
       .single();
     setLoading(false);
@@ -81,12 +99,6 @@ export default function JournauxPage() {
     }
     router.push(`/chantiers/${chantierId}/journaux/${data.id}`);
   }
-
-  const libelleEtape = (etapeCourante: Etape): string => {
-    if (etapeCourante === 0) return langue === "fr" ? "1. Saisir le jour" : "Step 1: Enter the day";
-    if (etapeCourante === 1) return langue === "fr" ? "2. Vérifier" : "Step 2: Review";
-    return langue === "fr" ? "3. Créer la fiche" : "Step 3: Create";
-  };
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
@@ -116,44 +128,19 @@ export default function JournauxPage() {
         </div>
       )}
 
-      {/* Barre d'étapes */}
-      <div className="anim-fade-up anim-delay-1 mb-6 flex items-center gap-2 rounded-xl border border-border/80 bg-surface p-3 shadow-soft">
-        {([0, 1, 2] as Etape[]).map((etapeCourante) => (
-          <div
-            key={etapeCourante}
-            className={`flex flex-1 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold ${
-              etape === etapeCourante
-                ? "bg-primary text-white"
-                : "text-muted"
-            }`}
-          >
-            <span
-              className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${
-                etape === etapeCourante ? "bg-white text-primary" : "bg-surface-2 text-muted"
-              }`}
-            >
-              {etapeCourante + 1}
-            </span>
-            {libelleEtape(etapeCourante)}
-          </div>
-        ))}
-      </div>
+      {/* Saisie du jour : tout sur une seule page, un seul bouton d'enregistrement */}
+      <Card padding="lg" className="anim-fade-up anim-delay-1 mb-8">
+        <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+          <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+          {langue === "fr" ? "Saisie du jour" : "Daily entry"}
+        </h2>
 
-      {/* Étape 1 : saisie */}
-      {etape === 0 && (
-        <Card padding="lg" className="anim-fade-up">
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-foreground">
-            <CalendarDays className="h-5 w-5 text-primary" />
-            {langue === "fr" ? "Saisir le jour" : "Enter the day"}
-          </h2>
-          <form
-            onSubmit={() => {
-              setEtape(1);
-            }}
-            className="grid grid-cols-1 gap-4 md:grid-cols-2"
-          >
+        <form onSubmit={handleCreate} className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">Date</label>
+              <label className="mb-1 block text-sm font-medium text-foreground">
+                {langue === "fr" ? "Date du journal" : "Log date"}
+              </label>
               <input
                 type="date"
                 className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
@@ -163,100 +150,72 @@ export default function JournauxPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">Météo</label>
-              <input
-                className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
-                placeholder="Ensoleillé, pluvieux..."
-                value={meteo}
-                onChange={(e) => setMeteo(e.target.value)}
-              />
+              <label className="mb-1 block text-sm font-medium text-foreground">
+                {langue === "fr" ? "Météo du jour" : "Weather today"}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {METEO_CHOIX.map((choix) => (
+                  <button
+                    key={choix}
+                    type="button"
+                    onClick={() => setMeteo(meteo === choix ? "" : choix)}
+                    className={`rounded-xl border px-3.5 py-2 text-sm font-medium transition ${
+                      meteo === choix
+                        ? "border-action bg-action/10 text-foreground"
+                        : "border-border/80 bg-surface text-muted shadow-sm hover:border-primary-light/50 hover:text-foreground"
+                    }`}
+                  >
+                    {choix}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="md:col-span-2">
-              <label className="mb-1 block text-sm font-medium text-foreground">Observations</label>
-              <textarea
-                className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
-                rows={3}
-                placeholder="Travaux réalisés, incidents, heures supplémentaires..."
-                value={observations}
-                onChange={(e) => setObservations(e.target.value)}
-              />
-            </div>
-            <div className="md:col-span-2 flex items-end">
-              <Button type="submit" size="lg" className="w-full">
-                Continuer vers la vérification
-              </Button>
-            </div>
-          </form>
-        </Card>
-      )}
+          </div>
 
-      {/* Étape 2 : vérification */}
-      {etape === 1 && (
-        <Card padding="lg" className="anim-fade-up">
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-foreground">
-            <ClipboardCheck className="h-5 w-5 text-primary" />
-            {langue === "fr" ? "Vérifier le jour saisi" : "Review the entered day"}
-          </h2>
-          <div className="space-y-3 text-sm text-foreground">
-            <div className="rounded-xl border border-border p-4">
-              <p className="font-semibold">Date : {date}</p>
-              <p className="mt-1">Météo : {meteo || (langue === "fr" ? "non renseignée" : "not specified")}</p>
-            </div>
-            <div className="rounded-xl border border-border p-4">
-              <p className="font-semibold">Observations</p>
-              <p className="mt-1 whitespace-pre-wrap">{observations || (langue === "fr" ? "aucune" : "none")}</p>
-            </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-foreground">
+              {langue === "fr" ? "Observations de la journée" : "Day observations"}
+            </label>
+            <textarea
+              className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+              rows={4}
+              placeholder={
+                langue === "fr"
+                  ? "Travaux réalisés, incidents, heures supplémentaires..."
+                  : "Work done, incidents, overtime..."
+              }
+              value={observations}
+              onChange={(e) => setObservations(e.target.value)}
+            />
           </div>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
-            <Button variant="secondary" onClick={() => setEtape(0)}>
-              <ChevronLeft className="h-4 w-4" />
-              Modifier
-            </Button>
-            <Button onClick={() => setEtape(2)}>
-              Créer la fiche
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </Card>
-      )}
 
-      {/* Étape 3 : création */}
-      {etape === 2 && (
-        <Card padding="lg" className="anim-fade-up">
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-foreground">
-            <FilePlus2 className="h-5 w-5 text-primary" />
-            {langue === "fr" ? "Créer la fiche" : "Create the sheet"}
-          </h2>
-          <div className="space-y-2 text-sm text-foreground">
-            <p>
-              <span className="font-semibold">Date : </span>
-              {date}
-            </p>
-            <p>
-              <span className="font-semibold">Météo : </span>
-              {meteo || (langue === "fr" ? "non renseignée" : "not specified")}
-            </p>
-            <p>
-              <span className="font-semibold">Observations : </span>
-              {observations || (langue === "fr" ? "aucune" : "none")}
-            </p>
-          </div>
-          <p className="mt-4 text-xs text-muted">
-            {langue === "fr"
-              ? "Le journal sera enregistré au statut « Brouillon »."
-              : "The journal will be saved as « Draft »."}
-          </p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
-            <Button variant="secondary" onClick={() => setEtape(1)}>
-              <ChevronLeft className="h-4 w-4" />
-              Retour
+          {journalDuJour ? (
+            <div className="flex flex-col gap-3 rounded-xl border border-primary/30 bg-primary/10 p-4 text-sm text-foreground sm:flex-row sm:items-center sm:justify-between">
+              <p>
+                {langue === "fr"
+                  ? `Un journal existe déjà pour le ${formaterDate(journalDuJour.date_journal)}. Ouvrez-le pour continuer la saisie.`
+                  : `A log already exists for ${formaterDate(journalDuJour.date_journal)}. Open it to continue.`}
+              </p>
+              <Link
+                href={`/chantiers/${chantierId}/journaux/${journalDuJour.id}`}
+                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-action px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-action/25 transition hover:bg-action-strong"
+              >
+                {langue === "fr" ? "Ouvrir ce journal" : "Open this log"}
+              </Link>
+            </div>
+          ) : (
+            <Button type="submit" size="lg" className="w-full" disabled={loading}>
+              {loading
+                ? langue === "fr"
+                  ? "Enregistrement..."
+                  : "Saving..."
+                : langue === "fr"
+                  ? "Enregistrer le journal"
+                  : "Save the log"}
             </Button>
-            <Button type="button" onClick={(e) => handleCreate(e)} size="lg" disabled={loading}>
-              Créer le journal
-            </Button>
-          </div>
-        </Card>
-      )}
+          )}
+        </form>
+      </Card>
 
       {/* Liste des journaux existants */}
       <div className="anim-fade-up anim-delay-2 mt-10">
@@ -275,7 +234,7 @@ export default function JournauxPage() {
                 <Card padding="none" className="flex items-center gap-4 p-4 hover:border-primary/40 transition-all">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-foreground">{new Date(j.date_journal).toLocaleDateString(langue === "fr" ? "fr-FR" : "en-US")}</span>
+                      <span className="font-semibold text-foreground">{formaterDate(j.date_journal)}</span>
                       <Badge variant={j.statut === "valide" ? "success" : "warning"}>
                         {langue === "fr" ? STATUT_LABELS[j.statut].fr : STATUT_LABELS[j.statut].en}
                       </Badge>

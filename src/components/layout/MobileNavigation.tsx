@@ -3,6 +3,7 @@
 import { BookOpen, Building2, LayoutDashboard, PenLine } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { t } from "@/lib/i18n";
 
 // Navigation visible sur mobile : la barre fixe en bas de l'écran
@@ -12,15 +13,37 @@ const NAV_MOBILE = [
   { href: "/bpu", cle: "nav.bpu", icon: <BookOpen className="h-5 w-5" /> },
 ];
 
+// Mémorise le dernier chantier ouvert pour que « Saisie du jour » y retourne directement
+const CLE_DERNIER_CHANTIER = "btp.dernier.chantier";
+
 export default function MobileNavigation() {
   const chemin = usePathname() ?? "/";
+  const [dernierChantier, setDernierChantier] = useState<string | null>(null);
 
-  // « Saisie du jour » : journal du chantier actuellement ouvert, sinon la liste des chantiers
-  let cibleSaisie = "/chantiers";
-  const segments = chemin.split("/").filter(Boolean);
-  if (segments[0] === "chantiers" && segments.length >= 2) {
-    cibleSaisie = `/chantiers/${segments[1]}/journaux`;
-  }
+  useEffect(() => {
+    const segments = chemin.split("/").filter(Boolean);
+    const idDansUrl =
+      segments[0] === "chantiers" && segments.length >= 2 && segments[1] !== "nouveau"
+        ? segments[1]
+        : null;
+    if (idDansUrl) {
+      try {
+        localStorage.setItem(CLE_DERNIER_CHANTIER, idDansUrl);
+      } catch {
+        // stockage indisponible : on ignore
+      }
+      setDernierChantier(idDansUrl);
+      return;
+    }
+    try {
+      setDernierChantier(localStorage.getItem(CLE_DERNIER_CHANTIER));
+    } catch {
+      setDernierChantier(null);
+    }
+  }, [chemin]);
+
+  // « Saisie du jour » : journal du chantier en cours, sinon du dernier chantier visité
+  const cibleSaisie = dernierChantier ? `/chantiers/${dernierChantier}/journaux` : "/chantiers";
 
   return (
     <>

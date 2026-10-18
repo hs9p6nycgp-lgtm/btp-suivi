@@ -5,9 +5,25 @@ import { offlineInsert, offlineUpdate, offlineDelete } from "@/lib/offline/mutat
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { CalendarDays, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { getLangue } from "@/lib/i18n";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { getLangue, traduireErreur } from "@/lib/i18n";
+
+// JJ/MM/AAAA sans risque de décalage de fuseau (chaîne « AAAA-MM-JJ »)
+function formaterDate(dateIso: string | null | undefined): string {
+  if (!dateIso) return "-";
+  const [a, m, j] = String(dateIso).split("-");
+  return a && m && j ? `${j}/${m}/${a}` : String(dateIso);
+}
+
+// Style unique des champs de la page
+const CLASSE_CHAMP =
+  "w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10";
+
+// Météo en un seul appui (mêmes choix que sur la page de création du journal)
+const METEO_CHOIX = ["Soleil", "Nuageux", "Pluie", "Harmattan"];
 
 export default function JournalDetailPage() {
   const params = useParams();
@@ -38,6 +54,7 @@ export default function JournalDetailPage() {
 
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoLegende, setPhotoLegende] = useState("");
+  const [apercuPhoto, setApercuPhoto] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -53,6 +70,18 @@ export default function JournalDetailPage() {
   useEffect(() => {
     if (journalId) loadAll();
   }, [journalId]);
+
+  // Aperçu local de la photo choisie avant l'envoi : sur chantier, le réseau
+  // peut être lent, on voit tout de suite que la bonne photo est sélectionnée.
+  useEffect(() => {
+    if (!photoFile) {
+      setApercuPhoto(null);
+      return;
+    }
+    const url = URL.createObjectURL(photoFile);
+    setApercuPhoto(url);
+    return () => URL.revokeObjectURL(url);
+  }, [photoFile]);
 
   async function loadAll() {
     const supabase = createClient();
@@ -80,8 +109,19 @@ export default function JournalDetailPage() {
     if (ef.data) setEffectifs(ef.data);
     if (en.data) setEngins(en.data);
     if (inc.data) setIncidents(inc.data);
-    if (ph.data) setPhotos(ph.data);
     if (qt.data) setQuantites(qt.data);
+    if (ph.data) {
+      const listePhotos = ph.data as Array<{ id: string; chemin: string; legende: string | null; latitude: number | null; longitude: number | null }>;
+      setPhotos(listePhotos);
+      if (listePhotos.length > 0) {
+        // Le bucket est privé : URLs signées (1 h) pour afficher les vignettes
+        const { data: signees } = await supabase.storage
+          .from("chantiers-documents")
+          .createSignedUrls(listePhotos.map((x) => x.chemin), 60 * 60);
+        const urlParChemin = new Map((signees ?? []).map((s) => [s.path, s.signedUrl]));
+        setPhotos(listePhotos.map((x) => ({ ...x, url: urlParChemin.get(x.chemin) ?? null })));
+      }
+    }
   }
 
   const editable = journal?.statut !== "valide";
@@ -91,79 +131,80 @@ export default function JournalDetailPage() {
     if (!editable) return;
     setLoading(true);
     setMessage(null);
-    const supabase = createClient();
     const { error } = await offlineUpdate("journaux", journalId, { meteo: meteo || null, observations: observations || null });
     setLoading(false);
-    if (error) { setMessage(error.message); return; }
+    if (error) { setMessage(traduireErreur(error)); return; }
     setMessage(langue === "fr" ? "En-tête enregistré." : "Header saved.");
     loadAll();
   }
 
+  // Ajouts optimistes : l'élément apparaît tout de suite, sans recharger la page
+  // (sur un réseau faible, 25 ouvriers ne doivent pas faire 25 attentes).
   async function addEffectif(e: React.FormEvent) {
     e.preventDefault();
     if (!editable) return;
-    const supabase = createClient();
     const { error } = await offlineInsert("journal_effectifs", { journal_id: journalId, corps_metier: effMetier, nombre: Number(effNombre) || 0 });
-    if (error) { setMessage(error.message); return; }
+    if (error) { setMessage(traduireErreur(error)); return; }
+    setEffectifs((l) => [...l, { id: `local-${Date.now()}`, corps_metier: effMetier, nombre: Number(effNombre) || 0 }]);
     setEffMetier(""); setEffNombre("");
-    loadAll();
   }
 
   async function addEngin(e: React.FormEvent) {
     e.preventDefault();
     if (!editable) return;
-    const supabase = createClient();
     const { error } = await offlineInsert("journal_engins", {
       journal_id: journalId, type_engin: engType, immatriculation: engImmat || null,
       heures_marche: Number(engHeures) || 0, quantite_produite: engQte ? Number(engQte) : null,
     });
-    if (error) { setMessage(error.message); return; }
+    if (error) { setMessage(traduireErreur(error)); return; }
+    setEngins((l) => [...l, { id: `local-${Date.now()}`, type_engin: engType, heures_marche: Number(engHeures) || 0 }]);
     setEngType(""); setEngImmat(""); setEngHeures(""); setEngQte("");
-    loadAll();
   }
 
   async function addIncident(e: React.FormEvent) {
     e.preventDefault();
     if (!editable) return;
-    const supabase = createClient();
     const { error } = await offlineInsert("incidents_journal", {
       journal_id: journalId, type: incType, description: incDesc || null, duree_heures: Number(incDuree) || 0,
     });
-    if (error) { setMessage(error.message); return; }
+    if (error) { setMessage(traduireErreur(error)); return; }
+    setIncidents((l) => [...l, { id: `local-${Date.now()}`, type: incType, description: incDesc || null, duree_heures: Number(incDuree) || 0 }]);
     setIncDesc(""); setIncDuree("");
-    loadAll();
   }
 
   async function addQuantite(e: React.FormEvent) {
     e.preventDefault();
     if (!editable) return;
-    const supabase = createClient();
     const { error } = await offlineInsert("quantites_realisees", {
       chantier_id: chantierId, poste_dqe_id: qtePoste, quantite: Number(qteValeur) || 0,
       journal_id: journalId, section_id: qteSection || null,
       date_saisie: journal?.date_journal,
     });
-    if (error) { setMessage(error.message); return; }
+    if (error) { setMessage(traduireErreur(error)); return; }
+    setQuantites((l) => [...l, { id: `local-${Date.now()}`, poste_dqe_id: qtePoste, quantite: Number(qteValeur) || 0 }]);
     setQteValeur("");
-    loadAll();
   }
 
   async function removeItem(table: string, id: string) {
     if (!editable) return;
-    const supabase = createClient();
     const { error } = await offlineDelete(table, id);
-    if (error) { setMessage(error.message); return; }
-    loadAll();
+    if (error) { setMessage(traduireErreur(error)); return; }
+    // Retrait immédiat à l'écran, sans recharger la page
+    if (table === "journal_effectifs") setEffectifs((l) => l.filter((x) => x.id !== id));
+    if (table === "journal_engins") setEngins((l) => l.filter((x) => x.id !== id));
+    if (table === "incidents_journal") setIncidents((l) => l.filter((x) => x.id !== id));
+    if (table === "quantites_realisees") setQuantites((l) => l.filter((x) => x.id !== id));
   }
 
   async function addPhoto(e: React.FormEvent) {
     e.preventDefault();
     if (!editable || !photoFile) return;
     setLoading(true);
+    setMessage(null);
     const supabase = createClient();
     const path = `journaux/${journalId}/${Date.now()}-${photoFile.name}`;
     const { error: upErr } = await supabase.storage.from("chantiers-documents").upload(path, photoFile);
-    if (upErr) { setLoading(false); setMessage(upErr.message); return; }
+    if (upErr) { setLoading(false); setMessage(traduireErreur(upErr)); return; }
 
     let lat: number | null = null, lon: number | null = null;
     if (navigator.geolocation) {
@@ -178,11 +219,18 @@ export default function JournalDetailPage() {
     const { error } = await supabase.from("photos_journal").insert({
       journal_id: journalId, chemin: path, legende: photoLegende || null, latitude: lat, longitude: lon,
     });
+    if (error) { setLoading(false); setMessage(traduireErreur(error)); return; }
+
+    // La photo envoyée apparaît tout de suite en vignette (URL signée), sans recharger la page
+    const legende = photoLegende || null;
+    const { data: signee } = await supabase.storage.from("chantiers-documents").createSignedUrl(path, 60 * 60);
     setLoading(false);
-    if (error) { setMessage(error.message); return; }
+    setPhotos((l) => [
+      ...l,
+      { id: `local-${Date.now()}`, chemin: path, legende, latitude: lat, longitude: lon, url: signee?.signedUrl ?? null },
+    ]);
     setPhotoFile(null); setPhotoLegende("");
     setMessage(langue === "fr" ? "Photo ajoutée." : "Photo added.");
-    loadAll();
   }
 
   async function validateJournal() {
@@ -222,29 +270,67 @@ export default function JournalDetailPage() {
 
     const { error } = await offlineUpdate("journaux", journalId, { statut: "valide", validated_at: new Date().toISOString() });
     setLoading(false);
-    if (error) { setMessage(error.message); return; }
+    if (error) { setMessage(traduireErreur(error)); return; }
     setMessage(langue === "fr" ? "Journal validé." : "Journal validated.");
+    loadAll();
+  }
+
+  // Rouvrir un journal validé pour corriger une erreur : il repasse en brouillon.
+  async function reopenJournal() {
+    if (editable) return;
+    if (!confirm(langue === "fr" ? "Rouvrir ce journal pour le corriger ? Il repassera en brouillon." : "Reopen this log to fix it? It will go back to draft.")) return;
+    setLoading(true);
+    const { error } = await offlineUpdate("journaux", journalId, { statut: "brouillon", validated_at: null });
+    setLoading(false);
+    if (error) { setMessage(traduireErreur(error)); return; }
+    setMessage(langue === "fr" ? "Journal rouvert : la saisie est de nouveau modifiable." : "Log reopened: entries can be edited again.");
     loadAll();
   }
 
   if (!journal) return <div className="p-4">Chargement...</div>;
 
   return (
-    <main className="flex-1 overflow-y-auto bg-surface-2 p-4 md:p-6">
-      <div className="mb-6 flex items-start justify-between">
-        <Link href={`/chantiers/${chantierId}`} className="text-sm text-orange-600 hover:underline">
-          ← Retour chantier
-        </Link>
-        <h1 className="text-2xl font-bold text-foreground">
-          Journal du {new Date(journal.date_journal).toLocaleDateString(langue === "fr" ? "fr-FR" : "en-US")}
-        </h1>
-        <p className="text-sm text-muted mt-1">
-          Statut : {journal.statut} {journal.statut === "valide" ? (langue === "fr" ? "(verrouillé)" : "(locked)") : "(draft)"}
-        </p>
-      </div>
+    <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
+      <div className="mx-auto w-full max-w-5xl">
+      <PageHeader
+        eyebrow={langue === "fr" ? "Suivi de chantier" : "Site tracking"}
+        title={`${langue === "fr" ? "Journal du" : "Log for"} ${formaterDate(journal.date_journal)}`}
+        description={
+          editable
+            ? langue === "fr"
+              ? "Météo, effectifs, engins, quantités et photos du jour. Validez en fin de journée pour verrouiller."
+              : "Weather, crew, machines, quantities and photos of the day. Validate at the end of the day to lock."
+            : langue === "fr"
+              ? "Journal validé et verrouillé. Si vous devez corriger une erreur, rouvrez la saisie."
+              : "Log validated and locked. If you need to fix a mistake, reopen the entry."
+        }
+        icon={<CalendarDays className="h-5 w-5" />}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant={editable ? "warning" : "success"}>
+              {editable
+                ? (langue === "fr" ? "Brouillon" : "Draft")
+                : (langue === "fr" ? "Validé" : "Validated")}
+            </Badge>
+            {!editable && (
+              <Button variant="secondary" onClick={reopenJournal} disabled={loading}>
+                <RotateCcw className="h-4 w-4" />
+                {langue === "fr" ? "Rouvrir la saisie" : "Reopen entry"}
+              </Button>
+            )}
+            <Link
+              href={`/chantiers/${chantierId}/journaux`}
+              className="inline-flex items-center gap-2 rounded-xl border border-border/80 bg-surface px-3.5 py-2 text-sm font-semibold text-muted shadow-sm transition hover:border-primary-light/50 hover:text-foreground"
+            >
+              <span>←</span>
+              {langue === "fr" ? "Retour aux journaux" : "Back to logs"}
+            </Link>
+          </div>
+        }
+      />
 
       {message && (
-        <div className="mb-4 rounded-lg bg-orange-50 border border-orange-200 p-3 text-sm text-orange-700">
+        <div className="anim-fade-up mb-4 rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
           {message}
         </div>
       )}
@@ -255,15 +341,30 @@ export default function JournalDetailPage() {
           <form onSubmit={saveEntete} className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">Météo</label>
-              <input className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" value={meteo} onChange={(e) => setMeteo(e.target.value)} />
+              <div className="flex flex-wrap gap-2">
+                {METEO_CHOIX.map((choix) => (
+                  <button
+                    key={choix}
+                    type="button"
+                    onClick={() => setMeteo(meteo === choix ? "" : choix)}
+                    className={`rounded-xl border px-3.5 py-2 text-sm font-medium transition ${
+                      meteo === choix
+                        ? "border-action bg-action/10 text-foreground"
+                        : "border-border/80 bg-surface text-muted shadow-sm hover:border-primary-light/50 hover:text-foreground"
+                    }`}
+                  >
+                    {choix}
+                  </button>
+                ))}
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">Observations</label>
-              <textarea className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" rows={3} value={observations} onChange={(e) => setObservations(e.target.value)} />
+              <textarea className={CLASSE_CHAMP} rows={3} value={observations} onChange={(e) => setObservations(e.target.value)} />
             </div>
-            <button type="submit" disabled={loading} className="btn-primary disabled:opacity-50">
+            <Button type="submit" disabled={loading} className="md:col-span-2">
               {loading ? "Enregistrement..." : "Enregistrer l'en-tête"}
-            </button>
+            </Button>
           </form>
         </CardVariant>
       )}
@@ -282,7 +383,7 @@ export default function JournalDetailPage() {
             {effectifs.map((e) => (
               <li key={e.id} className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-surface-2/60 p-2.5 text-sm">
                 <span>{e.corps_metier} : {e.nombre}</span>
-                {editable && <button onClick={() => removeItem("journal_effectifs", e.id)} className="text-rose-600 text-xs">Supprimer</button>}
+                {editable && <button onClick={() => removeItem("journal_effectifs", e.id)} className="text-danger text-xs font-medium hover:underline">Supprimer</button>}
               </li>
             ))}
             {effectifs.length === 0 && <li className="text-sm text-muted">Aucun effectif.</li>}
@@ -303,7 +404,7 @@ export default function JournalDetailPage() {
             {engins.map((en) => (
               <li key={en.id} className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-surface-2/60 p-2.5 text-sm">
                 <span>{en.type_engin} - {en.heures_marche} h</span>
-                {editable && <button onClick={() => removeItem("journal_engins", en.id)} className="text-rose-600 text-xs">Supprimer</button>}
+                {editable && <button onClick={() => removeItem("journal_engins", en.id)} className="text-danger text-xs font-medium hover:underline">Supprimer</button>}
               </li>
             ))}
             {engins.length === 0 && <li className="text-sm text-muted">Aucun engin.</li>}
@@ -330,7 +431,7 @@ export default function JournalDetailPage() {
             {incidents.map((inc) => (
               <li key={inc.id} className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-surface-2/60 p-2.5 text-sm">
                 <span>{inc.type} - {inc.description ?? "sans description"} ({inc.duree_heures} h)</span>
-                {editable && <button onClick={() => removeItem("incidents_journal", inc.id)} className="text-rose-600 text-xs">Supprimer</button>}
+                {editable && <button onClick={() => removeItem("incidents_journal", inc.id)} className="text-danger text-xs font-medium hover:underline">Supprimer</button>}
               </li>
             ))}
             {incidents.length === 0 && <li className="text-sm text-muted">Aucun incident.</li>}
@@ -352,14 +453,14 @@ export default function JournalDetailPage() {
                 {sections.map((s) => <option key={s.id} value={s.id}>{s.nom}</option>)}
               </select>
               <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" type="number" step="0.01" placeholder="Quantité" value={qteValeur} onChange={(e) => setQteValeur(e.target.value)} required />
-              <button type="submit" className="btn-primary">Ajouter</button>
+              <button type="submit" className="rounded-lg bg-gradient-to-br from-action to-action-strong px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:brightness-105 active:scale-[0.98]">Ajouter</button>
             </form>
           )}
           <ul className="space-y-2">
             {quantites.map((q) => (
               <li key={q.id} className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-surface-2/60 p-2.5 text-sm">
                 <span>{postes.find((p) => p.id === q.poste_dqe_id)?.designation ?? q.poste_dqe_id} : {Number(q.quantite).toFixed(2)}</span>
-                {editable && <button onClick={() => removeItem("quantites_realisees", q.id)} className="text-rose-600 text-xs">Supprimer</button>}
+                {editable && <button onClick={() => removeItem("quantites_realisees", q.id)} className="text-danger text-xs font-medium hover:underline">Supprimer</button>}
               </li>
             ))}
             {quantites.length === 0 && <li className="text-sm text-muted">Aucune quantité.</li>}
@@ -368,25 +469,60 @@ export default function JournalDetailPage() {
       </section>
 
       <section className="mb-6">
-        <h2 className="mb-4 text-lg font-bold text-foreground">Photos</h2>
+        <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+          <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+          Photos
+        </h2>
         <CardVariant padding="lg">
           {editable && (
-            <form onSubmit={addPhoto} className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-              <input type="file" accept="image/*" className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)} />
-              <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="Légende" value={photoLegende} onChange={(e) => setPhotoLegende(e.target.value)} />
-              <button type="submit" disabled={loading} className="btn-primary disabled:opacity-50">
-                {loading ? "Téléversement..." : "Téléverser"}
-              </button>
+            <form onSubmit={addPhoto} className="mb-4 space-y-3">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className={CLASSE_CHAMP}
+                  onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
+                />
+                <input className={CLASSE_CHAMP} placeholder="Légende (facultatif)" value={photoLegende} onChange={(e) => setPhotoLegende(e.target.value)} />
+              </div>
+              {apercuPhoto && (
+                <div className="flex items-center gap-3 rounded-xl border border-border/70 bg-surface-2/60 p-3">
+                  {/* Aperçu local : on vérifie que la bonne photo est choisie avant l'envoi (réseau lent sur chantier) */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={apercuPhoto} alt="Aperçu de la photo choisie" className="h-20 w-20 rounded-lg border border-border/70 object-cover" />
+                  <div className="text-sm">
+                    <p className="font-medium text-foreground">{photoFile?.name}</p>
+                    <p className="text-xs text-muted">
+                      {langue === "fr" ? "C'est bien cette photo ? Touchez « Envoyer la photo »." : "Is this the right photo? Tap “Send photo”."}
+                    </p>
+                  </div>
+                </div>
+              )}
+              <Button type="submit" disabled={loading || !photoFile}>
+                {loading ? (langue === "fr" ? "Envoi en cours..." : "Uploading...") : (langue === "fr" ? "Envoyer la photo" : "Send photo")}
+              </Button>
             </form>
           )}
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
             {photos.map((ph) => (
-              <div key={ph.id} className="rounded-xl border border-border/70 p-3">
-                <p className="text-xs text-muted truncate">{ph.chemin}</p>
-                {ph.legende && <p className="text-sm text-muted">{ph.legende}</p>}
-                {ph.latitude !== null && ph.longitude !== null && (
-                  <p className="text-xs text-muted">GPS : {ph.latitude}, {ph.longitude}</p>
+              <div key={ph.id} className="overflow-hidden rounded-xl border border-border/70">
+                {ph.url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={ph.url} alt={ph.legende ?? "Photo du journal"} loading="lazy" className="h-32 w-full object-cover" />
+                ) : (
+                  <div className="grid h-32 w-full place-items-center bg-surface-2 text-center text-xs text-muted">
+                    {langue === "fr" ? "Photo indisponible" : "Photo unavailable"}
+                  </div>
                 )}
+                <div className="p-2.5">
+                  {ph.legende && <p className="truncate text-sm text-foreground">{ph.legende}</p>}
+                  {ph.latitude !== null && ph.longitude !== null && (
+                    <p className="text-xs text-muted">
+                      GPS : {Number(ph.latitude).toFixed(5)}, {Number(ph.longitude).toFixed(5)}
+                    </p>
+                  )}
+                </div>
               </div>
             ))}
             {photos.length === 0 && <p className="text-sm text-muted">Aucune photo.</p>}
@@ -394,13 +530,25 @@ export default function JournalDetailPage() {
         </CardVariant>
       </section>
 
-      {editable && (
-        <div className="mt-8">
-          <button onClick={validateJournal} disabled={loading} className="rounded-xl bg-emerald-600 px-6 py-3 text-white font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-sm hover:shadow-md">
-            {loading ? "Validation..." : "Valider le journal (verrouille la saisie)"}
-          </button>
+      {editable ? (
+        <div className="mt-8 rounded-2xl border border-action/30 bg-action/5 p-4">
+          <Button onClick={validateJournal} size="lg" disabled={loading} className="w-full sm:w-auto">
+            {loading ? (langue === "fr" ? "Validation..." : "Validating...") : (langue === "fr" ? "Valider le journal (verrouille la saisie)" : "Validate the log (locks entry)")}
+          </Button>
+          <p className="mt-2 text-xs text-muted">
+            {langue === "fr"
+              ? "La validation génère les alertes d'écart de quantité. Le journal pourra être rouvert si besoin."
+              : "Validation generates quantity-gap alerts. The log can be reopened if needed."}
+          </p>
+        </div>
+      ) : (
+        <div className="mt-8 rounded-2xl border border-success/30 bg-success/5 p-4 text-sm text-foreground">
+          {langue === "fr"
+            ? "Journal validé. Une erreur repérée ? Utilisez « Rouvrir la saisie » en haut de page."
+            : "Log validated. Spotted a mistake? Use “Reopen entry” at the top of the page."}
         </div>
       )}
+      </div>
     </main>
   );
 }
