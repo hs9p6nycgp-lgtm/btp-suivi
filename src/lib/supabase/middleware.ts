@@ -27,9 +27,22 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isLoginPage = request.nextUrl.pathname.startsWith("/login");
+  const chemin = request.nextUrl.pathname;
+  const isLoginPage = chemin.startsWith("/login");
 
-  if (!user && !isLoginPage) {
+  // Pages accessibles sans connexion : connexion, mot de passe oublié,
+  // lien de réinitialisation reçu par e-mail, retour d'authentification,
+  // page « hors connexion » (utilisée par le service worker PWA).
+  const cheminsPublics = [
+    "/login",
+    "/mot-de-passe-oublie",
+    "/reinitialiser-mot-de-passe",
+    "/auth/callback",
+    "/offline",
+  ];
+  const estPublic = cheminsPublics.some((c) => chemin === c || chemin.startsWith(`${c}/`));
+
+  if (!user && !estPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
