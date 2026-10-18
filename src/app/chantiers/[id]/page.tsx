@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Calendar, CalendarRange, ClipboardCheck, ClipboardList, Coins, MapPin, Calculator } from "lucide-react";
+import { Box, Calendar, CalendarRange, ClipboardCheck, ClipboardList, Coins, MapPin, Calculator, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -156,6 +156,7 @@ export default function ChantierDetailPage() {
           {/* Accès rapides */}
           <div className="mt-5 flex flex-wrap gap-2">
             {[
+              { href: `/chantiers/${chantier.id}/modifier`, label: langue === "fr" ? "Modifier le chantier" : "Edit site", icon: <Pencil className="h-4 w-4" /> },
               { href: `/chantiers/${chantier.id}/planning`, label: "Planning & PERT", icon: <CalendarRange className="h-4 w-4" /> },
               { href: `/chantiers/${chantier.id}/couts`, label: langue === "fr" ? "Coûts & Budget" : "Costs & Budget", icon: <Coins className="h-4 w-4" /> },
               { href: `/chantiers/${chantier.id}/qualite`, label: langue === "fr" ? "Qualité" : "Quality", icon: <ClipboardCheck className="h-4 w-4" /> },

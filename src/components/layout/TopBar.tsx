@@ -19,6 +19,7 @@ const TITRES_PAR_ROUTE: Array<{ motif: RegExp; cle?: string; fr: string; en?: st
   { motif: /^\/chantiers\/[^/]+\/livraisons/, cle: "detail.livraisons", fr: "Livraisons" },
   { motif: /^\/chantiers\/[^/]+\/metre/, cle: "detail.metre", fr: "Métré" },
   { motif: /^\/chantiers\/[^/]+\/modelisation3d/, fr: "Modélisation 3D", en: "3D Modeling" },
+  { motif: /^\/chantiers\/[^/]+\/modifier/, fr: "Modifier le chantier", en: "Edit site" },
   { motif: /^\/chantiers\/nouveau/, cle: "nouveau_chantier.titre", fr: "Nouveau chantier" },
   { motif: /^\/chantiers\/[^/]+/, fr: "Fiche chantier", en: "Site sheet" },
   { motif: /^\/chantiers/, cle: "chantiers.titre", fr: "Chantiers" },

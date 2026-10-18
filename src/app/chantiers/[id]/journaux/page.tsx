@@ -2,6 +2,7 @@
 
 import { CalendarDays } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { creerJournalHorsLigne } from "@/lib/offline/mutations";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -72,32 +73,36 @@ export default function JournauxPage() {
     setItems((data ?? []) as Journal[]);
   }
 
-  // Création du journal du jour : les observations sont désormais enregistrées
-  // (avant, elles étaient saisies puis perdues) et l'insertion est protégée
-  // contre les doublons (un seul journal par date).
+  // Création du journal du jour via la fonction robuste au réseau faible :
+  // hors ligne ou réseau lent → la fiche est gardée sur le téléphone et
+  // envoyée automatiquement à la reconnexion ; l'utilisateur est toujours prévenu.
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (journalDuJour) return;
     setLoading(true);
     setMessage(null);
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from("journaux")
-      .insert({
-        chantier_id: chantierId,
-        date_journal: date,
-        meteo: meteo || null,
-        observations: observations || null,
-        statut: "brouillon",
-      })
-      .select()
-      .single();
+    const resultat = await creerJournalHorsLigne({ chantierId, date, meteo, observations });
     setLoading(false);
-    if (error) {
-      setMessage(traduireErreur(error));
+
+    if (resultat.statut === "cree") {
+      router.push(`/chantiers/${chantierId}/journaux/${resultat.id}`);
       return;
     }
-    router.push(`/chantiers/${chantierId}/journaux/${data.id}`);
+    if (resultat.statut === "en_attente") {
+      setMessage(
+        langue === "fr"
+          ? "Réseau faible : le journal est bien gardé sur le téléphone. Il sera envoyé tout seul dès que la connexion revient."
+          : "Weak network: the log is kept on the phone. It will be sent automatically as soon as the connection returns.",
+      );
+      return;
+    }
+    setMessage(
+      resultat.raison === "stockage_indisponible"
+        ? langue === "fr"
+          ? "Stockage du téléphone indisponible : le journal n'a pas pu être gardé hors connexion. Réessayez."
+          : "Phone storage unavailable: the log could not be kept offline. Try again."
+        : traduireErreur(resultat.erreur ?? {}),
+    );
   }
 
   return (

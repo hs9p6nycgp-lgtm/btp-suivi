@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getLangue, traduireErreur } from "@/lib/i18n";
+import { compresserImage } from "@/lib/photos/compression";
+import { BUCKET_PHOTOS, urlSignee, urlsSignees } from "@/lib/photos/urls";
 
 // JJ/MM/AAAA sans risque de décalage de fuseau (chaîne « AAAA-MM-JJ »)
 function formaterDate(dateIso: string | null | undefined): string {
@@ -115,10 +117,7 @@ export default function JournalDetailPage() {
       setPhotos(listePhotos);
       if (listePhotos.length > 0) {
         // Le bucket est privé : URLs signées (1 h) pour afficher les vignettes
-        const { data: signees } = await supabase.storage
-          .from("chantiers-documents")
-          .createSignedUrls(listePhotos.map((x) => x.chemin), 60 * 60);
-        const urlParChemin = new Map((signees ?? []).map((s) => [s.path, s.signedUrl]));
+        const urlParChemin = await urlsSignees(listePhotos.map((x) => x.chemin));
         setPhotos(listePhotos.map((x) => ({ ...x, url: urlParChemin.get(x.chemin) ?? null })));
       }
     }
@@ -202,8 +201,10 @@ export default function JournalDetailPage() {
     setLoading(true);
     setMessage(null);
     const supabase = createClient();
-    const path = `journaux/${journalId}/${Date.now()}-${photoFile.name}`;
-    const { error: upErr } = await supabase.storage.from("chantiers-documents").upload(path, photoFile);
+    // Photo compressée avant l'envoi (max 1600 px) : indispensable sur réseau faible
+    const fichierEnvoye = await compresserImage(photoFile);
+    const path = `journaux/${journalId}/${Date.now()}-${fichierEnvoye.name}`;
+    const { error: upErr } = await supabase.storage.from(BUCKET_PHOTOS).upload(path, fichierEnvoye);
     if (upErr) { setLoading(false); setMessage(traduireErreur(upErr)); return; }
 
     let lat: number | null = null, lon: number | null = null;
@@ -223,11 +224,11 @@ export default function JournalDetailPage() {
 
     // La photo envoyée apparaît tout de suite en vignette (URL signée), sans recharger la page
     const legende = photoLegende || null;
-    const { data: signee } = await supabase.storage.from("chantiers-documents").createSignedUrl(path, 60 * 60);
+    const url = await urlSignee(path);
     setLoading(false);
     setPhotos((l) => [
       ...l,
-      { id: `local-${Date.now()}`, chemin: path, legende, latitude: lat, longitude: lon, url: signee?.signedUrl ?? null },
+      { id: `local-${Date.now()}`, chemin: path, legende, latitude: lat, longitude: lon, url },
     ]);
     setPhotoFile(null); setPhotoLegende("");
     setMessage(langue === "fr" ? "Photo ajoutée." : "Photo added.");
@@ -235,7 +236,7 @@ export default function JournalDetailPage() {
 
   async function validateJournal() {
     if (!editable) return;
-    if (!confirm(langue === "fr" ? "Valider ce journal ? Une fois validé, il ne sera plus modifiable." : "Validate this journal? Once validated, it cannot be modified.")) return;
+    if (!confirm(langue === "fr" ? "Valider ce journal ? Il sera verrouillé, mais vous pourrez le rouvrir si une erreur est trouvée." : "Validate this journal? It will be locked, but you can reopen it if a mistake is found.")) return;
     setLoading(true);
     const supabase = createClient();
 

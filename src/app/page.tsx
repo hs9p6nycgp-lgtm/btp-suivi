@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Calculator, CalendarClock, Coins, FileText, Image as ImageIcon, Ruler, TriangleAlert } from "lucide-react";
+import { ArrowRight, Calculator, CalendarClock, Coins, FileText, Image as ImageIcon, PenLine, Ruler, TriangleAlert } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -10,6 +10,10 @@ import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { getLangue } from "@/lib/i18n";
+import { detailAlerte, libelleTypeAlerte } from "@/lib/alertes";
+import { lireDernierChantier } from "@/lib/chantiers/dernier";
+import { actionsDuJour } from "@/lib/journal/actionsDuJour";
+import { urlsSignees } from "@/lib/photos/urls";
 
 type Chantier = {
   id: string;
@@ -45,17 +49,6 @@ type PhotoJournal = {
   created_at: string;
   /** URL signée temporaire pour afficher la photo (bucket privé). */
   url?: string | null;
-};
-
-// Libellés humains des types d'alerte générés par l'application
-const TYPES_ALERTES: Record<string, { fr: string; en: string }> = {
-  quantite: { fr: "Écart de quantité", en: "Quantity difference" },
-  delai: { fr: "Retard de planning", en: "Schedule delay" },
-  budget: { fr: "Dépassement de budget", en: "Budget overrun" },
-  qualite: { fr: "Non-conformité qualité", en: "Quality non-conformity" },
-  stock: { fr: "Stock bas", en: "Low stock" },
-  hse: { fr: "Alerte sécurité (HSE)", en: "Safety alert (HSE)" },
-  eprouvette: { fr: "Échéance éprouvette béton", en: "Concrete sample due" },
 };
 
 const STATUT_LABELS: Record<string, { fr: string; en: string; color: "success" | "warning" | "danger" | "info" }> = {
@@ -210,6 +203,13 @@ export default function Home() {
   const [alertes, setAlertes] = useState<Alerte[]>([]);
   const [photos, setPhotos] = useState<PhotoJournal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [journauxAujourdhui, setJournauxAujourdhui] = useState<string[]>([]);
+  const [nonConformitesOuvertes, setNonConformitesOuvertes] = useState<Record<string, number>>({});
+  const [dernierChantier, setDernierChantier] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDernierChantier(lireDernierChantier());
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -244,6 +244,29 @@ export default function Home() {
         if (!actif) return;
         setAlertes((alertesData.data ?? []) as Alerte[]);
 
+        // Journaux du jour : sert à la carte « À faire aujourd'hui »
+        const maintenant = new Date();
+        const dateJour = `${maintenant.getFullYear()}-${String(maintenant.getMonth() + 1).padStart(2, "0")}-${String(maintenant.getDate()).padStart(2, "0")}`;
+        const journauxData = await supabase
+          .from("journaux")
+          .select("chantier_id")
+          .eq("date_journal", dateJour);
+        if (!actif) return;
+        setJournauxAujourdhui((journauxData.data ?? []).map((j) => j.chantier_id as string));
+
+        // Non-conformités encore ouvertes (celles « clôturées » ne comptent plus)
+        const ncData = await supabase
+          .from("non_conformites")
+          .select("chantier_id, statut")
+          .neq("statut", "cloturee");
+        if (!actif) return;
+        const ncParChantier: Record<string, number> = {};
+        for (const nc of ncData.data ?? []) {
+          const id = nc.chantier_id as string;
+          ncParChantier[id] = (ncParChantier[id] ?? 0) + 1;
+        }
+        setNonConformitesOuvertes(ncParChantier);
+
         const photosData = await supabase
           .from("photos_journal")
           .select("chemin, legende, created_at")
@@ -255,13 +278,10 @@ export default function Home() {
           setPhotos([]);
           return;
         }
-        // Le bucket est privé : on génère des URL signées (valables 1 heure) pour l'affichage
-        const { data: signees } = await supabase.storage
-          .from("chantiers-documents")
-          .createSignedUrls(liste.map((p) => p.chemin), 60 * 60);
+        // Le bucket est privé : URLs signées (outil commun de la Session 2)
+        const tableUrls = await urlsSignees(liste.map((p) => p.chemin));
         if (!actif) return;
-        const urlParChemin = new Map((signees ?? []).map((s) => [s.path, s.signedUrl]));
-        setPhotos(liste.map((p) => ({ ...p, url: urlParChemin.get(p.chemin) ?? null })));
+        setPhotos(liste.map((p) => ({ ...p, url: tableUrls.get(p.chemin) ?? null })));
       } catch {
         // Les données secondaires sont remplies à la volée ; on continue sans elles
       }
@@ -279,6 +299,20 @@ export default function Home() {
   const terminePct = chantiers.length > 0 ? Math.round((clotures / chantiers.length) * 100) : 0;
 
   const nomDesChantiers = new Map(chantiers.map((c) => [c.id, c.nom]));
+
+  // Alertes ouvertes par chantier (la requête ne charge déjà que les « ouverte »)
+  const alertesParChantier = alertes.reduce<Record<string, number>>((acc, a) => {
+    acc[a.chantier_id] = (acc[a.chantier_id] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  // « Quoi faire aujourd'hui ? » : calcul pur, sans requête (outil de la Session 2)
+  const actionsJour = actionsDuJour({
+    chantiers: chantiers.map((c) => ({ id: c.id, nom: c.nom, statut: c.statut })),
+    chantiersAvecJournalAujourdhui: journauxAujourdhui,
+    nonConformitesOuvertes,
+    alertesOuvertes: alertesParChantier,
+  });
 
   const { planifiee, realisee } = planVersRealise(chantiers, depenses);
   const donnees = fusionnerSeries(planifiee, realisee);
@@ -319,7 +353,14 @@ export default function Home() {
               Vue d'ensemble de vos chantiers en cours et à venir.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={dernierChantier ? `/chantiers/${dernierChantier}/journaux` : "/chantiers"}
+              className="inline-flex items-center gap-2 rounded-xl bg-action px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-action/30 transition hover:bg-action-strong"
+            >
+              <PenLine className="h-4 w-4" />
+              {langue === "fr" ? "Saisie du jour" : "Daily entry"}
+            </Link>
             <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold backdrop-blur">
               {chantiers.length} {langue === "fr" ? "chantiers" : "sites"}
             </span>
@@ -381,6 +422,69 @@ export default function Home() {
           miniPoints={chantiersEnPreparation(chantiers)}
         />
       </div>
+
+      {/* À faire aujourd'hui : les actions prioritaires, calculées sans requête */}
+      <section className="anim-fade-up anim-delay-1 mb-6">
+        <div className="mb-4">
+          <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
+            <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+            {langue === "fr" ? "À faire aujourd'hui" : "To do today"}
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            {langue === "fr"
+              ? "Ce que l'application vous propose de traiter en priorité, chantier par chantier."
+              : "What the app suggests you handle first, site by site."}
+          </p>
+        </div>
+        {actionsJour.length === 0 ? (
+          <Card padding="lg" className="text-center">
+            <p className="text-sm font-semibold text-foreground">
+              {langue === "fr" ? "Rien d'urgent aujourd'hui." : "Nothing urgent today."}
+            </p>
+            <p className="mt-0.5 text-xs text-muted">
+              {langue === "fr"
+                ? "Toutes les saisies du jour sont faites, aucune alerte ouverte."
+                : "All daily entries are done, no open alert."}
+            </p>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {actionsJour.slice(0, 6).map((action, index) => (
+              <Link key={`${action.type}-${action.chantierId}-${index}`} href={action.lienHref} className="block">
+                <Card padding="md" className="hover-lift flex items-center gap-4">
+                  <span
+                    className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl text-sm font-bold ${
+                      action.priorite === 1
+                        ? "bg-action/15 text-action-strong"
+                        : action.priorite === 2
+                          ? "bg-warning/15 text-warning"
+                          : "bg-primary/10 text-primary"
+                    }`}
+                  >
+                    {action.priorite}
+                  </span>
+                  <div className="flex-1">
+                    <p className="font-semibold text-foreground">{action.libelle}</p>
+                    <p className="text-sm text-muted">
+                      {action.chantierNom} — {action.detail}
+                    </p>
+                  </div>
+                  <span className="hidden shrink-0 items-center gap-1 text-xs font-semibold text-primary sm:inline-flex">
+                    {action.type === "saisie_journal"
+                      ? langue === "fr"
+                        ? "Saisir"
+                        : "Enter"
+                      : langue === "fr"
+                        ? "Ouvrir"
+                        : "Open"}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </span>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* Mes chantiers : montant du marché et dépenses engagées */}
       <section className="anim-fade-up anim-delay-2 mb-6">
@@ -465,7 +569,6 @@ export default function Home() {
           <div className="space-y-3">
             {alertes.map((alerte) => {
               const chantier = nomDesChantiers.get(alerte.chantier_id);
-              const libelle = TYPES_ALERTES[alerte.type] ?? { fr: alerte.type, en: alerte.type };
               return (
                 <Link key={alerte.id} href={`/chantiers/${alerte.chantier_id}`} className="block">
                   <Card padding="md" className="hover-lift flex items-start gap-4 border-l-4 border-l-warning">
@@ -475,17 +578,9 @@ export default function Home() {
                     <div className="flex-1">
                       <p className="font-semibold text-foreground">
                         {chantier ? `${chantier} — ` : ""}
-                        {langue === "fr" ? libelle.fr : libelle.en}
+                        {libelleTypeAlerte(alerte.type, langue === "fr" ? "fr" : "en")}
                       </p>
-                      <p className="text-sm text-muted">
-                        {alerte.type === "quantite"
-                          ? langue === "fr"
-                            ? `Écart constaté : ${alerte.valeur} % (seuil du chantier : ${alerte.seuil} %)`
-                            : `Measured difference: ${alerte.valeur}% (site threshold: ${alerte.seuil}%)`
-                          : langue === "fr"
-                            ? `Valeur : ${alerte.valeur} / Seuil : ${alerte.seuil}`
-                            : `Value: ${alerte.valeur} / Threshold: ${alerte.seuil}`}
-                      </p>
+                      <p className="text-sm text-muted">{detailAlerte(alerte, langue === "fr" ? "fr" : "en")}</p>
                     </div>
                     <span className="shrink-0 self-center text-xs font-semibold text-primary">
                       {langue === "fr" ? "Ouvrir" : "Open"} →

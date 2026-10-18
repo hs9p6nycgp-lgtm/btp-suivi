@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { t } from "@/lib/i18n";
+import { lireDernierChantier, memoriserDernierChantier } from "@/lib/chantiers/dernier";
 
 // Navigation visible sur mobile : la barre fixe en bas de l'écran
 const NAV_MOBILE = [
@@ -12,9 +13,6 @@ const NAV_MOBILE = [
   { href: "/chantiers", cle: "chantiers.titre", icon: <Building2 className="h-5 w-5" /> },
   { href: "/bpu", cle: "nav.bpu", icon: <BookOpen className="h-5 w-5" /> },
 ];
-
-// Mémorise le dernier chantier ouvert pour que « Saisie du jour » y retourne directement
-const CLE_DERNIER_CHANTIER = "btp.dernier.chantier";
 
 export default function MobileNavigation() {
   const chemin = usePathname() ?? "/";
@@ -27,19 +25,11 @@ export default function MobileNavigation() {
         ? segments[1]
         : null;
     if (idDansUrl) {
-      try {
-        localStorage.setItem(CLE_DERNIER_CHANTIER, idDansUrl);
-      } catch {
-        // stockage indisponible : on ignore
-      }
+      memoriserDernierChantier(idDansUrl);
       setDernierChantier(idDansUrl);
       return;
     }
-    try {
-      setDernierChantier(localStorage.getItem(CLE_DERNIER_CHANTIER));
-    } catch {
-      setDernierChantier(null);
-    }
+    setDernierChantier(lireDernierChantier());
   }, [chemin]);
 
   // « Saisie du jour » : journal du chantier en cours, sinon du dernier chantier visité
