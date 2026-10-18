@@ -25,18 +25,27 @@ export default function MobileNavigation() {
   return (
     <>
       {/* Barre de navigation inférieure */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden">
+      <nav className="glass fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around border-t border-border/70 pb-[env(safe-area-inset-bottom)] md:hidden">
         {NAV_MOBILE.map((item) => {
           const actif = item.href === "/" ? chemin === "/" : chemin.startsWith(`${item.href}/`);
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-1 flex-col items-center gap-1 py-2 text-xs font-medium ${
+              className={`relative flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-semibold transition-colors ${
                 actif ? "text-action" : "text-muted"
               }`}
             >
-              <span className="shrink-0">{item.icon}</span>
+              {actif && (
+                <span className="absolute top-0 h-0.5 w-8 rounded-full bg-gradient-to-r from-action to-action-strong" />
+              )}
+              <span
+                className={`grid h-8 w-14 place-items-center rounded-full transition ${
+                  actif ? "bg-action/10" : ""
+                }`}
+              >
+                {item.icon}
+              </span>
               <span>{t(item.cle)}</span>
             </Link>
           );
@@ -46,7 +55,7 @@ export default function MobileNavigation() {
       {/* Bouton orange flottant : saisie du jour */}
       <Link
         href={cibleSaisie}
-        className="fixed bottom-24 right-4 z-50 flex items-center gap-2 rounded-2xl bg-action px-5 py-4 text-sm font-bold text-white shadow-lg transition hover:bg-action/90 md:hidden"
+        className="fixed bottom-24 right-4 z-50 flex items-center gap-2 rounded-2xl bg-gradient-to-br from-action to-action-strong px-5 py-4 text-sm font-bold text-white shadow-xl shadow-action/40 transition hover:brightness-105 active:scale-95 md:hidden"
       >
         <PenLine className="h-5 w-5" />
         <span>{t("topbar.saisie_jour")}</span>

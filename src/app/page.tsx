@@ -278,14 +278,33 @@ export default function Home() {
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
-      {/* En-tête de la page */}
-      <div className="mb-6">
-        <div className="flex items-start justify-between">
+      {/* Bandeau d'en-tête */}
+      <div className="anim-fade-up relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary to-primary-deep p-6 text-white shadow-xl shadow-primary/20 md:p-8">
+        <div className="bg-grid pointer-events-none absolute inset-0 opacity-40" aria-hidden />
+        <div
+          className="pointer-events-none absolute -right-20 -top-28 h-72 w-72 rounded-full bg-action/25 blur-3xl"
+          aria-hidden
+        />
+        <div className="relative flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground md:text-3xl">Tableau de bord</h1>
-            <p className="text-sm text-muted">
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/50">
+              {langue === "fr" ? "Vue d'ensemble" : "Overview"}
+            </p>
+            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Tableau de bord</h1>
+            <p className="mt-1 text-sm text-white/70">
               Vue d'ensemble de vos chantiers en cours et à venir.
             </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold backdrop-blur">
+              {chantiers.length} {langue === "fr" ? "chantiers" : "sites"}
+            </span>
+            <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold backdrop-blur">
+              {enCours} {langue === "fr" ? "en cours" : "in progress"}
+            </span>
+            <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold backdrop-blur">
+              {alertes.length} {langue === "fr" ? "alertes" : "alerts"}
+            </span>
           </div>
         </div>
       </div>
@@ -293,14 +312,16 @@ export default function Home() {
       {/* Cartes de chiffres clés */}
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title={langue === "fr" ? "Chantiers actifs" : "Active sites"}
-          value={enCours}
+          className="anim-fade-up anim-delay-1 h-full"
+          title={langue === "fr" ? "Chantiers" : "Sites"}
+          value={chantiers.length}
           icon={<CalendarClock className="h-5 w-5" />}
           color="blue"
-          trend={{ value: `${enCours}`, label: langue === "fr" ? "en cours" : "in progress", positive: true }}
+          trend={{ value: `${chantiers.length}`, label: langue === "fr" ? "au total" : "total", positive: true }}
           miniPoints={activiteParCreation(chantiers)}
         />
         <StatCard
+          className="anim-fade-up anim-delay-2 h-full"
           title={langue === "fr" ? "En cours" : "In progress"}
           value={enCours}
           icon={<Coins className="h-5 w-5" />}
@@ -309,6 +330,7 @@ export default function Home() {
           miniPoints={montantEnCours(chantiers)}
         />
         <StatCard
+          className="anim-fade-up anim-delay-3 h-full"
           title={langue === "fr" ? "Clôturés" : "Closed"}
           value={clotures}
           icon={<FileText className="h-5 w-5" />}
@@ -317,6 +339,7 @@ export default function Home() {
           miniPoints={montantClotures(chantiers)}
         />
         <StatCard
+          className="anim-fade-up anim-delay-4 h-full"
           title={langue === "fr" ? "Montant total" : "Total amount"}
           value={totalMontant.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
           subtitle="FCFA"
@@ -325,6 +348,7 @@ export default function Home() {
           miniPoints={montantParMois(chantiers)}
         />
         <StatCard
+          className="anim-fade-up anim-delay-5 h-full"
           title={langue === "fr" ? "En préparation" : "In preparation"}
           value={enPreparation}
           icon={<CalendarClock className="h-5 w-5" />}
@@ -335,11 +359,14 @@ export default function Home() {
       </div>
 
       {/* Plan prévu / réalisé */}
-      <section className="mb-6">
+      <section className="anim-fade-up anim-delay-5 mb-6">
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-bold text-foreground">Plan prévu / réalisé</h2>
-            <p className="text-sm text-muted">Comparaison entre le planning prévu et les dépenses réelles.</p>
+            <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
+              <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+              Plan prévu / réalisé
+            </h2>
+            <p className="mt-1 text-sm text-muted">Comparaison entre le planning prévu et les dépenses réelles.</p>
           </div>
         </div>
         <Card padding="lg">
@@ -400,34 +427,37 @@ export default function Home() {
       </section>
 
       {/* Comparatif prévu / réalisé par chantier */}
-      <section className="mb-6">
+      <section className="anim-fade-up anim-delay-6 mb-6">
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-bold text-foreground">Prévu / réalisé par chantier</h2>
-            <p className="text-sm text-muted">Montant du marché et dépenses réellement engagées.</p>
+            <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
+              <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+              Prévu / réalisé par chantier
+            </h2>
+            <p className="mt-1 text-sm text-muted">Montant du marché et dépenses réellement engagées.</p>
           </div>
         </div>
-        <div className="overflow-x-auto rounded-xl border border-border bg-surface">
+        <div className="overflow-x-auto rounded-2xl border border-border/80 bg-surface shadow-soft">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border text-left">
-                <th className="p-3 font-semibold text-muted">Chantier</th>
-                <th className="p-3 text-right font-semibold text-muted">Montant marché (FCFA)</th>
-                <th className="p-3 text-right font-semibold text-muted">Dépenses réelles (FCFA)</th>
-                <th className="p-3 text-right font-semibold text-muted">Écart (FCFA)</th>
+              <tr className="border-b border-border/80 bg-surface-2 text-left">
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Chantier</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">Montant marché (FCFA)</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">Dépenses réelles (FCFA)</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">Écart (FCFA)</th>
               </tr>
             </thead>
             <tbody>
               {comparaison.map(({ chantier, realiseTotal }) => (
-                <tr key={chantier.id} className="border-b border-border last:border-0">
-                  <td className="p-3 font-medium text-foreground">{chantier.nom}</td>
-                  <td className="p-3 text-right font-mono text-foreground">
+                <tr key={chantier.id} className="border-b border-border/60 transition last:border-0 hover:bg-surface-2/70">
+                  <td className="px-4 py-3 font-medium text-foreground">{chantier.nom}</td>
+                  <td className="px-4 py-3 text-right font-mono tabular-nums text-foreground">
                     {Number(chantier.montant_marche || 0).toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
                   </td>
-                  <td className="p-3 text-right font-mono text-foreground">
+                  <td className="px-4 py-3 text-right font-mono tabular-nums text-foreground">
                     {realiseTotal.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
                   </td>
-                  <td className="p-3 text-right font-mono text-danger">
+                  <td className="px-4 py-3 text-right font-mono tabular-nums text-danger">
                     {(realiseTotal - Number(chantier.montant_marche || 0)).toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
                   </td>
                 </tr>
@@ -438,25 +468,33 @@ export default function Home() {
       </section>
 
       {/* Alertes en cours */}
-      <section className="mb-6">
+      <section className="anim-fade-up anim-delay-7 mb-6">
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-bold text-foreground">Alertes en cours</h2>
-            <p className="text-sm text-muted">Non-conformités et écarts encore ouverts.</p>
+            <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
+              <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+              Alertes en cours
+            </h2>
+            <p className="mt-1 text-sm text-muted">Non-conformités et écarts encore ouverts.</p>
           </div>
         </div>
         {alertes.length === 0 ? (
           <Card padding="lg" className="text-center">
-            <TriangleAlert className="mx-auto mb-3 h-10 w-10 text-muted" />
-            <p className="text-sm text-muted">Aucune alerte en cours.</p>
+            <span className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-slate-100 text-muted dark:bg-white/5">
+              <TriangleAlert className="h-7 w-7" />
+            </span>
+            <p className="text-sm font-semibold text-foreground">Aucune alerte en cours.</p>
+            <p className="mt-0.5 text-xs text-muted">Tout est sous contrôle.</p>
           </Card>
         ) : (
           <div className="space-y-3">
             {alertes.map((alerte) => {
               const chantier = nomDesChantiers.get(alerte.chantier_id);
               return (
-                <Card key={alerte.id} padding="md" className="flex items-start gap-4 border-l-4 border-warning">
-                  <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
+                <Card key={alerte.id} padding="md" className="flex items-start gap-4 border-l-4 border-l-warning">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
+                    <TriangleAlert className="h-5 w-5" />
+                  </span>
                   <div className="flex-1">
                     <p className="font-semibold text-foreground">
                       {chantier ? `${chantier} — ` : ""}
@@ -475,17 +513,23 @@ export default function Home() {
       </section>
 
       {/* Galerie photos */}
-      <section>
+      <section className="anim-fade-up anim-delay-8">
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-bold text-foreground">Galerie photos</h2>
-            <p className="text-sm text-muted">Dernières photos saisies dans les journaux.</p>
+            <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
+              <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+              Galerie photos
+            </h2>
+            <p className="mt-1 text-sm text-muted">Dernières photos saisies dans les journaux.</p>
           </div>
         </div>
         {photos.length === 0 ? (
           <Card padding="lg" className="text-center">
-            <ImageIcon className="mx-auto mb-3 h-10 w-10 text-muted" />
-            <p className="text-sm text-muted">Aucune photo pour le moment.</p>
+            <span className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-slate-100 text-muted dark:bg-white/5">
+              <ImageIcon className="h-7 w-7" />
+            </span>
+            <p className="text-sm font-semibold text-foreground">Aucune photo pour le moment.</p>
+            <p className="mt-0.5 text-xs text-muted">Les photos des journaux apparaîtront ici.</p>
           </Card>
         ) : (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -495,7 +539,7 @@ export default function Home() {
                 key={photo.chemin}
                 src={photo.chemin}
                 alt={photo.legende ?? "Photo de chantier"}
-                className="h-40 w-full rounded-xl border border-border object-cover"
+                className="h-40 w-full rounded-2xl border border-border/80 object-cover shadow-soft transition duration-500 hover:scale-[1.03] hover:shadow-soft-lg"
               />
             ))}
           </div>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { getLangue, setLangue, t, Langue } from "@/lib/i18n";
 
-export default function SignOutButton() {
+export default function SignOutButton({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const [menuOuvert, setMenuOuvert] = useState(false);
   const [langue, setLangueState] = useState<Langue>(getLangue());
@@ -25,28 +25,39 @@ export default function SignOutButton() {
   };
 
   return (
-    <div className="relative inline-block">
+    <div className="relative inline-block w-full">
       <button
         onClick={() => setMenuOuvert(!menuOuvert)}
-        className="inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-semibold text-foreground hover:bg-slate-100 dark:hover:bg-white/10 transition"
+        title={compact ? (langue === "fr" ? "Français" : "English") : undefined}
+        className={`inline-flex items-center justify-center gap-2 rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:border-primary-light/50 hover:bg-slate-50 dark:hover:bg-white/10 ${
+          compact ? "w-full" : ""
+        }`}
       >
-        <span className="text-xs">{langue === "fr" ? "🇫🇷" : "🇬🇧"}</span>
-        <span className="hidden sm:inline">{langue === "fr" ? "Français" : "English"}</span>
-        <span className="text-[10px]">▾</span>
+        <span className="text-xs leading-none">{langue === "fr" ? "🇫🇷" : "🇬🇧"}</span>
+        {!compact && (
+          <>
+            <span className="hidden sm:inline">{langue === "fr" ? "Français" : "English"}</span>
+            <span className="text-[10px] opacity-60">▾</span>
+          </>
+        )}
       </button>
 
       {menuOuvert && (
-        <div className="absolute right-0 mt-2 w-48 rounded-xl border border-border bg-surface p-1 shadow-lg z-50">
-          <div className="px-3 py-2 border-b border-border">
-            <p className="text-xs font-semibold text-muted uppercase tracking-wider">{t("langue.titre")}</p>
+        <div
+          className={`absolute mt-2 w-48 rounded-xl border border-border bg-surface p-1 shadow-xl shadow-black/10 ${
+            compact ? "bottom-full left-0 mb-2" : "right-0"
+          }`}
+        >
+          <div className="border-b border-border px-3 py-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">{t("langue.titre")}</p>
           </div>
           <button
             onClick={() => {
               handleLangueChange("fr");
               setMenuOuvert(false);
             }}
-            className={`w-full px-3 py-2 text-left text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition ${
-              langue === "fr" ? "bg-primary/10 text-primary font-semibold" : "text-foreground"
+            className={`w-full rounded-lg px-3 py-2 text-left text-sm transition hover:bg-slate-100 dark:hover:bg-white/10 ${
+              langue === "fr" ? "bg-primary/10 font-semibold text-primary" : "text-foreground"
             }`}
           >
             🇫🇷 {t("langue.francais")}
@@ -56,19 +67,19 @@ export default function SignOutButton() {
               handleLangueChange("en");
               setMenuOuvert(false);
             }}
-            className={`w-full px-3 py-2 text-left text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition ${
-              langue === "en" ? "bg-primary/10 text-primary font-semibold" : "text-foreground"
+            className={`w-full rounded-lg px-3 py-2 text-left text-sm transition hover:bg-slate-100 dark:hover:bg-white/10 ${
+              langue === "en" ? "bg-primary/10 font-semibold text-primary" : "text-foreground"
             }`}
           >
             🇬🇧 {t("langue.anglais")}
           </button>
-          <div className="border-t border-border my-1" />
+          <div className="my-1 border-t border-border" />
           <button
             onClick={() => {
               setMenuOuvert(false);
               handleLogout();
             }}
-            className="w-full px-3 py-2 text-left text-sm rounded-lg text-danger hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
+            className="w-full rounded-lg px-3 py-2 text-left text-sm text-danger transition hover:bg-rose-50 dark:hover:bg-rose-950/30"
           >
             {t("auth.deconnecter")}
           </button>

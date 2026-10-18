@@ -19,18 +19,23 @@ export function Button({
 }: ButtonProps) {
   const variants = {
     // Action principale de l'écran : l'orange chantier (un seul par écran)
-    primary: "bg-action text-white hover:bg-action/90",
-    secondary: "bg-primary text-white hover:bg-primary/90",
-    outline: "border border-primary text-primary hover:bg-primary/10",
+    primary:
+      "bg-gradient-to-br from-action to-action-strong text-white shadow-lg shadow-action/30 hover:shadow-xl hover:shadow-action/40 hover:brightness-[1.04] active:scale-[0.98]",
+    secondary:
+      "bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary/90 hover:shadow-primary/30 active:scale-[0.98]",
+    outline:
+      "border-2 border-primary/60 text-primary hover:border-primary hover:bg-primary/5 active:scale-[0.98]",
     ghost: "text-foreground hover:bg-slate-100 dark:hover:bg-white/10",
-    danger: "bg-danger text-white hover:bg-danger/90",
-    success: "bg-success text-white hover:bg-success/90",
+    danger:
+      "bg-gradient-to-br from-rose-500 to-rose-600 text-white shadow-lg shadow-rose-500/25 hover:shadow-rose-500/35 active:scale-[0.98]",
+    success:
+      "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/35 active:scale-[0.98]",
   };
 
   const sizes = {
-    sm: "px-3 py-1.5 text-sm",
-    md: "px-4 py-2 text-sm",
-    lg: "px-6 py-3 text-base",
+    sm: "px-3 py-1.5 text-sm rounded-lg",
+    md: "px-4 py-2 text-sm rounded-xl",
+    lg: "px-6 py-3 text-base rounded-xl",
   };
 
   return (
@@ -38,8 +43,8 @@ export function Button({
       disabled={disabled || isLoading}
       className={`
         inline-flex items-center justify-center gap-2
-        rounded-xl font-semibold transition-all duration-200
-        disabled:opacity-50 disabled:cursor-not-allowed
+        font-semibold transition-all duration-200
+        disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none
         ${variants[variant]} ${sizes[size]} ${className}
       `}
       {...props}

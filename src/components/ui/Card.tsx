@@ -15,9 +15,9 @@ export function Card({
   ...props
 }: CardProps) {
   const variants = {
-    default: "bg-surface border border-border shadow-sm",
-    outlined: "bg-transparent border-2 border-primary/40 shadow-none hover:border-primary",
-    elevated: "bg-surface border border-border shadow-lg",
+    default: "bg-surface border border-border/80 shadow-soft hover:shadow-soft-lg",
+    outlined: "bg-transparent border-2 border-primary/30 shadow-none hover:border-primary/60",
+    elevated: "bg-surface border border-border/70 shadow-soft-lg",
   };
 
   const paddings = {
@@ -29,7 +29,7 @@ export function Card({
 
   return (
     <div
-      className={`rounded-xl ${variants[variant]} ${paddings[padding]} transition-all duration-200 hover:shadow-md ${className}`}
+      className={`rounded-2xl ${variants[variant]} ${paddings[padding]} transition-all duration-300 ${className}`}
       {...props}
     >
       {children}

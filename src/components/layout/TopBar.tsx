@@ -37,10 +37,12 @@ export default function TopBar() {
   }, []);
 
   return (
-    <header className="flex h-16 items-center justify-between gap-4 border-b border-border bg-surface px-4 shadow-sm md:px-6 z-30">
+    <header className="glass sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border/70 px-4 md:px-6">
       {/* Titre de la page courante */}
       <div className="flex min-w-0 items-center gap-2">
-        <h1 className="truncate text-lg font-bold text-foreground md:text-xl">{t(cleTitre)}</h1>
+        <h1 className="truncate text-lg font-bold tracking-tight text-foreground md:text-xl">
+          {t(cleTitre)}
+        </h1>
       </div>
 
       {/* Actions du haut */}
@@ -49,11 +51,11 @@ export default function TopBar() {
           type="button"
           onClick={() => setPaletteOuverte(true)}
           aria-label={t("topbar.rechercher")}
-          className="flex items-center gap-2 rounded-xl border border-border bg-slate-50 px-3 py-2 text-sm font-medium text-muted transition hover:bg-slate-100 dark:hover:bg-white/10 dark:text-slate-300"
+          className="group flex items-center gap-2 rounded-full border border-border/80 bg-surface-2 py-2 pl-3 pr-2 text-sm font-medium text-muted shadow-sm transition hover:border-primary-light/50 hover:text-foreground"
         >
-          <Search className="h-4 w-4" />
+          <Search className="h-4 w-4 transition group-hover:scale-110" />
           <span className="hidden lg:inline">{t("topbar.rechercher")}</span>
-          <kbd className="rounded-md border border-border bg-white px-1.5 py-0.5 text-[10px] font-semibold text-muted dark:bg-slate-800 dark:text-slate-400">
+          <kbd className="hidden rounded-md border border-border/80 bg-surface px-1.5 py-0.5 text-[10px] font-semibold text-muted md:inline-block">
             ⌘K
           </kbd>
         </button>

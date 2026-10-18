@@ -33,9 +33,13 @@ export default function AlertsBadge() {
   if (nombre === 0) return null;
 
   return (
-    <span className="relative inline-flex" title={t("topbar.alertes")} aria-label={t("topbar.alertes")}>
-      <Bell className="h-5 w-5 text-danger" />
-      <span className="absolute -top-1 -right-2.5 rounded-full bg-danger px-1.5 py-0.5 text-[10px] font-bold text-white">
+    <span
+      className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-rose-600/20 bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300"
+      title={t("topbar.alertes")}
+      aria-label={t("topbar.alertes")}
+    >
+      <Bell className="h-5 w-5" />
+      <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-gradient-to-br from-rose-500 to-rose-600 px-1 text-[10px] font-bold text-white shadow-md shadow-rose-500/40">
         {nombre}
       </span>
     </span>

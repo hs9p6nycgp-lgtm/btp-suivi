@@ -18,9 +18,13 @@ export function ThemeToggle() {
       type="button"
       onClick={() => setTheme(court === "sombre" ? "light" : "dark")}
       aria-label={t("topbar.theme")}
-      className="rounded-xl border border-border p-2 text-foreground transition hover:bg-slate-100 dark:hover:bg-white/10"
+      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border/80 bg-surface text-muted shadow-sm transition hover:border-primary-light/50 hover:text-foreground"
     >
-      {court === "sombre" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+      {court === "sombre" ? (
+        <Sun className="h-5 w-5 transition-transform duration-300 hover:rotate-45" />
+      ) : (
+        <Moon className="h-5 w-5 transition-transform duration-300 hover:-rotate-12" />
+      )}
     </button>
   );
 }

@@ -16,15 +16,34 @@ type StatCardProps = {
   trend?: { value: string; label: string; positive: boolean };
   color?: "blue" | "orange" | "emerald" | "rose" | "amber" | "slate";
   miniPoints?: PointeMini[];
+  className?: string;
 };
 
 const colorMap = {
-  blue: { bg: "bg-blue-50 dark:bg-blue-950/40", text: "text-blue-700 dark:text-blue-300", border: "border-blue-200 dark:border-blue-800" },
-  orange: { bg: "bg-orange-50 dark:bg-orange-950/40", text: "text-orange-700 dark:text-orange-300", border: "border-orange-200 dark:border-orange-800" },
-  emerald: { bg: "bg-emerald-50 dark:bg-emerald-950/40", text: "text-emerald-700 dark:text-emerald-300", border: "border-emerald-200 dark:border-emerald-800" },
-  rose: { bg: "bg-rose-50 dark:bg-rose-950/40", text: "text-rose-700 dark:text-rose-300", border: "border-rose-200 dark:border-rose-800" },
-  amber: { bg: "bg-amber-50 dark:bg-amber-950/40", text: "text-amber-700 dark:text-amber-300", border: "border-amber-200 dark:border-amber-800" },
-  slate: { bg: "bg-slate-50 dark:bg-slate-800/40", text: "text-slate-700 dark:text-slate-300", border: "border-slate-200 dark:border-slate-700" },
+  blue: {
+    tile: "bg-gradient-to-br from-blue-500 to-blue-700 shadow-blue-500/30",
+    bar: "from-blue-400 via-blue-500 to-blue-700",
+  },
+  orange: {
+    tile: "bg-gradient-to-br from-orange-400 to-orange-600 shadow-orange-500/30",
+    bar: "from-orange-300 via-orange-400 to-orange-600",
+  },
+  emerald: {
+    tile: "bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-emerald-500/30",
+    bar: "from-emerald-400 via-emerald-500 to-emerald-700",
+  },
+  rose: {
+    tile: "bg-gradient-to-br from-rose-500 to-rose-700 shadow-rose-500/30",
+    bar: "from-rose-400 via-rose-500 to-rose-700",
+  },
+  amber: {
+    tile: "bg-gradient-to-br from-amber-400 to-amber-600 shadow-amber-500/30",
+    bar: "from-amber-300 via-amber-400 to-amber-600",
+  },
+  slate: {
+    tile: "bg-gradient-to-br from-slate-500 to-slate-700 shadow-slate-500/30",
+    bar: "from-slate-400 via-slate-500 to-slate-700",
+  },
 };
 
 export function StatCard({
@@ -35,22 +54,29 @@ export function StatCard({
   trend,
   color = "slate",
   miniPoints,
+  className = "",
 }: StatCardProps) {
   const c = colorMap[color];
   return (
-    <Card variant="default" padding="md" className="border-b-2 border-transparent hover:border-transparent">
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <p className="text-xs font-semibold text-muted uppercase tracking-wider">{title}</p>
-          {subtitle && <p className="text-xs text-muted mt-0.5">{subtitle}</p>}
+    <Card variant="default" padding="md" className={`group relative overflow-hidden ${className}`}>
+      {/* Liseré supérieur coloré */}
+      <span className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${c.bar}`} aria-hidden />
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="min-w-0 pt-1">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted">{title}</p>
+          {subtitle && <p className="mt-0.5 text-xs text-muted">{subtitle}</p>}
         </div>
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${c.bg} ${c.text}`}>
+        <div
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white shadow-lg transition-transform duration-300 group-hover:-rotate-3 group-hover:scale-110 ${c.tile}`}
+        >
           {icon ?? <BarChart3 className="h-5 w-5" />}
         </div>
       </div>
       {/* Chiffres clés en Geist Mono, taille 28 à 36 px */}
       <div className="mb-2">
-        <p className="text-3xl md:text-4xl font-mono font-bold text-foreground">{value}</p>
+        <p className="font-mono text-3xl font-bold tabular-nums tracking-tight text-foreground md:text-4xl">
+          {value}
+        </p>
       </div>
       {trend && (
         <p className={`text-xs font-semibold ${trend.positive ? "text-success" : "text-danger"}`}>
@@ -72,4 +98,3 @@ export function StatCard({
     </Card>
   );
 }
-

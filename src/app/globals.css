@@ -1,18 +1,25 @@
 @import "tailwindcss";
 
 /*
- * Design system — palette et thème (voir DESIGN.md).
+ * Design system — palette et thème.
  * Règle absolue : seuls l'apparence est gérée ici, ni le calcul ni la logique métier ne sont touchés.
  */
 
+/* Mode sombre piloté par la classe `dark` (next-themes), et non par le système :
+   le bouton clair/sombre de l'application est ainsi toujours cohérent. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  /* Palette DESIGN.md — mode clair */
-  --background: #f8fafc;
+  /* Palette — mode clair */
+  --background: #f5f7fb;
   --foreground: #0f172a;
   --primary: #0f2a4a; /* bleu nuit : barre latérale, titres */
   --primary-light: #3b6ea5;
+  --primary-deep: #081a30;
   --surface: #ffffff;
+  --surface-2: #f8fafc;
   --action: #f97316; /* orange chantier : un seul élément d'action principal */
+  --action-strong: #ea580c;
   --success: #16a34a;
   --warning: #d97706;
   --danger: #dc2626;
@@ -21,13 +28,16 @@
 }
 
 :root.dark {
-  /* Palette DESIGN.md — mode sombre */
-  --background: #0b1220;
-  --foreground: #e2e8f0;
+  /* Palette — mode sombre */
+  --background: #0a1120;
+  --foreground: #e6edf7;
   --primary: #1e3a5f;
-  --primary-light: #3b6ea5;
-  --surface: #111a2e;
+  --primary-light: #4b7fb8;
+  --primary-deep: #060f1e;
+  --surface: #101a2e;
+  --surface-2: #0d1526;
   --action: #fb923c;
+  --action-strong: #f97316;
   --success: #22c55e;
   --warning: #f59e0b;
   --danger: #ef4444;
@@ -40,8 +50,11 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-primary-light: var(--primary-light);
+  --color-primary-deep: var(--primary-deep);
   --color-action: var(--action);
+  --color-action-strong: var(--action-strong);
   --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
@@ -55,53 +68,110 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ---------- Sélection de texte et focus ---------- */
+::selection {
+  background: color-mix(in srgb, var(--action) 30%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--action);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+/* ---------- Barre de défilement (bureau) ---------- */
+@media (min-width: 768px) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--muted) 35%, transparent) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--muted) 30%, transparent);
+    border-radius: 9999px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--muted) 50%, transparent);
+    background-clip: padding-box;
+  }
 }
 
 /* ---------- Cartes modernes ---------- */
 .card {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
   border-radius: 1rem;
-  box-shadow: 0 1px 3px 0 rgb(15 23 42 / 0.06), 0 1px 2px -1px rgb(15 23 42 / 0.04);
+  box-shadow: 0 1px 2px 0 rgb(15 23 42 / 0.05), 0 12px 28px -18px rgb(15 23 42 / 0.22);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
 }
 
 .card:hover {
-  box-shadow: 0 4px 6px -1px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.04);
+  border-color: color-mix(in srgb, var(--primary-light) 30%, var(--border));
+  box-shadow: 0 2px 4px 0 rgb(15 23 42 / 0.05), 0 18px 36px -20px rgb(15 23 42 / 0.3);
+}
+
+/* Carte mise en avant (héros, total, résumé) */
+.card-elevated {
+  box-shadow: 0 2px 4px 0 rgb(15 23 42 / 0.04), 0 24px 48px -24px rgb(15 23 42 / 0.35);
 }
 
 /* ---------- Boutons ---------- */
 .btn-primary {
-  background: var(--action);
+  background-image: linear-gradient(135deg, var(--action) 0%, var(--action-strong) 100%);
   color: #ffffff;
-  border-radius: 0.75rem;
+  border-radius: 0.875rem;
   padding: 0.75rem 1.5rem;
   font-weight: 700;
   border: none;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 6px -1px rgb(249 115 22 / 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  box-shadow: 0 1px 2px rgb(249 115 22 / 0.35), 0 12px 26px -12px rgb(249 115 22 / 0.6);
 }
 
 .btn-primary:hover {
-  background: var(--action);
-  box-shadow: 0 6px 8px -1px rgb(249 115 22 / 0.35);
   transform: translateY(-1px);
+  filter: brightness(1.04);
+  box-shadow: 0 2px 4px rgb(249 115 22 / 0.3), 0 18px 34px -14px rgb(249 115 22 / 0.65);
+}
+
+.btn-primary:active {
+  transform: translateY(0) scale(0.985);
+}
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .btn-secondary {
-  background: #ffffff;
+  background: var(--surface);
   color: var(--primary);
-  border: 1.5px solid var(--primary);
-  border-radius: 0.75rem;
+  border: 1.5px solid color-mix(in srgb, var(--primary) 75%, transparent);
+  border-radius: 0.875rem;
   padding: 0.75rem 1.5rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .btn-secondary:hover {
   background: var(--primary);
   color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px -14px rgb(15 42 74 / 0.7);
 }
 
 /* ---------- Badges ---------- */
@@ -163,13 +233,120 @@ body {
 .progress-fill {
   height: 100%;
   border-radius: 9999px;
-  background: var(--action);
+  background-image: linear-gradient(90deg, var(--action), var(--action-strong));
   transition: width 0.5s ease;
 }
 
 /* ---------- Utilitaires ---------- */
 .text-muted { color: var(--muted); }
 .border-subtle { border-color: var(--border); }
+
+/* Ombres douces en couches (cartes, panneaux) */
+@utility shadow-soft {
+  box-shadow: 0 1px 2px 0 rgb(15 23 42 / 0.05), 0 12px 28px -18px rgb(15 23 42 / 0.22);
+}
+
+@utility shadow-soft-lg {
+  box-shadow: 0 2px 4px 0 rgb(15 23 42 / 0.04), 0 24px 48px -24px rgb(15 23 42 / 0.35);
+}
+
+@utility glow-action {
+  box-shadow: 0 1px 2px rgb(249 115 22 / 0.35), 0 12px 26px -12px rgb(249 115 22 / 0.6);
+}
+
+/* Effet verre dépoli (barres d'outils) */
+.glass {
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+}
+
+/* Trame de fond discrète (bandeaux) */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgb(148 163 184 / 0.10) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(148 163 184 / 0.10) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+/* Dégradé du bandeau latéral (barre de navigation) */
+.sidebar-surface {
+  background:
+    radial-gradient(120% 55% at 8% -8%, rgb(59 110 165 / 0.38) 0%, transparent 62%),
+    radial-gradient(90% 45% at 105% 112%, rgb(249 115 22 / 0.16) 0%, transparent 58%),
+    linear-gradient(180deg, #12315a 0%, #0f2a4a 42%, #0a1d36 100%);
+}
+
+/* Élévation au survol (cartes cliquables) */
+.hover-lift {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-3px);
+}
+
+/* Ombre portée colorée pour l'action principale */
+.glow-action {
+  box-shadow: 0 1px 2px rgb(249 115 22 / 0.35), 0 14px 30px -12px rgb(249 115 22 / 0.6);
+}
+
+/* Finition "squelette" : balayage lumineux */
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--muted) 16%, var(--surface));
+}
+
+.skeleton-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent);
+  animation: shimmer 1.6s infinite;
+}
+
+:root.dark .skeleton-shimmer::after {
+  background-image: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.08), transparent);
+}
+
+/* ---------- Animations d'entrée ---------- */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+.anim-fade-up { animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-fade-in { animation: fade-in 0.5s ease both; }
+.anim-delay-1 { animation-delay: 0.06s; }
+.anim-delay-2 { animation-delay: 0.12s; }
+.anim-delay-3 { animation-delay: 0.18s; }
+.anim-delay-4 { animation-delay: 0.24s; }
+.anim-delay-5 { animation-delay: 0.3s; }
+.anim-delay-6 { animation-delay: 0.36s; }
+.anim-delay-7 { animation-delay: 0.42s; }
+.anim-delay-8 { animation-delay: 0.48s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-fade-up,
+  .anim-fade-in {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
 
 /* ---------- Mobile / tactile ---------- */
 /* Éviter le zoom automatique sur iOS lors du focus d'un input */
