@@ -43,12 +43,14 @@ type Section3D = {
   type_ouvrage: string | null;
 };
 
-const STATUT_LABELS: Record<string, { fr: string; en: string; color: "success" | "warning" | "danger" | "info" | "primary" }> = {
-  en_preparation: { fr: "En préparation", en: "Preparation", color: "info" },
-  en_cours: { fr: "En cours", en: "In Progress", color: "success" },
-  suspendu: { fr: "Suspendu", en: "Suspended", color: "warning" },
-  receptionne_provisulement: { fr: "Réceptionné prov.", en: "Provisional Acceptance", color: "info" },
-  cloture: { fr: "Clôturé", en: "Closed", color: "danger" },
+// Couleurs volontairement limitées à la palette de StatCard : une couleur
+// inconnue faisait planter toute la fiche (BUG-016 / T-UI-14, 18/10/2026).
+const STATUT_LABELS: Record<string, { fr: string; en: string; color: "blue" | "emerald" | "amber" | "rose" }> = {
+  en_preparation: { fr: "En préparation", en: "Preparation", color: "blue" },
+  en_cours: { fr: "En cours", en: "In Progress", color: "emerald" },
+  suspendu: { fr: "Suspendu", en: "Suspended", color: "amber" },
+  receptionne_provisoirement: { fr: "Réceptionné prov.", en: "Provisional Acceptance", color: "blue" },
+  cloture: { fr: "Clôturé", en: "Closed", color: "rose" },
 };
 
 export default function ChantierDetailPage() {
@@ -199,7 +201,7 @@ export default function ChantierDetailPage() {
           value={langue === "fr" ? s.fr : s.en}
           subtitle={chantier.statut}
           icon={<ClipboardList className="h-5 w-5" />}
-          color={s.color as "blue" | "orange" | "emerald" | "rose" | "amber" | "slate"}
+          color={s.color}
         />
         <StatCard
           className="h-full"

@@ -16,7 +16,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 | TODO-UI-010 | Accueil : carte « À faire aujourd'hui » | ✅ FAIT (18/10/2026) |
 | TODO-UI-011 | Accueil : détail d'alerte lisible (« Valeur / Seuil » bruts) | ✅ FAIT (18/10/2026) |
 | TODO-UI-012 | Création de chantier : formulaire par étapes, position GPS automatique, page « Modifier le chantier » | ✅ FAIT (18/10/2026) |
-| TODO-UI-013 | Fiche chantier : écran planté à l'ouverture (« This page couldn't load ») — couleur de statut inconnue du composant StatCard | 🔴 À CORRIGER — **bloquant** |
+| TODO-UI-013 | Fiche chantier : écran planté à l'ouverture (« This page couldn't load ») — couleur de statut inconnue du composant StatCard | ✅ CORRIGÉ (18/10/2026, Session 2 — accord utilisateur) |
 | TODO-UI-014 | Liste des chantiers : badge « En préparation » qui dépasse de sa carte (86 px) | 🔴 À CORRIGER |
 | TODO-UI-015 | Accueil : « 1 chantiers » (pluriel) + dates des mini-courbes coupées | 🔴 À CORRIGER |
 | TODO-UI-016 | Connexion : la coquille (barres latérale/haut/bas) s'affiche avant connexion | 🔴 À CORRIGER |
@@ -238,7 +238,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 
 ---
 
-## TODO-UI-013 — 🔴 BLOQUANT : fiche chantier plantée à l'ouverture (BUG-016)
+## TODO-UI-013 — ✅ CORRIGÉ : fiche chantier plantée à l'ouverture (BUG-016)
 
 - **Écran** : fiche chantier (`/chantiers/[id]`) — `src/app/chantiers/[id]/page.tsx` (~ligne 202) et composant `src/components/ui/StatCard.tsx`.
 - **Signalé** : test PC du 18/10/2026 — « This page couldn't load », reproduit **3 fois sur 3**, aussi bien après la création d'un chantier qu'en cliquant un chantier de la liste (captures `pc-03-fiche-chantier.png`, `pc-v1-fiche-chantier-final.png`, `pc-99-erreur.png`).
@@ -248,6 +248,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
   2. **Dans `StatCard`** : sécuriser la lecture → `const c = colorMap[color] ?? colorMap.slate;` — ainsi une couleur inconnue ne pourra plus jamais faire planter une page entière (repli gris).
 - **Au passage (même écran)** : corriger la clé `receptionne_provisulement` → `receptionne_provisoirement` (la valeur réelle en base — contrainte de `supabase/migrations/0001_v0_schema.sql`) dans `src/app/chantiers/[id]/page.tsx` (l.50) **et** `src/app/chantiers/page.tsx` (l.26, 28, 34). Sinon : le menu déroulant de statut écrit une valeur que la base refuse (échec silencieux) et l'affichage retombe sur « En préparation ».
 - **Priorité** : **haute — bloquante** (tout le parcours chantier est inaccessible).
+- **✅ Appliqué (Session 2, 18/10/2026, accord exprès de l'utilisateur)** : couleurs remappées vers la palette de `StatCard` (`info`→`blue`, `success`→`emerald`, `warning`→`amber`, `danger`→`rose`) ; suppression du `as "blue" | …` (TypeScript vérifie désormais directement) ; repli `colorMap[color] ?? colorMap.slate` ajouté dans `StatCard` ; typo `receptionne_provisulement` → `receptionne_provisoirement` corrigé dans les 2 fichiers (valeur réelle de la base). Vérifié : TypeScript propre, 185 tests verts, build complet OK.
 
 ---
 

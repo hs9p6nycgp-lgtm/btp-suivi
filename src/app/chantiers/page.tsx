@@ -23,15 +23,16 @@ type Chantier = {
 };
 
 type TypeChantier = "route" | "batiment";
-type StatutChantier = "en_preparation" | "en_cours" | "suspendu" | "receptionne_provisulement" | "cloture";
+// Valeurs alignées sur la contrainte de la base (supabase/migrations/0001_v0_schema.sql).
+type StatutChantier = "en_preparation" | "en_cours" | "suspendu" | "receptionne_provisoirement" | "cloture";
 
-const STATUTS: StatutChantier[] = ["en_preparation", "en_cours", "suspendu", "receptionne_provisulement", "cloture"];
+const STATUTS: StatutChantier[] = ["en_preparation", "en_cours", "suspendu", "receptionne_provisoirement", "cloture"];
 
 const STATUT_LABELS: Record<StatutChantier, { fr: string; en: string; variant: "success" | "warning" | "danger" | "info" | "primary" }> = {
   en_preparation: { fr: "En préparation", en: "Preparation", variant: "info" },
   en_cours: { fr: "En cours", en: "In Progress", variant: "success" },
   suspendu: { fr: "Suspendu", en: "Suspended", variant: "warning" },
-  receptionne_provisulement: { fr: "Réceptionné prov.", en: "Provisional Acceptance", variant: "info" },
+  receptionne_provisoirement: { fr: "Réceptionné prov.", en: "Provisional Acceptance", variant: "info" },
   cloture: { fr: "Clôturé", en: "Closed", variant: "danger" },
 };
 

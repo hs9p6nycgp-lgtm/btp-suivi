@@ -56,7 +56,9 @@ export function StatCard({
   miniPoints,
   className = "",
 }: StatCardProps) {
-  const c = colorMap[color];
+  // Repli volontaire (BUG-016 / T-UI-14) : une couleur inconnue ne doit
+  // jamais faire planter une page entière (repli gris neutre).
+  const c = colorMap[color] ?? colorMap.slate;
   return (
     <Card variant="default" padding="md" className={`group relative overflow-hidden ${className}`}>
       {/* Liseré supérieur coloré */}

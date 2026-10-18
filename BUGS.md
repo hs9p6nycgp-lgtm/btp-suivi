@@ -355,7 +355,7 @@ listés dans `TODO_LOGIQUE.md`.
 - **Contexte** : test PC du 18/10/2026 — reproduit **3 fois sur 3**, à l'ouverture de n'importe quelle fiche (captures `pc-v1-fiche-chantier-final.png`, `pc-99-erreur.png`).
 - **Résultat obtenu** : « This page couldn't load ». La carte « Statut » (lignes 46-52) envoie une couleur (`info`/`success`/`warning`/`danger`) que `StatCard` ne connaît pas : `colorMap[color]` est `undefined` et la lecture de `.bar` fait planter tout l'écran. Le `as "blue" | …` (ligne 202) masque l'erreur à TypeScript.
 - **Résultat attendu** : fiche affichée normalement, carte « Statut » colorée.
-- **Correctif** : voir TODO-UI-013 (Session 1) — corriger les couleurs côté fiche **et** ajouter un repli sécurisé dans `StatCard`. Au passage, corriger `receptionne_provisulement` → `receptionne_provisoirement` (2 fichiers) pour coller à la contrainte réelle de la base.
+- **Correctif** : **CORRIGÉ (Session 2, 18/10/2026, accord exprès de l'utilisateur)** — couleurs de statut remappées vers la palette réelle de `StatCard`, repli sécurisé ajouté dans le composant (une couleur inconnue ne peut plus faire planter une page), typo `receptionne_provisulement` → `receptionne_provisoirement` corrigé dans les 2 fichiers. Détail : TODO-UI-013.
 
 ---
 
