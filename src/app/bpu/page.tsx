@@ -148,34 +148,34 @@ export default function BpuPage() {
         <form onSubmit={handleAdd} className="grid grid-cols-1 gap-3 lg:col-span-3">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-6">
             <input
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               placeholder="Code"
               value={code}
               onChange={(e) => setCode(e.target.value)}
             />
             <input
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               placeholder={langue === "fr" ? "Désignation *" : "Designation *"}
               value={designation}
               onChange={(e) => setDesignation(e.target.value)}
               required
             />
             <input
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               placeholder={langue === "fr" ? "Unité *" : "Unit *"}
               value={unite}
               onChange={(e) => setUnite(e.target.value)}
               required
             />
             <input
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               type="number"
               placeholder={langue === "fr" ? "Prix (FCFA)" : "Price (FCFA)"}
               value={prix}
               onChange={(e) => setPrix(e.target.value)}
             />
             <input
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+              className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               placeholder={langue === "fr" ? "Source" : "Source"}
               value={source}
               onChange={(e) => setSource(e.target.value)}
@@ -191,41 +191,42 @@ export default function BpuPage() {
       </div>
 
       <section>
-        <h2 className="mb-4 text-lg font-bold text-foreground">
+        <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+          <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
           {filtered.length} {langue === "fr" ? "postes" : "items"}
         </h2>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-2xl border border-border/80 bg-surface shadow-soft">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border text-left">
-                <th className="p-3 font-semibold text-muted">Code</th>
-                <th className="p-3 font-semibold text-muted">Désignation</th>
-                <th className="p-3 font-semibold text-muted text-center">Unité</th>
-                <th className="p-3 font-semibold text-muted text-right">Prix (FCFA)</th>
-                <th className="p-3 font-semibold text-muted">Statut</th>
-                <th className="p-3 font-semibold text-muted text-right">Source</th>
-                <th className="p-3" />
+              <tr className="border-b border-border/80 bg-surface-2 text-left">
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Code</th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Désignation</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Unité</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">Prix (FCFA)</th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Statut</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">Source</th>
+                <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody>
               {filtered.map((p) => (
-                <tr key={p.id} className="border-b border-border last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                  <td className="p-3 text-muted">{p.code ?? "-"}</td>
-                  <td className="p-3 font-medium text-foreground">{p.designation}</td>
-                  <td className="p-3 text-center text-muted">{p.unite}</td>
-                  <td className="p-3 text-right font-mono text-foreground">
+                <tr key={p.id} className="border-b border-border/60 transition last:border-0 hover:bg-surface-2/70">
+                  <td className="px-4 py-3 text-muted">{p.code ?? "-"}</td>
+                  <td className="px-4 py-3 font-medium text-foreground">{p.designation}</td>
+                  <td className="px-4 py-3 text-center text-muted">{p.unite}</td>
+                  <td className="px-4 py-3 text-right font-mono tabular-nums text-foreground">
                     {p.prix_unitaire.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
                   </td>
-                  <td className="p-3">
+                  <td className="px-4 py-3">
                     <Badge variant={p.statut === "valide" ? "success" : "warning"}>
                       {langue === "fr" ? STATUT_LABELS[p.statut].fr : STATUT_LABELS[p.statut].en}
                     </Badge>
                   </td>
-                  <td className="p-3 text-right text-muted">{p.source ?? "-"}</td>
-                  <td className="p-3 text-right">
+                  <td className="px-4 py-3 text-right text-muted">{p.source ?? "-"}</td>
+                  <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => handleRemove(p.id)}
-                      className="text-danger text-xs font-medium hover:underline"
+                      className="text-xs font-medium text-danger hover:underline"
                     >
                       Supprimer
                     </button>
@@ -234,7 +235,7 @@ export default function BpuPage() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-6 text-center text-muted">
+                  <td colSpan={7} className="px-4 py-8 text-center text-muted">
                     Aucun poste BPU pour le moment.
                   </td>
                 </tr>

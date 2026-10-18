@@ -119,38 +119,44 @@ export default function DqeImport({ chantierId }: { chantierId: string }) {
   }
 
   return (
-    <div className="space-y-3">
-      <p className="text-sm text-zinc-600">
+    <section className="card p-5">
+      <h2 className="mb-1 text-lg font-bold text-foreground">Import du DQE</h2>
+      <p className="mb-4 text-sm text-muted">
         Format attendu (premiere feuille) : colonnes Code, Designation, Unite,
         Quantite, Prix unitaire (FCFA). Les lignes invalides sont ignorees.
       </p>
-      <input
-        type="file"
-        accept=".xlsx,.xls,.csv"
-        onChange={onFile}
-        className="block"
-      />
-      {fileName && <p className="text-sm">Fichier : {fileName}</p>}
+      <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-surface-2 px-4 py-6 text-center transition hover:border-primary-light/60">
+        <span className="text-sm font-medium text-foreground">
+          {fileName ?? "Choisir un fichier Excel (.xlsx, .xls, .csv)"}
+        </span>
+        <span className="text-xs text-muted">Le fichier est analysé avant l&apos;import.</span>
+        <input
+          type="file"
+          accept=".xlsx,.xls,.csv"
+          onChange={onFile}
+          className="hidden"
+        />
+      </label>
       {errors.length > 0 && (
-        <ul className="text-sm text-red-600">
+        <ul className="mt-4 space-y-1 rounded-xl border border-rose-600/20 bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
           {errors.map((e, i) => (
             <li key={i}>{e}</li>
           ))}
         </ul>
       )}
       {rows.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-sm">{rows.length} ligne(s) prete(s) a importer.</p>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <p className="text-sm text-foreground">{rows.length} ligne(s) prete(s) a importer.</p>
           <button
             onClick={handleImport}
             disabled={importing}
-            className="rounded bg-orange-600 px-4 py-2 text-white disabled:opacity-50"
+            className="btn-primary disabled:opacity-50"
           >
             {importing ? "Import en cours..." : "Importer dans le chantier"}
           </button>
         </div>
       )}
-      {summary && <p className="text-sm font-medium">{summary}</p>}
-    </div>
+      {summary && <p className="mt-3 text-sm font-medium text-foreground">{summary}</p>}
+    </section>
   );
 }
