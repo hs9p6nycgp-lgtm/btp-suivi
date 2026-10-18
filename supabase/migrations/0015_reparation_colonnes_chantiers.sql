@@ -3,7 +3,7 @@
 -- A executer dans Supabase (SQL Editor). Idempotent : peut etre
 -- relance sans risque, meme si certaines colonnes existent deja.
 -- ==============================================================
--- Contexte (bug constate le 17/10/2026) :
+-- Contexte (bug constate le 18/10/2026) :
 --   La creation d'un chantier echouait avec l'erreur PostgREST
 --   "Could not find the 'hauteur' column of 'chantiers' in the schema cache".
 --   Cause : la migration 0009_phase3_qualite_non_conformite.sql n'a pas ete
