@@ -19,8 +19,6 @@
 | Réf | Tâche | Propriétaire | Fichiers concernés | Code exigence | Priorité |
 |-----|-------|--------------|--------------------|---------------|----------|
 | T-MIG-02 | **BLOQUANT** — Appliquer la migration `0015_reparation_colonnes_chantiers.sql` dans le SQL Editor de Supabase (sans quoi la création de chantier échoue toujours) | Utilisateur (ou Session 3) | `supabase/migrations/0015_reparation_colonnes_chantiers.sql` | CHA-01 | Haute |
-| T-UI-06 | Formulaire « Nouveau chantier » : proposer les types détaillés via `typesDetaillesPour(@/lib/chantiers/types)` et enregistrer `type_detail` | 1 | `src/app/chantiers/nouveau/page.tsx` | CHA-01 | Haute (après T-MIG-02) |
-| T-UI-07 | Ajouter un raccourci visible « Calcul de devis » (icône `Calculator`) sur la page d'accueil | 1 | `src/app/page.tsx` | — | Moyenne |
 | T-DATA-01 | Doublons dans `bpu_postes` (443 lignes pour 289 postes uniques) : script de nettoyage à préparer, **exécution après accord de l'utilisateur** (suppression de données) | 2 (sur accord) | `supabase/seed/`, migration de nettoyage | REF-05 | Moyenne |
 
 ---
@@ -62,6 +60,8 @@
 | T-MIG-01 | Vérifier et activer les politiques RLS d'isolation multitenant côté base | 3 | `supabase/migrations/0007_phase3_multitenant_isolation.sql`, `supabase/RLS_MANUAL_CHECK.md` | 16/10/2026 |
 | T-TEST-01 | Maintenir `BUGS.md` à jour (ajouter les nouveaux bugs, fermer les corrigés) | 4 | `BUGS.md` | 16/10/2026 |
 | T-UI-05 | Refonte esthétique générale : design system (ombres, dégradés, animations), composants UI, navigation (sidebar/topbar/mobile), tableau de bord, chantiers, connexion, détail chantier, BPU, import DQE, en-têtes unifiés | 1 | `src/app/globals.css`, `src/components/ui/*`, `src/components/layout/*`, `src/components/DqeImport.tsx`, `src/components/SignOutButton.tsx`, `src/app/page.tsx`, `src/app/chantiers/page.tsx`, `src/app/chantiers/[id]/page.tsx`, `src/app/login/page.tsx`, `src/app/bpu/page.tsx`, `src/app/fournisseurs/page.tsx`, `src/app/rapports/page.tsx`, `src/app/export/page.tsx`, `src/app/referentiel/page.tsx` | 18/10/2026 |
+| T-UI-06 | Formulaire « Nouveau chantier » : champ « Sous-type (phase de travaux) » alimenté par `typesDetaillesPour` (s'adapte au type Route/Bâtiment), enregistré dans `type_detail` ; sous-type affiché dans la fiche chantier et la liste | 1 | `src/app/chantiers/nouveau/page.tsx`, `src/app/chantiers/[id]/page.tsx`, `src/app/chantiers/page.tsx` | 18/10/2026 |
+| T-UI-07 | Section « Outils rapides » sur la page d'accueil : cartes « Calcul de devis » et « Calcul de murs » | 1 | `src/app/page.tsx` | 18/10/2026 |
 
 ---
 
@@ -71,6 +71,9 @@
 - Tableau de bord : la carte « Chantiers » affiche le nombre total (elle dupliquait le nombre « en cours »).
 - Mode sombre : les variantes `dark:` suivent maintenant la classe du thème (bouton clair/sombre), et non le réglage système.
 - Aucune modification de `src/lib`, ni des migrations, ni des calculs.
+- (Suite) « Nouveau chantier » : champ **Sous-type (phase de travaux)** branché sur la liste officielle `src/lib/chantiers/types.ts` (filtrée par type), enregistré dans `type_detail` ; le sous-type apparaît dans le bandeau de la fiche chantier et dans la liste.
+- (Suite) Accueil : nouvelle section **« Outils rapides »** (Calcul de devis, Calcul de murs) juste sous les chiffres clés.
+- Rappel : `type_detail` nécessite la migration `0015` (déjà requise pour les colonnes de dimensions).
 
 ---
 

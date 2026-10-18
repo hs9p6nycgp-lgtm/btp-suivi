@@ -9,14 +9,14 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getLangue, traduireErreur } from "@/lib/i18n";
-
-type TypeChantier = "route" | "batiment";
+import { estTypeDetailValide, typesDetaillesPour, type TypeChantier } from "@/lib/chantiers/types";
 
 export default function NouveauChantierPage() {
   const router = useRouter();
   const langue = getLangue();
   const [nom, setNom] = useState("");
   const [type, setType] = useState<TypeChantier>("route");
+  const [typeDetail, setTypeDetail] = useState("");
   const [maitreOuvrage, setMaitreOuvrage] = useState("");
   const [montant, setMontant] = useState("");
   const [dateDebut, setDateDebut] = useState("");
@@ -47,6 +47,7 @@ export default function NouveauChantierPage() {
       .insert({
         nom,
         type,
+        type_detail: estTypeDetailValide(type, typeDetail) ? typeDetail || null : null,
         maitre_ouvrage: maitreOuvrage || null,
         montant_marche: Number(montant) || 0,
         date_debut: dateDebut || null,
@@ -87,18 +88,19 @@ export default function NouveauChantierPage() {
 
       <Card variant="elevated" padding="lg">
         <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              {langue === "fr" ? "Nom du chantier *" : "Site name *"}
+            </label>
+            <input
+              className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+              value={nom}
+              onChange={(e) => setNom(e.target.value)}
+              required
+            />
+          </div>
+
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
-                {langue === "fr" ? "Nom du chantier *" : "Site name *"}
-              </label>
-              <input
-                className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
-                value={nom}
-                onChange={(e) => setNom(e.target.value)}
-                required
-              />
-            </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">
                 {langue === "fr" ? "Type *" : "Type *"}
@@ -106,10 +108,30 @@ export default function NouveauChantierPage() {
               <select
                 className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 value={type}
-                onChange={(e) => setType(e.target.value as TypeChantier)}
+                onChange={(e) => {
+                  setType(e.target.value as TypeChantier);
+                  setTypeDetail("");
+                }}
               >
                 <option value="route">{typeLabel("route")}</option>
                 <option value="batiment">{typeLabel("batiment")}</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">
+                {langue === "fr" ? "Sous-type (phase de travaux)" : "Sub-type (work phase)"}
+              </label>
+              <select
+                className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                value={typeDetail}
+                onChange={(e) => setTypeDetail(e.target.value)}
+              >
+                <option value="">{langue === "fr" ? "— Non précisé —" : "— Not specified —"}</option>
+                {typesDetaillesPour(type).map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

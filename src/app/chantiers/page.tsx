@@ -10,11 +10,13 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { getLangue } from "@/lib/i18n";
+import { libelleTypeDetail } from "@/lib/chantiers/types";
 
 type Chantier = {
   id: string;
   nom: string;
   type: string;
+  type_detail: string | null;
   maitre_ouvrage: string | null;
   montant_marche: number;
   statut: string;
@@ -243,6 +245,7 @@ export default function ChantiersPage() {
                       <p className="truncate text-xs text-muted">
                         {c.maitre_ouvrage ??
                           (langue === "fr" ? "sans maître d'ouvrage" : "without project owner")}
+                        {c.type_detail ? ` · ${libelleTypeDetail(c.type_detail)}` : ""}
                       </p>
                     </div>
                   </div>
@@ -295,7 +298,12 @@ function TableauChantiers(props: {
             return (
               <tr key={c.id} className="border-b border-border/60 transition last:border-0 hover:bg-surface-2/70">
                 <td className="px-4 py-3 font-medium text-foreground">{c.nom}</td>
-                <td className="px-4 py-3 text-muted">{libelleType(c.type)}</td>
+                <td className="px-4 py-3 text-muted">
+                  <span className="block">{libelleType(c.type)}</span>
+                  {c.type_detail ? (
+                    <span className="block text-xs opacity-80">{libelleTypeDetail(c.type_detail)}</span>
+                  ) : null}
+                </td>
                 <td className="px-4 py-3 text-muted">{c.maitre_ouvrage ?? "—"}</td>
                 <td className="px-4 py-3 text-right font-mono tabular-nums text-foreground">
                   {Number(c.montant_marche || 0).toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}

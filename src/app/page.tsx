@@ -1,7 +1,8 @@
 "use client";
 
-import { CalendarClock, Coins, FileText, Image as ImageIcon, TriangleAlert } from "lucide-react";
+import { ArrowRight, Calculator, CalendarClock, Coins, FileText, Image as ImageIcon, Ruler, TriangleAlert } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -357,6 +358,59 @@ export default function Home() {
           miniPoints={chantiersEnPreparation(chantiers)}
         />
       </div>
+
+      {/* Outils rapides */}
+      <section className="anim-fade-up anim-delay-5 mb-6">
+        <div className="mb-4">
+          <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
+            <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+            {langue === "fr" ? "Outils rapides" : "Quick tools"}
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            {langue === "fr"
+              ? "Chiffrez un devis ou estimez un mur en quelques clics."
+              : "Estimate a quotation or a wall in a few clicks."}
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Link href="/calculateurs/devis" className="group block">
+            <Card padding="lg" className="hover-lift flex h-full items-center gap-4 hover:border-action/40">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-action to-action-strong text-white shadow-md shadow-action/25 transition-transform duration-300 group-hover:scale-110">
+                <Calculator className="h-6 w-6" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-bold text-foreground">
+                  {langue === "fr" ? "Calcul de devis" : "Estimate calculator"}
+                </span>
+                <span className="mt-0.5 block text-xs text-muted">
+                  {langue === "fr"
+                    ? "Chiffrage guidé à partir des modèles d'ouvrages et des prix du BPU."
+                    : "Guided pricing from job templates and bill-of-prices rates."}
+                </span>
+              </span>
+              <ArrowRight className="h-4 w-4 shrink-0 text-muted transition group-hover:translate-x-1 group-hover:text-action" />
+            </Card>
+          </Link>
+          <Link href="/calculateurs/mur" className="group block">
+            <Card padding="lg" className="hover-lift flex h-full items-center gap-4 hover:border-primary/40">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary to-primary-deep text-white shadow-md shadow-primary/25 transition-transform duration-300 group-hover:scale-110">
+                <Ruler className="h-6 w-6" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-bold text-foreground">
+                  {langue === "fr" ? "Calcul de murs" : "Wall calculator"}
+                </span>
+                <span className="mt-0.5 block text-xs text-muted">
+                  {langue === "fr"
+                    ? "Quantités d'agglos, de mortier et de main d'œuvre pour un mur en agglos."
+                    : "Block, mortar and labour quantities for a block wall."}
+                </span>
+              </span>
+              <ArrowRight className="h-4 w-4 shrink-0 text-muted transition group-hover:translate-x-1 group-hover:text-action" />
+            </Card>
+          </Link>
+        </div>
+      </section>
 
       {/* Plan prévu / réalisé */}
       <section className="anim-fade-up anim-delay-5 mb-6">

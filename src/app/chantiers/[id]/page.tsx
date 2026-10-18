@@ -12,11 +12,13 @@ import Modele3D from "@/components/visualisation/Modele3D";
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { getLangue } from "@/lib/i18n";
+import { libelleTypeDetail } from "@/lib/chantiers/types";
 
 type Chantier = {
   id: string;
   nom: string;
   type: string;
+  type_detail: string | null;
   maitre_ouvrage: string | null;
   montant_marche: number;
   date_debut: string | null;
@@ -123,7 +125,13 @@ export default function ChantierDetailPage() {
                 {chantier.maitre_ouvrage ?? (langue === "fr" ? "sans maître d'ouvrage" : "without project owner")}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {chantier.type_detail ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-action/50 bg-action/20 px-3 py-1.5 text-xs font-semibold backdrop-blur">
+                  <span className="h-1.5 w-1.5 rounded-full bg-action" aria-hidden />
+                  {libelleTypeDetail(chantier.type_detail)}
+                </span>
+              ) : null}
               <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold backdrop-blur">
                 {langue === "fr" ? s.fr : s.en}
               </span>
