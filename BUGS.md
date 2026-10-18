@@ -396,7 +396,7 @@ listés dans `TODO_LOGIQUE.md`.
 - **Contexte** : test PC du 18/10/2026. Question posée : est-ce voulu ?
 - **Résultat obtenu** : les barres latérale et du haut (et la navigation mobile) sont visibles autour de l'écran de connexion.
 - **Résultat attendu** : **non, ce n'est pas voulu** — l'écran de connexion doit être plein écran, sans menus.
-- **Correctif** : voir TODO-UI-016 (Session 1).
+- **Correctif** : **CORRIGÉ (Session 1, 18/10/2026, commit `45ee2b8`)** — coquille `AppShell` : barres latérale/haut, navigation mobile et bouton « Saisie du jour » masqués sur les pages de connexion. Détail : TODO-UI-016.
 
 ---
 

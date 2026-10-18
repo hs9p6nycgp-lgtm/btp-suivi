@@ -19,7 +19,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 | TODO-UI-013 | Fiche chantier : écran planté à l'ouverture (« This page couldn't load ») — couleur de statut inconnue du composant StatCard | ✅ CORRIGÉ (18/10/2026, Session 2 — accord utilisateur) |
 | TODO-UI-014 | Liste des chantiers : badge « En préparation » qui dépasse de sa carte (86 px) | 🔴 À CORRIGER |
 | TODO-UI-015 | Accueil : « 1 chantiers » (pluriel) + dates des mini-courbes coupées | 🔴 À CORRIGER |
-| TODO-UI-016 | Connexion : la coquille (barres latérale/haut/bas) s'affiche avant connexion | 🔴 À CORRIGER |
+| TODO-UI-016 | Connexion : la coquille (barres latérale/haut/bas) s'affiche avant connexion | ✅ CORRIGÉ (18/10/2026, Session 1 — commit `45ee2b8`) |
 
 ---
 
@@ -271,13 +271,14 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 
 ---
 
-## TODO-UI-016 — 🔴 Connexion : la coquille s'affiche avant connexion (BUG-020)
+## TODO-UI-016 — ✅ CORRIGÉ : Connexion — la coquille s'affiche avant connexion (BUG-020)
 
 - **Écran** : `/login` (idem mot-de-passe-oublie, réinitialisation) — capture `pc-01-connexion.png`.
 - **Question de l'utilisateur** : « à confirmer si c'est voulu » → **non, ce n'est pas voulu** : un écran de connexion doit être plein écran, sans barres ni menus.
 - **Cause** : `src/app/layout.tsx` rend la coquille (`Sidebar`, `TopBar`, `MobileNavigation`) pour **toutes** les routes.
 - **Correctif suggéré** : nouveau composant client `src/components/layout/Coquille.tsx` qui lit `usePathname()` et rend simplement `{children}` (sans coquille) pour les routes publiques : `/login`, `/mot-de-passe-oublie`, `/reinitialiser-mot-de-passe` (et probablement `/offline`, déjà conçue en plein écran : `min-h-screen`). Le layout ne garde alors que ce composant.
 - **Priorité** : moyenne (esthétique, mais visible avant même de se connecter).
+- **✅ Corrigé (Session 1, 18/10/2026, commit `45ee2b8`)** : composant `AppShell` (+ `routeAuth`) — barre du haut, barre latérale, navigation mobile et bouton « Saisie du jour » masqués sur les pages de connexion / mot de passe oublié / réinitialisation.
 
 ---
 
