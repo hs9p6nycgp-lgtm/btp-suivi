@@ -19,11 +19,6 @@
 | Réf | Tâche | Propriétaire | Fichiers concernés | Code exigence | Priorité |
 |-----|-------|--------------|--------------------|---------------|----------|
 | T-DEP-02 | Facultatif — nettoyer les projets Vercel en double : `btp-suivi-6wxl` (erreur 500 au chargement) et projet `btpsuivi` (protection SSO active ; ce n'est pas le site utilisé) ; conserver `btp-suivi-7w2i` (site vérifié en ligne) et au besoin `btp-suivi-cd4w` en secours | Utilisateur (compte Vercel) | `vercel.json` | — | Basse |
-| T-UI-09 | Journal : brancher la création robuste au réseau faible (`creerJournalHorsLigne` : délai maximal, file d'attente, message clair, observations) — blocage n°1 du test terrain | 1 | `src/app/chantiers/[id]/journaux/page.tsx` | PWA / JOU | Haute |
-| T-UI-10 | Photos : compresser avant téléversement (`compresserImage`, max 1600 px) ; facultatif : bascule des `createSignedUrls` inline vers `urlsSignees` | 1 | `src/app/chantiers/[id]/journaux/[journalId]/page.tsx` | PWA / PHO | Haute |
-| T-UI-11 | Accueil : carte « À faire aujourd'hui » branchée sur `actionsDuJour` (+ bouton « Saisie du jour » sur `lireDernierChantier`) | 1 | `src/app/page.tsx` | — | Moyenne |
-| T-UI-12 | Accueil : détail d'alerte lisible via `detailAlerte` (remplacer « Valeur : x / Seuil : y ») | 1 | `src/app/page.tsx` | — | Moyenne |
-| T-UI-13 | Création de chantier : formulaire par étapes (essentiel d'abord), bouton « Utiliser ma position », montant avec séparateurs, page « Modifier le chantier » | 1 | `src/app/chantiers/nouveau/page.tsx`, nouveau `src/app/chantiers/[id]/modifier/page.tsx` | CHA-01 / CHA-05 | Moyenne |
 
 ---
 
@@ -78,6 +73,11 @@
 | T-LOG-23 | Accueil : actions du jour (`actionsDuJour` — saisie manquante, non-conformités, alertes) + mémoire du dernier chantier partagée avec la navigation mobile (clé `btp.dernier.chantier`) + 7 tests | 2 | `src/lib/journal/actionsDuJour.ts`, `src/lib/chantiers/dernier.ts` | 18/10/2026 |
 | T-LOG-24 | Alertes : libellés FR/EN lisibles (9 types, 3 statuts) + détail formaté (`detailAlerte`, pourcentages) + textes « hors ligne » du journal dans le dictionnaire | 2 | `src/lib/alertes.ts`, `src/lib/i18n.ts` | 18/10/2026 |
 | T-DATA-02 | Nettoyage des chantiers de test : « Chantier Test Abidjan » + « B » supprimés (tous deux vides, sauvegarde JSON avant suppression, vérification OK) + outil `scripts/nettoyer-chantiers-test.mjs` (lecture seule par défaut) | 2 | `scripts/nettoyer-chantiers-test.mjs` | 18/10/2026 |
+| T-UI-09 | Journal : création robuste au réseau faible branchée (`creerJournalHorsLigne`) — message « gardé sur le téléphone », observations réellement enregistrées, avertissement si un journal existe déjà pour la date | 1 | `src/app/chantiers/[id]/journaux/page.tsx` | 18/10/2026 |
+| T-UI-10 | Photos : compression avant envoi (1600 px / JPEG 72 %) + vignettes par URLs signées (`compresserImage`, `urlsSignees`, `urlSignee`), aperçu local de la photo choisie, GPS affiché | 1 | `src/app/chantiers/[id]/journaux/[journalId]/page.tsx` | 18/10/2026 |
+| T-UI-11 | Accueil : carte « À faire aujourd'hui » (`actionsDuJour` : saisie manquante, non-conformités ouvertes, alertes) + gros bouton « Saisie du jour » qui ouvre le journal du dernier chantier ouvert (`lireDernierChantier`) | 1 | `src/app/page.tsx`, `src/components/layout/MobileNavigation.tsx` | 18/10/2026 |
+| T-UI-12 | Accueil : alertes lisibles et cliquables (`libelleTypeAlerte`, `detailAlerte`), galerie photos par URLs signées, journal validé **rouvrable** pour corriger une erreur | 1 | `src/app/page.tsx`, `src/app/chantiers/[id]/journaux/[journalId]/page.tsx` | 18/10/2026 |
+| T-UI-13 | Chantier : création allégée (essentiel d'abord, options avancées repliées, montant avec séparateurs, bouton « Utiliser ma position », contrôles montant/dates) + nouvelle page « Modifier le chantier » accessible depuis la fiche | 1 | `src/app/chantiers/nouveau/page.tsx`, `src/app/chantiers/[id]/modifier/page.tsx` (nouveau), `src/app/chantiers/[id]/page.tsx` | 18/10/2026 |
 
 ---
 
@@ -91,6 +91,10 @@
 - (Suite) Accueil : nouvelle section **« Outils rapides »** (Calcul de devis, Calcul de murs) juste sous les chiffres clés.
 - Rappel : `type_detail` nécessite la migration `0015` (déjà requise pour les colonnes de dimensions).
 - (Suite 2) Calculateur de devis : nouvelle section **« Vue 3D du projet »** (composant générique `Modele3DGenerique`, rotation/zoom/info-bulles) + **total estimatif** enfin affiché + en-tête unifié (T-UI-08).
+- (Suite 3 — retours du test terrain) Journal en **une seule page** (date pré-remplie, météo en 4 boutons, un seul bouton « Enregistrer » qui garde la fiche sur le téléphone si le réseau est faible) ; **réouverture possible** d'un journal validé ; photos compressées et visibles ; ajout d'ouvriers/engins sans recharger la page.
+- (Suite 3) Accueil : **« À faire aujourd'hui »** (actions prioritaires cliquables) + bouton **« Saisie du jour »** qui ouvre directement le journal du dernier chantier ; barre du haut : titre qui suit la page.
+- (Suite 3) Chantier : création allégée (options avancées repliées, montant avec séparateurs, bouton GPS) + page **« Modifier le chantier »**.
+- (Suite 3) Connexion : œil pour afficher le mot de passe, mode e-mail/téléphone mémorisé, avertissement hors réseau, message si le réseau est lent.
 
 ---
 
@@ -106,8 +110,8 @@
 ## Prochaine tâche à assigner
 
 - **Utilisateur** : ✅ T-DEP-01 levée — vérifié en ligne par la Session 3 (le site `btp-suivi-7w2i.vercel.app` répond de nouveau ; migration `0015` appliquée ; création de chantier OK, chantier « B » bien en base). Sur le téléphone : rouvrir `https://btp-suivi-7w2i.vercel.app` ; si l'écran reste bloqué sur l'ancienne version, fermer complètement l'appli (ou effacer les données du site) pour vider le cache PWA. Si le site rebuguait un jour : `npx vercel login` sur le Mac, puis un agent pourra redéployer. Facultatif : T-DEP-02 (nettoyage des projets Vercel en double).
-- **Session 1 (apparence)** : ✅ T-UI-08 terminée (vue 3D du projet dans le calculateur de devis). En continu : harmonisation des sous-pages de chantier (planning, qualité, coûts, livraisons, journaux, métré, modélisation 3D) — même design system que le reste de l'application.
-- **Session 2 (logique)** : ✅ Traitement des retours terrain (`RETOURS_UTILISATEUR.md`) : création de journal robuste au réseau faible (blocage n°1), outils photos (URLs signées + compression), actions du jour pour l'accueil, libellés d'alertes, mémoire du dernier chantier — tout testé (suite : 181 verts). Prochaines actions attendues côté Session 1 (T-UI-09 à T-UI-13).
+- **Session 1 (apparence)** : ✅ T-UI-09 à T-UI-13 terminées (retours du test terrain) : journal en une page + création hors ligne, photos compressées et visibles, « À faire aujourd'hui » sur l'accueil, « Saisie du jour » directe, création/modification de chantier simplifiées, connexion plus claire. En continu : harmonisation des sous-pages de chantier — même design system que le reste de l'application.
+- **Session 2 (logique)** : ✅ Traitement des retours terrain (`RETOURS_UTILISATEUR.md`) : création de journal robuste au réseau faible (blocage n°1), outils photos (URLs signées + compression), actions du jour pour l'accueil, libellés d'alertes, mémoire du dernier chantier — tout testé (suite : 181 verts). Branchement interface réalisé par la Session 1 (T-UI-09 à T-UI-13 terminées).
 - **Session 3 (migrations/déploiement)** : ✅ Vérifications du 18/10 terminées : base Supabase « Base à jour » (audit `scripts/audit-base.mjs`) ; déploiements Vercel vérifiés en ligne (`btp-suivi-7w2i` et `btp-suivi-cd4w` répondent). Reste : T-DEP-02 (facultatif, côté utilisateur).
 - **Session 4 (tests)** : aucun test rouge ; suite `npm test` = 181 tests verts.
 
@@ -122,3 +126,5 @@
 > Mise à jour du 18/10/2026 (Session 3) : vérification directe des sites → **le site `btp-suivi-7w2i.vercel.app` répond de nouveau** (redirection `/login`, page « Connexion » « BTP Suivi Pro », testé 3 fois entre 19h23 et 19h30) ; `btp-suivi-cd4w.vercel.app` répond aussi. Les déploiements automatiques GitHub → Vercel fonctionnent (dernier : succès). Constats : `btp-suivi-6wxl` renvoie une erreur 500 (middleware — projet en double, variables probablement absentes) ; `btpsuivi.vercel.app` n'appartient pas à ce projet (site tiers). Base Supabase revérifiée « Base à jour » (audit `scripts/audit-base.mjs`) — **rien à recréer côté Vercel**.
 >
 > Mise à jour du 18/10/2026 (Session 2, suite 5) : traitement des retours terrain (`RETOURS_UTILISATEUR.md`). Côté logique : création de journal qui résiste au réseau faible (blocage n°1 — délai maximal, file d'attente, observations enregistrées), outils photos (URLs signées + compression), actions du jour pour l'accueil, libellés d'alertes lisibles, mémoire du dernier chantier — le tout testé (**181 tests verts**). Reste à brancher côté interface : **T-UI-09 à T-UI-13** (détails dans `TODO_UI.md`, TODO-UI-008 à TODO-UI-012). NB : une partie du rapport est déjà en cours dans la copie de travail de la Session 1 (titres des écrans, statut « Brouillon », vignettes photos, « Saisie du jour » directe, journal en une page) — non commitée à l'heure de cette note.
+>
+> Mise à jour du 18/10/2026 (Session 1) : **branchement interface des retours terrain terminé** — T-UI-09 à T-UI-13 cochées (commits `cc7fee5` et `47d1acf`). Concrètement, pour le chef de chantier : journal en une page avec un seul bouton « Enregistrer » (et fiche gardée sur le téléphone si le réseau tombe), photos compressées et visibles avant/après l'envoi, « À faire aujourd'hui » sur l'accueil avec alertes cliquables, bouton « Saisie du jour » qui ouvre directement le journal du dernier chantier, création de chantier allégée + page « Modifier le chantier », connexion avec œil mot de passe et avertissement hors réseau. Sur le téléphone : fermer complètement l'appli puis la rouvrir (cache PWA) pour voir la nouvelle version après le prochain déploiement.

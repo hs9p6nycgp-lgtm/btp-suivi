@@ -11,11 +11,11 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 | TODO-UI-005 | Impossible de créer un chantier ; types de chantier détaillés manquants | 🟡 INTERFACE FAITE · base : migration 0015 à appliquer (bloquant) |
 | TODO-UI-006 | Pas d'icône/raccourci « Calcul de devis » sur la page d'accueil | ✅ CORRIGÉ |
 | TODO-UI-007 | Pas de vue 3D du projet dans le calculateur de devis | ✅ CORRIGÉ |
-| TODO-UI-008 | Journal : « Créer le journal » qui résiste au réseau faible (blocage n°1 du terrain) | 🟢 logique prête (Session 2) · 🔴 à brancher (Session 1) |
-| TODO-UI-009 | Photos : compression avant téléversement (+ bascule optionnelle sur `urlsSignees`) | 🟢 logique prête (Session 2) · 🔴 à brancher (Session 1) |
-| TODO-UI-010 | Accueil : carte « À faire aujourd'hui » | 🟢 logique prête (Session 2) · 🔴 à brancher (Session 1) |
-| TODO-UI-011 | Accueil : détail d'alerte lisible (« Valeur / Seuil » bruts) | 🟢 logique prête (Session 2) · 🔴 à brancher (Session 1) |
-| TODO-UI-012 | Création de chantier : formulaire par étapes, position GPS automatique, page « Modifier le chantier » | 🔴 à faire (Session 1) |
+| TODO-UI-008 | Journal : « Créer le journal » qui résiste au réseau faible (blocage n°1 du terrain) | ✅ FAIT (18/10/2026) |
+| TODO-UI-009 | Photos : compression avant téléversement (+ bascule optionnelle sur `urlsSignees`) | ✅ FAIT (18/10/2026) |
+| TODO-UI-010 | Accueil : carte « À faire aujourd'hui » | ✅ FAIT (18/10/2026) |
+| TODO-UI-011 | Accueil : détail d'alerte lisible (« Valeur / Seuil » bruts) | ✅ FAIT (18/10/2026) |
+| TODO-UI-012 | Création de chantier : formulaire par étapes, position GPS automatique, page « Modifier le chantier » | ✅ FAIT (18/10/2026) |
 
 ---
 
@@ -134,6 +134,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
   ```
   - Après « en_attente », conseillé : afficher aussi un petit état « Enregistré sur l'appareil — en attente de réseau » à la place du bouton, pour que personne ne reclique.
   - Le message doit rester **visible près du bouton** (il est aujourd'hui en haut de page).
+- **✅ FAIT (18/10/2026, Session 1)** : `handleCreate` appelle désormais `creerJournalHorsLigne` ; « en attente » et « stockage indisponible » ont chacun leur message clair, le bouton est désactivé pendant l'envoi, et un journal du même jour ne peut plus être créé en double (encart « Ouvrir ce journal » à la place).
 - **Priorité** : haute (blocage n°1 du test terrain).
 
 ---
@@ -153,6 +154,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
   const { error: upErr } = await supabase.storage.from("chantiers-documents").upload(path, fichierEnvoi);
   ```
 - **(Facultatif, recommandé)** : remplacer les appels `createSignedUrls` inline des deux pages par `urlsSignees(chemins)` (`src/lib/photos/urls.ts`) : même comportement (durée 1 h), un seul endroit à maintenir.
+- **✅ FAIT (18/10/2026, Session 1)** : compression avant envoi (`compresserImage`) + bascule complète sur `urlsSignees`/`urlSignee` (page journal et galerie de l'accueil) ; aperçu local de la photo choisie avant envoi ; vignettes affichées avec repli « Photo indisponible ».
 - **Priorité** : haute (fait partie des « 3 changements les plus urgents » du rapport).
 
 ---
@@ -188,6 +190,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
   - Afficher les 3–4 premières actions en haut du tableau de bord (au-dessus des graphiques) : icône selon `action.type`, `action.libelle`, `action.chantierNom`, `action.detail`, lien sur `action.lienHref`.
   - Liste vide → « Rien d'urgent aujourd'hui. »
   - Bouton principal « Saisie du jour » : `lireDernierChantier()` → `/chantiers/<id>/journaux`, sinon `/chantiers`.
+- **✅ FAIT (18/10/2026, Session 1)** : carte « À faire aujourd'hui » en haut de l'accueil (6 premières actions, numéro de priorité coloré, lien direct sur `lienHref`, message « Rien d'urgent aujourd'hui » si vide) + gros bouton orange « Saisie du jour » dans le bandeau, branché sur `lireDernierChantier` (+ affichage de la date locale du jour pour la requête journaux).
 - **Priorité** : moyenne-haute (fait partie des « 3 changements les plus urgents »).
 
 ---
@@ -205,6 +208,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
   {detailAlerte(alerte, langue)}
   ```
 - **(Facultatif)** : remplacer le dictionnaire inline `TYPES_ALERTES` par `libelleTypeAlerte(type, langue)` du même module (source unique).
+- **✅ FAIT (18/10/2026, Session 1)** : `libelleTypeAlerte` + `detailAlerte` utilisés sur l'accueil (dictionnaire inline supprimé) ; chaque alerte est cliquable et ouvre le chantier concerné ; colonne « Écart » de « Mes chantiers » colorée seulement en dépassement.
 - **Priorité** : moyenne.
 
 ---
@@ -225,6 +229,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
   2. **Formulaire allégé** : montrer d'abord l'essentiel (nom, type, sous-type, montant, dates), puis des sections repliables « Localisation & seuils » et « Dimensions (optionnel) » — pour éviter les 14 champs d'un coup sur téléphone.
   3. **Montant** : afficher les séparateurs de milliers pendant la saisie (l'utilisateur compte les zéros).
   4. **Page « Modifier le chantier »** : nouvelle route `/chantiers/[id]/modifier` qui réutilise le même formulaire (pré-rempli, `update` au lieu d'`insert`), avec le même garde-fou `estTypeDetailValide`. Lien « Modifier » sur la fiche chantier. **Côté base : rien à changer** — la politique RLS autorise déjà la mise à jour par le propriétaire (vérifié dans `0007_phase3_multitenant_isolation.sql`).
+- **✅ FAIT (18/10/2026, Session 1)** : les 4 points sont en place — bouton « Utiliser ma position » (message « Position indisponible… » en cas d'échec), essentiel d'abord avec **« Options avancées (facultatif) »** repliées (GPS, dimensions, seuil), montant avec séparateurs automatiques pendant la frappe, contrôles montant/date de début/date de fin, et page `/chantiers/[id]/modifier` pré-remplie accessible par « Modifier le chantier » depuis la fiche.
 - **Priorité** : moyenne (demande utilisateur, confort terrain).
 
 ---
