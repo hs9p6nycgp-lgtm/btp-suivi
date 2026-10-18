@@ -66,6 +66,7 @@
 | T-UI-05 | Refonte esthétique générale : design system (ombres, dégradés, animations), composants UI, navigation (sidebar/topbar/mobile), tableau de bord, chantiers, connexion, détail chantier, BPU, import DQE, en-têtes unifiés | 1 | `src/app/globals.css`, `src/components/ui/*`, `src/components/layout/*`, `src/components/DqeImport.tsx`, `src/components/SignOutButton.tsx`, `src/app/page.tsx`, `src/app/chantiers/page.tsx`, `src/app/chantiers/[id]/page.tsx`, `src/app/login/page.tsx`, `src/app/bpu/page.tsx`, `src/app/fournisseurs/page.tsx`, `src/app/rapports/page.tsx`, `src/app/export/page.tsx`, `src/app/referentiel/page.tsx` | 18/10/2026 |
 | T-UI-06 | Formulaire « Nouveau chantier » : champ « Sous-type (phase de travaux) » alimenté par `typesDetaillesPour` (s'adapte au type Route/Bâtiment), enregistré dans `type_detail` ; sous-type affiché dans la fiche chantier et la liste | 1 | `src/app/chantiers/nouveau/page.tsx`, `src/app/chantiers/[id]/page.tsx`, `src/app/chantiers/page.tsx` | 18/10/2026 |
 | T-UI-07 | Section « Outils rapides » sur la page d'accueil : cartes « Calcul de devis » et « Calcul de murs » | 1 | `src/app/page.tsx` | 18/10/2026 |
+| T-UI-08 | Vue 3D du projet dans le calculateur de devis : composant générique `Modele3DGenerique` (three.js, rotation/zoom/recentrage, info-bulles, grille au sol) + total estimatif affiché | 1 | `src/components/visualisation/Modele3DGenerique.tsx` (nouveau), `src/app/calculateurs/devis/page.tsx` | 18/10/2026 |
 
 ---
 
@@ -78,6 +79,7 @@
 - (Suite) « Nouveau chantier » : champ **Sous-type (phase de travaux)** branché sur la liste officielle `src/lib/chantiers/types.ts` (filtrée par type), enregistré dans `type_detail` ; le sous-type apparaît dans le bandeau de la fiche chantier et dans la liste.
 - (Suite) Accueil : nouvelle section **« Outils rapides »** (Calcul de devis, Calcul de murs) juste sous les chiffres clés.
 - Rappel : `type_detail` nécessite la migration `0015` (déjà requise pour les colonnes de dimensions).
+- (Suite 2) Calculateur de devis : nouvelle section **« Vue 3D du projet »** (composant générique `Modele3DGenerique`, rotation/zoom/info-bulles) + **total estimatif** enfin affiché + en-tête unifié (T-UI-08).
 
 ---
 
@@ -93,7 +95,7 @@
 ## Prochaine tâche à assigner
 
 - **Utilisateur (bloquant)** : ✅ T-MIG-02 terminée (migration `0015` appliquée par l'utilisateur, audit « Base à jour »). Rien en attente. Vous pouvez réessayer de créer un chantier.
-- **Session 1 (apparence)** : T-UI-08 — afficher la « Vue 3D du projet » dans le calculateur de devis (consignes complètes dans `TODO_UI.md` → TODO-UI-007). La logique est déjà prête (Session 2).
+- **Session 1 (apparence)** : ✅ T-UI-08 terminée (vue 3D du projet dans le calculateur de devis). En continu : harmonisation des sous-pages de chantier (planning, qualité, coûts, livraisons, journaux, métré, modélisation 3D) — même design system que le reste de l'application.
 - **Session 2 (logique)** : ✅ T-DATA-01 terminée (doublons BPU nettoyés : 443 → 289 lignes, devis revérifiés). Rien en attente.
 - **Session 3 (migrations/déploiement)** : rien à faire pour l'instant (migration `0015` appliquée).
 - **Session 4 (tests)** : aucun test rouge ; suite `npm test` = 141 tests verts.

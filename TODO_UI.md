@@ -10,6 +10,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 | TODO-UI-004 | Boutons « Supprimer » sans effet sur le journal | ✅ CORRIGÉ |
 | TODO-UI-005 | Impossible de créer un chantier ; types de chantier détaillés manquants | 🟡 INTERFACE FAITE · base : migration 0015 à appliquer (bloquant) |
 | TODO-UI-006 | Pas d'icône/raccourci « Calcul de devis » sur la page d'accueil | ✅ CORRIGÉ |
+| TODO-UI-007 | Pas de vue 3D du projet dans le calculateur de devis | ✅ CORRIGÉ |
 
 ---
 
@@ -77,16 +78,12 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
   - `modele3dDevis(template, inputs)` convertit les entrées du devis en scène 3D (« boites » et « cylindres »). `template` est le modèle de devis déjà sélectionné dans la page (celui de la ligne 17). Retourne `null` uniquement si le modèle n'a pas de 3D — aucun des 15 modèles actuels n'est concerné.
   - Objet retourné : `{ templateId, nom, resume, dimensions, centre, elements }`.
   - Conventions (documentées en tête du fichier) : mètres ; X = longueur, Y = hauteur (vers le haut), Z = largeur ; sol à Y = 0 ; `position` = **centre** de l'élément ; `rotation` en **degrés** (un seul axe à la fois) ; `dimensions` + `centre` = boîte englobante pour cadrer la caméra.
-- **À faire (Session 1 — interface)** :
-  1. Après la zone de résultats/total du devis, ajouter une section (ou un onglet) **« Vue 3D du projet »**.
-  2. Données : `const modele = useMemo(() => modele3dDevis(template, inputs), [template, inputs]);` — recalcul immédiat dès qu'un modèle ou une entrée change (rien n'est stocké en base).
-  3. Rendu conseillé : s'inspirer de `src/components/visualisation/Modele3D.tsx` (three.js déjà installé, rotation à la souris) dans un composant générique à créer, par ex. `src/components/visualisation/Modele3DGenerique.tsx` :
-     - `boite` → `THREE.BoxGeometry(taille[0], taille[1], taille[2])` ;
-     - `cylindre` → `THREE.CylinderGeometry(taille[0] / 2, taille[0] / 2, taille[1])` (axe vertical par défaut) ;
-     - appliquer `element.position` (centre) et `element.rotation` convertie en radians (`THREE.MathUtils.degToRad`) ;
-     - cadrer la caméra sur `modele.centre`, distance ≈ 1,8 × la plus grande valeur de `modele.dimensions` ; garder la grille au sol à Y = 0 (des éléments sont sous le sol : pieux, conduites, regards) ;
-     - afficher `modele.resume` sous le rendu (phrase explicative en français).
-  4. Astuce : les 15 modèles ont tous une vue 3D ; il n'y a donc pas d'affichage « vide » à gérer pour l'instant.
+- **À faire (Session 1 — interface)** : ✅ FAIT (18/10/2026).
+  1. Nouveau composant **`src/components/visualisation/Modele3DGenerique.tsx`** : affichage three.js d'un objet `Modele3D` de `src/lib/devis/model3d.ts` — boîtes (`BoxGeometry`) et cylindres (`CylinderGeometry`), positions/rotations respectées, grille au sol à Y = 0, caméra cadrée sur `centre`/`dimensions` (distance ≈ 1,8 × la plus grande dimension).
+  2. Interactions : **glisser** = rotation autour du modèle, **molette** = zoom, **double-clic** = recentrer ; **survol** d'un élément = info-bulle avec son libellé.
+  3. Animations gsap : arrivée de caméra + apparition en cascade au premier affichage (ou changement de projet) ; simple fondu lors d'une modification de saisie.
+  4. Intégration dans `src/app/calculateurs/devis/page.tsx` : section **« Vue 3D du projet »** (recalcul automatique via `useMemo` + `useDeferredValue`), `modele.resume` affiché sous le rendu.
+  5. Bonus au passage : le **total estimatif** du devis (calculé mais jamais affiché) est maintenant visible dans un bandeau sous les recommandations ; la page utilise l'en-tête unifié (`PageHeader`).
 - **Priorité** : moyenne (fonctionnalité demandée par l'utilisateur).
 
 ---
