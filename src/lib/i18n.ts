@@ -56,6 +56,13 @@ export const DICTIONNAIRE: Record<string, Record<Langue, string>> = {
   "err.user_not_found": { fr: "Utilisateur introuvable.", en: "User not found." },
   "err.network": { fr: "Erreur de connexion. Vérifiez votre réseau.", en: "Network error. Check your connection." },
   "err.unknown": { fr: "Une erreur est survenue.", en: "An error occurred." },
+  "err.db_colonne_manquante": { fr: "La base de données n'est pas à jour (une colonne manque). Appliquez la dernière migration Supabase.", en: "The database is out of date (a column is missing). Apply the latest Supabase migration." },
+  "err.db_table_manquante": { fr: "La base de données n'est pas à jour (une table manque). Appliquez la dernière migration Supabase.", en: "The database is out of date (a table is missing). Apply the latest Supabase migration." },
+  "err.rls": { fr: "Accès refusé par la sécurité de la base de données.", en: "Access denied by the database security policy." },
+  "err.fk": { fr: "Référence invalide : une donnée liée n'existe pas.", en: "Invalid reference: a linked record does not exist." },
+  "err.duplicate": { fr: "Cet enregistrement existe déjà.", en: "This record already exists." },
+  "err.check": { fr: "Valeur non autorisée pour ce champ.", en: "Value not allowed for this field." },
+  "err.not_null": { fr: "Un champ obligatoire est vide.", en: "A required field is empty." },
 
   // Accueil
   "home.titre": { fr: "Tableau de bord", en: "Dashboard" },
@@ -166,10 +173,35 @@ export function traduireErreur(erreur: { message?: string; code?: string; name?:
   const cle = mapping[msg] || mapping[code];
   if (cle) return t(cle);
 
+  // Erreurs de base de donnees (PostgREST / PostgreSQL) : message precis
+  // pour agir, suivi du detail brut entre parentheses.
+  if (code === "PGRST204" || /could not find the .*column/i.test(msg)) {
+    return `${t("err.db_colonne_manquante")} (${msg})`;
+  }
+  if (code === "42P01" || /relation .* does not exist/i.test(msg)) {
+    return `${t("err.db_table_manquante")} (${msg})`;
+  }
+  if (code === "42501" || /row-level security/i.test(msg)) {
+    return t("err.rls");
+  }
+  if (code === "23503" || /foreign key/i.test(msg)) {
+    return t("err.fk");
+  }
+  if (code === "23505" || /duplicate key/i.test(msg)) {
+    return t("err.duplicate");
+  }
+  if (code === "23514" || /check constraint/i.test(msg)) {
+    return t("err.check");
+  }
+  if (code === "23502" || /not-null constraint/i.test(msg)) {
+    return t("err.not_null");
+  }
+
   // Erreurs réseau
   if (msg.includes("Failed to fetch") || msg.includes("network")) {
     return t("err.network");
   }
 
-  return t("err.unknown");
+  // Inconnue : garder le message d'origine pour pouvoir diagnostiquer.
+  return msg ? `${t("err.unknown")} (${msg})` : t("err.unknown");
 }
