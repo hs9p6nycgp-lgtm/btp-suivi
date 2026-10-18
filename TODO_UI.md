@@ -69,4 +69,26 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 
 ---
 
+## TODO-UI-007 — Vue 3D d'un devis (nouveau)
+
+- **Écran** : Calculateur de devis (`src/app/calculateurs/devis/page.tsx`).
+- **Demande de l'utilisateur (18/10/2026)** : « quand on finit de faire un devis, on veut aussi modéliser le projet en 3D ».
+- **Côté logique (Session 2) : ✅ FAIT (18/10/2026)** — module `src/lib/devis/model3d.ts` (couvert par 18 tests) :
+  - `modele3dDevis(template, inputs)` convertit les entrées du devis en scène 3D (« boites » et « cylindres »). `template` est le modèle de devis déjà sélectionné dans la page (celui de la ligne 17). Retourne `null` uniquement si le modèle n'a pas de 3D — aucun des 15 modèles actuels n'est concerné.
+  - Objet retourné : `{ templateId, nom, resume, dimensions, centre, elements }`.
+  - Conventions (documentées en tête du fichier) : mètres ; X = longueur, Y = hauteur (vers le haut), Z = largeur ; sol à Y = 0 ; `position` = **centre** de l'élément ; `rotation` en **degrés** (un seul axe à la fois) ; `dimensions` + `centre` = boîte englobante pour cadrer la caméra.
+- **À faire (Session 1 — interface)** :
+  1. Après la zone de résultats/total du devis, ajouter une section (ou un onglet) **« Vue 3D du projet »**.
+  2. Données : `const modele = useMemo(() => modele3dDevis(template, inputs), [template, inputs]);` — recalcul immédiat dès qu'un modèle ou une entrée change (rien n'est stocké en base).
+  3. Rendu conseillé : s'inspirer de `src/components/visualisation/Modele3D.tsx` (three.js déjà installé, rotation à la souris) dans un composant générique à créer, par ex. `src/components/visualisation/Modele3DGenerique.tsx` :
+     - `boite` → `THREE.BoxGeometry(taille[0], taille[1], taille[2])` ;
+     - `cylindre` → `THREE.CylinderGeometry(taille[0] / 2, taille[0] / 2, taille[1])` (axe vertical par défaut) ;
+     - appliquer `element.position` (centre) et `element.rotation` convertie en radians (`THREE.MathUtils.degToRad`) ;
+     - cadrer la caméra sur `modele.centre`, distance ≈ 1,8 × la plus grande valeur de `modele.dimensions` ; garder la grille au sol à Y = 0 (des éléments sont sous le sol : pieux, conduites, regards) ;
+     - afficher `modele.resume` sous le rendu (phrase explicative en français).
+  4. Astuce : les 15 modèles ont tous une vue 3D ; il n'y a donc pas d'affichage « vide » à gérer pour l'instant.
+- **Priorité** : moyenne (fonctionnalité demandée par l'utilisateur).
+
+---
+
 *Fin de TODO_UI.md.*
