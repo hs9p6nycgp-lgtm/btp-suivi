@@ -16,6 +16,10 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 | TODO-UI-010 | Accueil : carte « À faire aujourd'hui » | ✅ FAIT (18/10/2026) |
 | TODO-UI-011 | Accueil : détail d'alerte lisible (« Valeur / Seuil » bruts) | ✅ FAIT (18/10/2026) |
 | TODO-UI-012 | Création de chantier : formulaire par étapes, position GPS automatique, page « Modifier le chantier » | ✅ FAIT (18/10/2026) |
+| TODO-UI-013 | Fiche chantier : écran planté à l'ouverture (« This page couldn't load ») — couleur de statut inconnue du composant StatCard | 🔴 À CORRIGER — **bloquant** |
+| TODO-UI-014 | Liste des chantiers : badge « En préparation » qui dépasse de sa carte (86 px) | 🔴 À CORRIGER |
+| TODO-UI-015 | Accueil : « 1 chantiers » (pluriel) + dates des mini-courbes coupées | 🔴 À CORRIGER |
+| TODO-UI-016 | Connexion : la coquille (barres latérale/haut/bas) s'affiche avant connexion | 🔴 À CORRIGER |
 
 ---
 
@@ -231,6 +235,48 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
   4. **Page « Modifier le chantier »** : nouvelle route `/chantiers/[id]/modifier` qui réutilise le même formulaire (pré-rempli, `update` au lieu d'`insert`), avec le même garde-fou `estTypeDetailValide`. Lien « Modifier » sur la fiche chantier. **Côté base : rien à changer** — la politique RLS autorise déjà la mise à jour par le propriétaire (vérifié dans `0007_phase3_multitenant_isolation.sql`).
 - **✅ FAIT (18/10/2026, Session 1)** : les 4 points sont en place — bouton « Utiliser ma position » (message « Position indisponible… » en cas d'échec), essentiel d'abord avec **« Options avancées (facultatif) »** repliées (GPS, dimensions, seuil), montant avec séparateurs automatiques pendant la frappe, contrôles montant/date de début/date de fin, et page `/chantiers/[id]/modifier` pré-remplie accessible par « Modifier le chantier » depuis la fiche.
 - **Priorité** : moyenne (demande utilisateur, confort terrain).
+
+---
+
+## TODO-UI-013 — 🔴 BLOQUANT : fiche chantier plantée à l'ouverture (BUG-016)
+
+- **Écran** : fiche chantier (`/chantiers/[id]`) — `src/app/chantiers/[id]/page.tsx` (~ligne 202) et composant `src/components/ui/StatCard.tsx`.
+- **Signalé** : test PC du 18/10/2026 — « This page couldn't load », reproduit **3 fois sur 3**, aussi bien après la création d'un chantier qu'en cliquant un chantier de la liste (captures `pc-03-fiche-chantier.png`, `pc-v1-fiche-chantier-final.png`, `pc-99-erreur.png`).
+- **Cause (diagnostiquée par la Session 2)** : la carte « Statut » passe à `StatCard` une couleur issue de `STATUT_LABELS` (lignes 46-52 : `"info"`, `"success"`, `"warning"`, `"danger"`), mais `StatCard` ne connaît que 6 couleurs (`blue`, `orange`, `emerald`, `rose`, `amber`, `slate`). Résultat : `colorMap[color]` vaut `undefined` et l'accès `.bar` plante tout l'écran. Le `as "blue" | "orange" | …` de la ligne 202 masque l'erreur à TypeScript — c'est ce qui a laissé passer le bug. À noter : **tous** les statuts plantent (aucune des 4 couleurs n'existe dans `StatCard`).
+- **Correctif (2 volets, à faire tous les deux)** :
+  1. **Dans la fiche** (lignes 46-52) : remplacer les couleurs par des valeurs existantes → `info`→`"blue"`, `success`→`"emerald"`, `warning`→`"amber"`, `danger`→`"rose"` ; puis **retirer le `as "blue" | …` de la ligne 202** (`color={s.color}`) pour que TypeScript vérifie désormais directement.
+  2. **Dans `StatCard`** : sécuriser la lecture → `const c = colorMap[color] ?? colorMap.slate;` — ainsi une couleur inconnue ne pourra plus jamais faire planter une page entière (repli gris).
+- **Au passage (même écran)** : corriger la clé `receptionne_provisulement` → `receptionne_provisoirement` (la valeur réelle en base — contrainte de `supabase/migrations/0001_v0_schema.sql`) dans `src/app/chantiers/[id]/page.tsx` (l.50) **et** `src/app/chantiers/page.tsx` (l.26, 28, 34). Sinon : le menu déroulant de statut écrit une valeur que la base refuse (échec silencieux) et l'affichage retombe sur « En préparation ».
+- **Priorité** : **haute — bloquante** (tout le parcours chantier est inaccessible).
+
+---
+
+## TODO-UI-014 — 🔴 Liste des chantiers : badge « En préparation » hors de sa carte (BUG-017)
+
+- **Écran** : liste des chantiers (`/chantiers`) — `src/app/chantiers/page.tsx`, badge ligne 252, carte ligne 233.
+- **Signalé** : badge mesuré **86 px en dehors de sa carte** (capture `pc-r1-liste-chantiers.png`).
+- **Piste** : dans la carte, le conteneur `flex items-start justify-between gap-3` a un bloc de gauche (`div.flex items-center gap-3`) qui ne peut pas se réduire, donc le badge est poussé hors de la carte au lieu que le texte se coupe. Correctif : ajouter `min-w-0` à ce bloc de gauche (les `truncate` du nom/maître d'ouvrage fonctionneront alors).
+- **Priorité** : haute (visible partout).
+
+---
+
+## TODO-UI-015 — 🔴 Accueil : « 1 chantiers » et dates des mini-courbes coupées (BUG-019)
+
+- **Écran** : Accueil (`src/app/page.tsx`) — captures `pc-v2-dashboard-bas.png`, `pc-v3-dashboard-fond.png`.
+- **Détail** :
+  1. Ligne 365 : `{chantiers.length} {langue === "fr" ? "chantiers" : "sites"}` → affiche « 1 chantiers ». Correctif : singulier quand il n'y en a qu'un → `chantiers.length === 1 ? "chantier" : "chantiers"` (idem « site » / « sites » en anglais).
+  2. Mini-courbes : les étiquettes portent les dates **au format ISO brut** (`x: chantier.created_at.slice(0, 10)` → « 2026-10-18 » ; `slice(0, 7)` → « 2026-10 »). Deux soucis : coupées en bas des cartes (graphique trop court : `h-16` dans `StatCard`) et format non conforme à la règle du projet (JJ/MM/AAAA). Correctifs suggérés : formater les x à la construction des points (date → « 18/10 », mois → « 10/26 ») ; agrandir la zone du graphique dans `StatCard` (`h-16` → `h-20`) ; ajouter une petite marge à droite (`margin={{ right: 6 }}`) pour que la dernière étiquette (« 2026-10 » sur la carte « Montant total ») ne soit plus rognée.
+- **Priorité** : moyenne (finitions).
+
+---
+
+## TODO-UI-016 — 🔴 Connexion : la coquille s'affiche avant connexion (BUG-020)
+
+- **Écran** : `/login` (idem mot-de-passe-oublie, réinitialisation) — capture `pc-01-connexion.png`.
+- **Question de l'utilisateur** : « à confirmer si c'est voulu » → **non, ce n'est pas voulu** : un écran de connexion doit être plein écran, sans barres ni menus.
+- **Cause** : `src/app/layout.tsx` rend la coquille (`Sidebar`, `TopBar`, `MobileNavigation`) pour **toutes** les routes.
+- **Correctif suggéré** : nouveau composant client `src/components/layout/Coquille.tsx` qui lit `usePathname()` et rend simplement `{children}` (sans coquille) pour les routes publiques : `/login`, `/mot-de-passe-oublie`, `/reinitialiser-mot-de-passe` (et probablement `/offline`, déjà conçue en plein écran : `min-h-screen`). Le layout ne garde alors que ce composant.
+- **Priorité** : moyenne (esthétique, mais visible avant même de se connecter).
 
 ---
 

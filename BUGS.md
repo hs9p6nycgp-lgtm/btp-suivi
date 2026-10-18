@@ -27,6 +27,11 @@ listés dans `TODO_LOGIQUE.md`.
 | BUG-013   | UI          | Journal : statut « brouillon (draft) » (mélange FR/EN, valeur brute) |
 | BUG-014   | UI          | Accueil : alertes en mots techniques (« quantite », « ouverte ») |
 | BUG-015   | UI          | Création de chantier : 14 champs d'un coup, GPS manuel, aucune correction après création |
+| BUG-016   | UI          | Fiche chantier : plantage à l'ouverture (couleur de statut inconnue du composant StatCard) |
+| BUG-017   | UI          | Liste des chantiers : badge « En préparation » qui dépasse de sa carte (86 px) |
+| BUG-018   | logique     | Navigation : clé de traduction brute « detail.quality » au lieu de « Qualité » |
+| BUG-019   | UI          | Accueil : « 1 chantiers » (pluriel) et dates des mini-courbes coupées |
+| BUG-020   | UI          | Connexion : la coquille (menus) s'affiche avant connexion |
 
 ---
 
@@ -340,6 +345,58 @@ listés dans `TODO_LOGIQUE.md`.
 - **Résultat obtenu** : 14 champs d'un coup ; latitude/longitude à taper à la main ; montant sans séparateurs ; après création, seule la modification du statut existe (pas de bouton « Modifier »).
 - **Résultat attendu** : formulaire en étapes centré sur l'essentiel, bouton « Utiliser ma position », montant lisible, et page « Modifier le chantier » (la base autorise déjà la mise à jour par le propriétaire — politique RLS de `0007_phase3_multitenant_isolation.sql`, aucun changement de base nécessaire).
 - **À faire (Session 1)** : voir TODO-UI-012.
+
+---
+
+## BUG-016 — Fiche chantier : plantage à l'ouverture (BLOQUANT)
+
+- **Écran** : fiche chantier (`/chantiers/[id]`, `src/app/chantiers/[id]/page.tsx`) et composant `src/components/ui/StatCard.tsx`.
+- **Zone** : UI (le plantage vient d'une couleur d'affichage passée au composant).
+- **Contexte** : test PC du 18/10/2026 — reproduit **3 fois sur 3**, à l'ouverture de n'importe quelle fiche (captures `pc-v1-fiche-chantier-final.png`, `pc-99-erreur.png`).
+- **Résultat obtenu** : « This page couldn't load ». La carte « Statut » (lignes 46-52) envoie une couleur (`info`/`success`/`warning`/`danger`) que `StatCard` ne connaît pas : `colorMap[color]` est `undefined` et la lecture de `.bar` fait planter tout l'écran. Le `as "blue" | …` (ligne 202) masque l'erreur à TypeScript.
+- **Résultat attendu** : fiche affichée normalement, carte « Statut » colorée.
+- **Correctif** : voir TODO-UI-013 (Session 1) — corriger les couleurs côté fiche **et** ajouter un repli sécurisé dans `StatCard`. Au passage, corriger `receptionne_provisulement` → `receptionne_provisoirement` (2 fichiers) pour coller à la contrainte réelle de la base.
+
+---
+
+## BUG-017 — Liste des chantiers : badge « En préparation » hors de sa carte
+
+- **Écran** : liste des chantiers (`/chantiers`, `src/app/chantiers/page.tsx`, badge ligne 252).
+- **Zone** : UI.
+- **Contexte** : test PC du 18/10/2026 (capture `pc-r1-liste-chantiers.png`).
+- **Résultat obtenu** : le badge du statut dépasse de **86 px** en dehors de la carte.
+- **Correctif** : voir TODO-UI-014 (Session 1).
+
+---
+
+## BUG-018 — Navigation : clé de traduction brute « detail.quality »
+
+- **Écran** : toutes les pages d'un chantier — barre latérale, onglets du chantier (`src/components/layout/Sidebar.tsx`, ligne 57).
+- **Zone** : logique (dictionnaire de traduction, `src/lib/i18n.ts`).
+- **Contexte** : test PC du 18/10/2026.
+- **Résultat obtenu** : la clé technique `detail.quality` s'affiche telle quelle au lieu de « Qualité » (le dictionnaire ne contenait pas cette clé, la fonction `t()` retombe alors sur la clé).
+- **Correctif** : **CORRIGÉ (Session 2, 18/10/2026)** — clé `"detail.quality"` ajoutée au dictionnaire (`fr: "Qualité"`, `en: "Quality"`) et nouveau **test de cohérence** (`src/lib/__tests__/i18n.test.ts`) : toutes les clés utilisées via `t("…")` / `cle: "…"` doivent exister, en français et en anglais (vérifié dans les deux sens : sans la clé le test échoue).
+
+---
+
+## BUG-019 — Accueil : « 1 chantiers » et dates des mini-courbes coupées
+
+- **Écran** : accueil (`src/app/page.tsx`, ligne 365 et mini-courbes des cartes de chiffres).
+- **Zone** : UI.
+- **Contexte** : test PC du 18/10/2026 (captures `pc-v2-dashboard-bas.png`, `pc-v3-dashboard-fond.png`).
+- **Résultat obtenu** : « 1 chantiers » (le pluriel ne s'accorde pas) ; les étiquettes de dates sont coupées en bas des mini-courbes (« 2026-10-18 ») et « 2026-10 » est rogné à droite sur la carte « Montant total ».
+- **Correctif** : voir TODO-UI-015 (Session 1).
+
+---
+
+## BUG-020 — Connexion : la coquille s'affiche avant connexion
+
+- **Écran** : connexion (`/login`) — capture `pc-01-connexion.png`.
+- **Zone** : UI.
+- **Contexte** : test PC du 18/10/2026. Question posée : est-ce voulu ?
+- **Résultat obtenu** : les barres latérale et du haut (et la navigation mobile) sont visibles autour de l'écran de connexion.
+- **Résultat attendu** : **non, ce n'est pas voulu** — l'écran de connexion doit être plein écran, sans menus.
+- **Correctif** : voir TODO-UI-016 (Session 1).
 
 ---
 
