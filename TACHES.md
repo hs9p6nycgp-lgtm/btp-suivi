@@ -77,6 +77,7 @@
 | T-LOG-22 | Photos : URLs signées groupées (`urlsSignees`) + compression locale avant envoi (`compresserImage`, 1600 px / JPEG 72 %) + 6 tests | 2 | `src/lib/photos/urls.ts`, `src/lib/photos/compression.ts` | 18/10/2026 |
 | T-LOG-23 | Accueil : actions du jour (`actionsDuJour` — saisie manquante, non-conformités, alertes) + mémoire du dernier chantier partagée avec la navigation mobile (clé `btp.dernier.chantier`) + 7 tests | 2 | `src/lib/journal/actionsDuJour.ts`, `src/lib/chantiers/dernier.ts` | 18/10/2026 |
 | T-LOG-24 | Alertes : libellés FR/EN lisibles (9 types, 3 statuts) + détail formaté (`detailAlerte`, pourcentages) + textes « hors ligne » du journal dans le dictionnaire | 2 | `src/lib/alertes.ts`, `src/lib/i18n.ts` | 18/10/2026 |
+| T-DATA-02 | Nettoyage des chantiers de test : « Chantier Test Abidjan » + « B » supprimés (tous deux vides, sauvegarde JSON avant suppression, vérification OK) + outil `scripts/nettoyer-chantiers-test.mjs` (lecture seule par défaut) | 2 | `scripts/nettoyer-chantiers-test.mjs` | 18/10/2026 |
 
 ---
 
