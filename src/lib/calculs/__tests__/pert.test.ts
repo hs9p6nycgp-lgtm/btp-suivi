@@ -5,7 +5,7 @@ import {
   calculPert,
   tachesCritiques,
   datePrevueFin,
-} from "../pert";
+} from "../pert.ts";
 
 describe("calcul PERT et chemin critique (PLA-02)", () => {
   const taches = [

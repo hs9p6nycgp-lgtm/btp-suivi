@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { filtrerReferentiel, trierReferentiel, type LigneReferentiel } from "../recherche";
+import { filtrerReferentiel, trierReferentiel, type LigneReferentiel } from "../recherche.ts";
 
 const lignes = [
   {

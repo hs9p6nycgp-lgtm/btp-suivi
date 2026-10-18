@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { materiauxEnAlerte, verifierStockBas } from "../stock";
+import { materiauxEnAlerte, verifierStockBas } from "../stock.ts";
 
 describe("alertes de stock bas (APP-04)", () => {
   it("detecte un stock bas", () => {

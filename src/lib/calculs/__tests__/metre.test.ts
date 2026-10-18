@@ -21,7 +21,7 @@ import {
   volumeBeton,
   volumeCouche,
   volumeFoisonne,
-} from "../metre";
+} from "../metre.ts";
 
 describe("formules de la section 5 du cahier des charges", () => {
   describe("indicateur 5.1 - écart de quantité", () => {

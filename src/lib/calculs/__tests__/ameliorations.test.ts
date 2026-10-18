@@ -8,8 +8,8 @@ import {
   stockTheorique,
   calculValeurAcquise,
   impactAvenant,
-} from "../metre";
-import { exporterReferentielCSV } from "../../referentiel/prix";
+} from "../metre.ts";
+import { exporterReferentielCSV } from "../../referentiel/prix.ts";
 
 describe("ameliorations (priorite S)", () => {
   describe("MET-05 : nombre de rotations", () => {

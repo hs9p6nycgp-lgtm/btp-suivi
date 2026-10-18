@@ -6,7 +6,7 @@ import {
   meilleurDevis,
   validerConditionsCommerciales,
   validerFournisseur,
-} from "../fournisseur";
+} from "../fournisseur.ts";
 
 describe("module Fournisseurs (FOU-01, FOU-02, FOU-04, FOU-06)", () => {
   describe("FOU-01 : validation de la fiche", () => {

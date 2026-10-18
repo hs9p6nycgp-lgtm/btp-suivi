@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { prixPourZone, prixAvecZone } from "../zones";
+import { prixPourZone, prixAvecZone } from "../zones.ts";
 
 describe("prix par zone geographique (REF-08)", () => {
   const zones = [

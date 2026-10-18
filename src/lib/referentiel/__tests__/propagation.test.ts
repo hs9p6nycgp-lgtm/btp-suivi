@@ -4,7 +4,7 @@ import { describe, it } from "node:test";
 import {
   lignesConcerneesParMiseAJour,
   nouveauMontantLigne,
-} from "../propagation";
+} from "../propagation.ts";
 
 describe("propagation des prix (REF-06)", () => {
   const lignes = [

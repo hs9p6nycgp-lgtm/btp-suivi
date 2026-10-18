@@ -5,7 +5,7 @@ import {
   construireEntreeHistorique,
   estPrixObsolete,
   lignesAffecteesParMiseAJour,
-} from "../prix";
+} from "../prix.ts";
 
 describe("referentiel de prix (REF-03, REF-06, REF-09)", () => {
   describe("REF-09 : prix obsolete", () => {

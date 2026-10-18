@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { validerBasePrix, type BasePrixRow } from "../basePrix";
+import { validerBasePrix, type BasePrixRow } from "../basePrix.ts";
 
 function ligneValide(): BasePrixRow {
   return {

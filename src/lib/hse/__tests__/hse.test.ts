@@ -4,7 +4,7 @@ import { describe, it } from "node:test";
 import {
   calculJoursSansAccident,
   calculTauxFrequence,
-} from "../hse";
+} from "../hse.ts";
 
 describe("indicateurs HSE (HSE-03)", () => {
   describe("taux de frequence", () => {

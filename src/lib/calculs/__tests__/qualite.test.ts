@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { estConforme } from "../qualite";
+import { estConforme } from "../qualite.ts";
 
 describe("conformité des essais (exigence QUA-02)", () => {
   it("accepte une mesure dans la fourchette de tolérance", () => {

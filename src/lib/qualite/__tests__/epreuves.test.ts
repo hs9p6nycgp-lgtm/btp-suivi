@@ -6,7 +6,7 @@ import {
   calculerRappelsEpreuves,
   dateControlePrevue,
   epreuvesAEchancier,
-} from "../epreuves";
+} from "../epreuves.ts";
 
 describe("rappels d'eprouvettes beton (QUA-04)", () => {
   describe("date de controle prevue", () => {
