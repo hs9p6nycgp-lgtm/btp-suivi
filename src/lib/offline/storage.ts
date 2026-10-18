@@ -64,18 +64,20 @@ export type QueuedOp = {
   createdAt: number;
 };
 
-export async function queueAdd(op: Omit<QueuedOp, "id" | "createdAt">): Promise<void> {
+// Retourne true si l'opération a bien été mise en file (false si le stockage est indisponible).
+export async function queueAdd(op: Omit<QueuedOp, "id" | "createdAt">): Promise<boolean> {
   try {
     const db = await openDb();
-    await new Promise<void>((resolve) => {
+    return await new Promise<boolean>((resolve) => {
       const tx = db.transaction("queue", "readwrite");
       const store = tx.objectStore("queue");
       store.add({ ...op, createdAt: Date.now() });
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => resolve();
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => resolve(false);
+      tx.onabort = () => resolve(false);
     });
   } catch {
-    // ignore
+    return false;
   }
 }
 

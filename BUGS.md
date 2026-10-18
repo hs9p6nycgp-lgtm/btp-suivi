@@ -21,6 +21,12 @@ listés dans `TODO_LOGIQUE.md`.
 | BUG-007   | logique     | estConforme jamais appelée dans la page qualité          |
 | BUG-008   | logique     | Date de fin prévue du planning copiée de la date de début |
 | BUG-009   | logique     | Isolation multitenant non fonctionnelle                 |
+| BUG-010   | logique+UI  | Journal : observations perdues + « Créer le journal » sans réponse sur réseau faible |
+| BUG-011   | UI          | Photos : galerie du tableau de bord cassée, aucune vignette au journal |
+| BUG-012   | UI          | Titre « Tableau de bord » affiché sur les écrans de chantier |
+| BUG-013   | UI          | Journal : statut « brouillon (draft) » (mélange FR/EN, valeur brute) |
+| BUG-014   | UI          | Accueil : alertes en mots techniques (« quantite », « ouverte ») |
+| BUG-015   | UI          | Création de chantier : 14 champs d'un coup, GPS manuel, aucune correction après création |
 
 ---
 
@@ -270,6 +276,70 @@ listés dans `TODO_LOGIQUE.md`.
   `src/app/chantiers/page.tsx`, `src/app/chantiers/[id]/page.tsx`,
   `src/components/ChantierStatut.tsx` ;
   politiques dans `supabase/migrations/0007_phase3_multitenant_isolation.sql`.
+
+---
+
+## BUG-010 — Journal : « Créer le journal » sans réponse sur réseau faible ; observations perdues
+
+- **Écran** : Journal de chantier (`src/app/chantiers/[id]/journaux/page.tsx`).
+- **Zone** : logique + interface.
+- **Contexte** : test terrain du 18/10/2026 (`RETOURS_UTILISATEUR.md`, §3 — blocage n°1).
+- **Résultat obtenu** : a) les « observations » saisies à la création n'étaient pas insérées (la colonne `journaux.observations` existe depuis `0005_phase2_journal.sql`, mais elle était absente du payload) ; b) sans réseau, l'insertion pouvait ne jamais répondre (aucun délai maximal) : aucun message, aucune mise en file, données perdues en quittant l'écran.
+- **Résultat attendu** : la fiche doit toujours trouver une issue — créée (même après une réponse perdue), mise en file sur l'appareil et synchronisée plus tard, ou refusée avec un message clair — et la météo/observations ne doivent jamais être perdues.
+- **Correctif logique (Session 2, 18/10/2026)** : `creerJournalHorsLigne` (`src/lib/offline/mutations.ts` + `src/lib/journal/creation.ts`, 10 tests) : observations incluses, délai maximal 15 s, vérification de réponse perdue, mise en file IndexedDB rejouée à la reconnexion. Textes prêts dans `src/lib/i18n.ts`.
+- **Reste (Session 1)** : brancher la fonction dans la page — voir TODO-UI-008.
+
+---
+
+## BUG-011 — Photos : galerie du tableau de bord cassée, aucune vignette au journal
+
+- **Écrans** : Accueil (`src/app/page.tsx`), page détail du journal (`src/app/chantiers/[id]/journaux/[journalId]/page.tsx`).
+- **Zone** : UI.
+- **Contexte** : test terrain du 18/10/2026 (§3 et §4).
+- **Résultat obtenu** : la galerie de l'accueil affichait des « carrés cassés » (`<img src={photo.chemin}>` : chemin brut d'un bucket privé, `public = false` dans `0003_phase1_chantiers_details.sql`) ; la page journal n'affichait que le chemin du fichier en petit, jamais l'image.
+- **Résultat attendu** : afficher les photos (URLs signées) — vignettes à l'accueil, vignettes cliquables au journal — et revoir sa photo après l'envoi.
+- **Correctif** : côté logique, outils prêts `urlsSignees` / `urlSignee` (`src/lib/photos/urls.ts`) ; URLs signées, vignettes et aperçu déjà en cours dans la copie de travail de la Session 1 (18/10, non commités) ; reste la compression avant envoi — voir TODO-UI-009.
+
+---
+
+## BUG-012 — Titre « Tableau de bord » affiché sur tous les écrans de chantier
+
+- **Écrans** : barre supérieure de tous les écrans enfant (`src/components/layout/TopBar.tsx`).
+- **Zone** : UI.
+- **Contexte** : test terrain du 18/10/2026 (§3 : « en haut de l'écran, c'est écrit "Tableau de bord" alors que je suis dans le journal »).
+- **Résultat obtenu** : la correspondance chemin → titre ne connaissait que quelques chemins exacts ; toute sous-route retombait sur « Tableau de bord ».
+- **Correctif** : titres par motif de route (du plus précis au plus général) — déjà en cours dans la copie de travail de la Session 1 (18/10, non commité).
+
+---
+
+## BUG-013 — Journal : statut « brouillon (draft) »
+
+- **Écran** : page détail du journal (`src/app/chantiers/[id]/journaux/[journalId]/page.tsx`).
+- **Zone** : UI.
+- **Contexte** : test terrain du 18/10/2026 (§3 : « moitié français, moitié anglais »).
+- **Résultat obtenu** : `Statut : {journal.statut} (draft)` — valeur technique brute + mention anglaise en dur.
+- **Correctif** : affichage « Brouillon / Draft » et « Validé (verrouillé) / Validated (locked) » selon la langue — déjà en cours dans la copie de travail de la Session 1 (18/10, non commité). À noter aussi : bouton « Rouvrir » pour corriger un journal validé (demandé au §3 du rapport), également en cours.
+
+---
+
+## BUG-014 — Accueil : alertes en mots techniques
+
+- **Écran** : Accueil, section « Alertes en cours » (`src/app/page.tsx`).
+- **Zone** : UI.
+- **Contexte** : test terrain du 18/10/2026 (§4 : « quantite — Valeur : 12 / Seuil : 10 », badge « ouverte »).
+- **Résultat obtenu** : type et statut bruts, ligne valeur/seuil sans unité ni signe, alerte non cliquable.
+- **Correctif en cours** : libellés lisibles + alerte cliquable (Session 1, copie de travail du 18/10, non commités). Côté logique : `libelleTypeAlerte`, `libelleStatutAlerte`, `detailAlerte` (`src/lib/alertes.ts`, testés) pour la ligne de détail — voir TODO-UI-011.
+
+---
+
+## BUG-015 — Création de chantier : formulaire long, GPS manuel, rien à corriger après création
+
+- **Écran** : Création de chantier (`src/app/chantiers/nouveau/page.tsx`).
+- **Zone** : UI.
+- **Contexte** : test terrain du 18/10/2026 (§2).
+- **Résultat obtenu** : 14 champs d'un coup ; latitude/longitude à taper à la main ; montant sans séparateurs ; après création, seule la modification du statut existe (pas de bouton « Modifier »).
+- **Résultat attendu** : formulaire en étapes centré sur l'essentiel, bouton « Utiliser ma position », montant lisible, et page « Modifier le chantier » (la base autorise déjà la mise à jour par le propriétaire — politique RLS de `0007_phase3_multitenant_isolation.sql`, aucun changement de base nécessaire).
+- **À faire (Session 1)** : voir TODO-UI-012.
 
 ---
 

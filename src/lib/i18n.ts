@@ -115,6 +115,10 @@ export const DICTIONNAIRE: Record<string, Record<Langue, string>> = {
   "detail.livraisons": { fr: "Livraisons", en: "Deliveries" },
   "detail.modelisation3d": { fr: "Modélisation 3D", en: "3D Modeling" },
 
+  // Journal de chantier — création robuste réseau
+  "journal.enregistre_hors_ligne": { fr: "Pas de réseau : la fiche du jour a été enregistrée sur votre appareil. Elle sera créée automatiquement dès le retour du réseau.", en: "No network: today's log was saved on your device. It will be created automatically once the network is back." },
+  "journal.hors_ligne_impossible": { fr: "Impossible d'enregistrer la fiche sur cet appareil (stockage indisponible). Libérez de l'espace puis réessayez.", en: "Could not save the log on this device (storage unavailable). Free up space and try again." },
+
   // Langue
   "langue.titre": { fr: "Langue", en: "Language" },
   "langue.francais": { fr: "Français", en: "French" },

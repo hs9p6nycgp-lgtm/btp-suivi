@@ -4,6 +4,7 @@
 // Si le navigateur est en ligne, l'insertion/mise a jour/suppression est directe.
 
 import { createClient } from "@/lib/supabase/client";
+import { creerJournal, type EntreeJournal, type ResultatCreationJournal } from "@/lib/journal/creation";
 import { queueAdd } from "./storage";
 
 export async function offlineInsert(table: string, payload: any) {
@@ -31,4 +32,18 @@ export async function offlineDelete(table: string, id: string) {
   }
   const supabase = createClient();
   return await supabase.from(table).delete().eq("id", id);
+}
+
+// Création d'une fiche journal robuste au réseau faible (blocage n°1 du terrain).
+// - En ligne : insertion avec délai maximal, vérification en cas de réponse perdue,
+//   puis mise en file si le réseau ne répond pas.
+// - Hors ligne : mise en file directe (IndexedDB), rejouée à la reconnexion
+//   par NetworkStatus.tsx.
+export async function creerJournalHorsLigne(
+  entree: EntreeJournal,
+): Promise<ResultatCreationJournal> {
+  return creerJournal(entree, {
+    client: createClient(),
+    mettreEnFile: (table, payload) => queueAdd({ table, operation: "insert", payload }),
+  });
 }
