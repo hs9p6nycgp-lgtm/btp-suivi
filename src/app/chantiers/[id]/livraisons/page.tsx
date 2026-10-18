@@ -1,15 +1,17 @@
 "use client";
 
-import { Truck } from "lucide-react";
+import { Truck, AlertTriangle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { offlineInsert, offlineDelete } from "@/lib/offline/mutations";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getLangue, traduireErreur } from "@/lib/i18n";
+import { verifierStockBas, materiauxEnAlerte } from "@/lib/stock/stock";
 
 type Livraison = {
   id: string;
@@ -26,6 +28,27 @@ type Livraison = {
 };
 
 type RecapEntry = { commandee: number; livree: number; miseEnOeuvre: number };
+
+// Seuils de stock (APP-04) : repli sur le navigateur si la table base
+// n'existe pas encore (migration 0016_phase2_seuils_stock.sql non appliquée).
+const cleSeuilsLocaux = (id: string) => `btp.seuilsStock.${id}`;
+
+function lireSeuilsLocaux(chantierId: string): Record<string, number> {
+  try {
+    const brut = window.localStorage.getItem(cleSeuilsLocaux(chantierId));
+    return brut ? (JSON.parse(brut) as Record<string, number>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function ecrireSeuilsLocaux(chantierId: string, seuils: Record<string, number>) {
+  try {
+    window.localStorage.setItem(cleSeuilsLocaux(chantierId), JSON.stringify(seuils));
+  } catch {
+    // Stockage navigateur indisponible : les seuils restent en memoire.
+  }
+}
 
 export default function LivraisonsPage() {
   const params = useParams();
@@ -46,6 +69,8 @@ export default function LivraisonsPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [messageOk, setMessageOk] = useState(false);
+  const [seuils, setSeuils] = useState<Record<string, number>>({});
+  const [seuilsLocaux, setSeuilsLocaux] = useState(false);
 
   useEffect(() => {
     if (chantierId) load();
@@ -57,13 +82,31 @@ export default function LivraisonsPage() {
     if (!user) { router.replace("/login"); return; }
     const { data: chantier } = await supabase.from("chantiers").select("id").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle();
     if (!chantier) { router.replace("/chantiers"); return; }
-    const { data, error } = await supabase
-      .from("livraisons")
-      .select("*")
-      .eq("chantier_id", chantierId)
-      .order("date_livraison", { ascending: false });
-    if (error) return;
-    setItems((data ?? []) as Livraison[]);
+    const [livRes, seuilsRes] = await Promise.all([
+      supabase
+        .from("livraisons")
+        .select("*")
+        .eq("chantier_id", chantierId)
+        .order("date_livraison", { ascending: false }),
+      supabase
+        .from("seuils_stock_chantier")
+        .select("materiau,seuil")
+        .eq("chantier_id", chantierId),
+    ]);
+    if (livRes.error) return;
+    setItems((livRes.data ?? []) as Livraison[]);
+    if (seuilsRes.error) {
+      // Table de seuils pas encore creee en base : repli sur ce navigateur
+      setSeuils(lireSeuilsLocaux(chantierId));
+      setSeuilsLocaux(true);
+    } else {
+      const map: Record<string, number> = {};
+      for (const s of (seuilsRes.data ?? []) as { materiau: string; seuil: number }[]) {
+        map[s.materiau] = Number(s.seuil) || 0;
+      }
+      setSeuils(map);
+      setSeuilsLocaux(false);
+    }
   }
 
   async function handleAdd(e: React.FormEvent) {
@@ -129,6 +172,25 @@ export default function LivraisonsPage() {
     load();
   }
 
+  async function changerSeuil(materiau: string, valeur: string) {
+    const seuil = Math.max(0, Number(valeur) || 0);
+    const nouveaux = { ...seuils, [materiau]: seuil };
+    setSeuils(nouveaux);
+    if (seuilsLocaux) {
+      ecrireSeuilsLocaux(chantierId, nouveaux);
+      return;
+    }
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("seuils_stock_chantier")
+      .upsert({ chantier_id: chantierId, materiau, seuil }, { onConflict: "chantier_id,materiau" });
+    if (error) {
+      // Repli : enregistrer au moins sur cet appareil
+      setSeuilsLocaux(true);
+      ecrireSeuilsLocaux(chantierId, nouveaux);
+    }
+  }
+
   const recap: Record<string, RecapEntry> = {};
   for (const it of items) {
     if (!recap[it.materiau]) recap[it.materiau] = { commandee: 0, livree: 0, miseEnOeuvre: 0 };
@@ -137,6 +199,12 @@ export default function LivraisonsPage() {
     recap[it.materiau].miseEnOeuvre += Number(it.quantite_mise_en_oeuvre) || 0;
   }
 
+  // APP-03 / APP-04 : stock theorique (entrees - sorties) et alertes de stock bas
+  const alertes = Object.entries(recap).map(([mat, q]) =>
+    verifierStockBas(mat, q.livree, q.miseEnOeuvre, seuils[mat] ?? 0),
+  );
+  const enAlerte = materiauxEnAlerte(alertes);
+
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
       <PageHeader
@@ -144,8 +212,8 @@ export default function LivraisonsPage() {
         title={langue === "fr" ? "Approvisionnements et livraisons" : "Supplies and deliveries"}
         description={
           langue === "fr"
-            ? "Saisie des bons de livraison et comparaison commandé / livré / mis en œuvre."
-            : "Delivery note entry and ordered / delivered / installed comparison."
+            ? "Saisie des bons de livraison, comparaison commandé / livré / mis en œuvre et suivi des stocks."
+            : "Delivery note entry, ordered / delivered / installed comparison and stock tracking."
         }
         icon={<Truck className="h-5 w-5" />}
         actions={
@@ -316,7 +384,95 @@ export default function LivraisonsPage() {
         </Card>
       </section>
 
-      <section className="anim-fade-up anim-delay-3">
+      {/* APP-03 / APP-04 : stocks theoriques et alertes */}
+      <section className="anim-fade-up anim-delay-3 mb-6">
+        <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+          <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+          {langue === "fr" ? "Stocks théoriques et alertes" : "Theoretical stock and alerts"}
+        </h2>
+
+        {enAlerte.length > 0 && (
+          <div className="mb-4 flex items-center gap-2 rounded-xl border border-amber-400/40 bg-amber-500/10 p-3 text-sm font-medium text-foreground">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />
+            {langue === "fr"
+              ? `${enAlerte.length} matériau${enAlerte.length > 1 ? "x" : ""} en alerte de stock — vérifiez les approvisionnements.`
+              : `${enAlerte.length} material${enAlerte.length > 1 ? "s" : ""} in stock alert — check supplies.`}
+          </div>
+        )}
+
+        <Card padding="none">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/80 bg-surface-2 text-left">
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Matériau</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">Entrées (livré)</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">Sorties (mis en œuvre)</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">Stock théorique</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Seuil d&apos;alerte</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">État</th>
+                </tr>
+              </thead>
+              <tbody>
+                {alertes.map((a) => {
+                  const surconsommation = a.stockTheorique < 0;
+                  const niveau: "danger" | "warning" | "success" = surconsommation ? "danger" : a.enAlerte ? "warning" : "success";
+                  const libelle = surconsommation
+                    ? (langue === "fr" ? "Surconsommation" : "Overconsumption")
+                    : a.enAlerte
+                      ? (langue === "fr" ? "Stock bas" : "Low stock")
+                      : "OK";
+                  return (
+                    <tr key={a.materiau} className="border-b border-border/60 transition last:border-0 hover:bg-surface-2/70">
+                      <td className="px-4 py-3 font-medium text-foreground">{a.materiau}</td>
+                      <td className="px-4 py-3 text-right tabular-nums text-muted">{recap[a.materiau].livree.toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right tabular-nums text-muted">{recap[a.materiau].miseEnOeuvre.toFixed(2)}</td>
+                      <td className={`px-4 py-3 text-right font-semibold tabular-nums ${a.enAlerte ? "text-danger" : "text-success"}`}>
+                        {a.stockTheorique.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={seuils[a.materiau] ?? 0}
+                          onChange={(e) => changerSeuil(a.materiau, e.target.value)}
+                          className="w-24 rounded-lg border border-border/80 bg-surface px-2 py-1 text-right text-sm tabular-nums text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                          aria-label={`${langue === "fr" ? "Seuil d'alerte" : "Alert threshold"} ${a.materiau}`}
+                        />
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <Badge variant={niveau}>{libelle}</Badge>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {alertes.length === 0 && (
+                  <tr>
+                    <td className="p-6 text-center text-muted" colSpan={6}>
+                      {langue === "fr" ? "Aucune entrée : ajoutez d'abord des livraisons." : "No entries: add deliveries first."}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+        <p className="mt-3 text-xs text-muted">
+          {langue === "fr"
+            ? "Stock théorique = entrées (livré) − sorties (mis en œuvre), 2 décimales. « Surconsommation » = quantité mise en œuvre supérieure au livré. Le seuil d'alerte est paramétrable par chantier et par matériau."
+            : "Theoretical stock = entries (delivered) − exits (installed), 2 decimals. “Overconsumption” = quantity installed greater than delivered. The alert threshold is configurable per site and per material."}
+        </p>
+        {seuilsLocaux && (
+          <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+            {langue === "fr"
+              ? "Les seuils sont enregistrés sur cet appareil uniquement (table base absente : migration 0016 non appliquée)."
+              : "Thresholds are saved on this device only (database table missing: migration 0016 not applied)."}
+          </p>
+        )}
+      </section>
+
+      <section className="anim-fade-up anim-delay-4">
         <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
           <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
           {langue === "fr" ? "Livraisons enregistrées" : "Recorded deliveries"}
