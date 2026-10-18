@@ -79,6 +79,12 @@ export default function QualitePage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
 
+  // QUA-04 : formulaire nouvel éprouvette béton
+  const [nouvelleDateCoulage, setNouvelleDateCoulage] = useState<Date | null>(null);
+  const [nouvelAgeJours, setNouvelAgeJours] = useState<number | null>(null);
+  const [nouvelleResistanceMesuree, setNouvelleResistanceMesuree] = useState<number>(0);
+  const [nouvelleResistanceExigee, setNouvelleResistanceExigee] = useState<number>(0);
+
   // Formulaire nouvel essai
   const [nouvelEssaiType, setNouvelEssaiType] = useState("");
   const [nouvelleValeur, setNouvelleValeur] = useState("");
@@ -167,6 +173,34 @@ export default function QualitePage() {
     const { error } = await supabase.from("non_conformites").update({ statut: "cloturee", date_cloture: new Date().toISOString().slice(0, 10) }).eq("id", id);
     if (error) { setMessage(traduireErreur(error)); return; }
     setMessage(langue === "fr" ? "Non-conformite cloturee." : "Non-conformity closed.");
+    load();
+  }
+
+  // QUA-04 : ajout d'éprouvette béton (7, 14, 28 jours)
+  async function ajouterEpreuve(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setMessage(null);
+    const supabase = createClient();
+    const conform = estConforme(nouvelleResistanceMesuree, nouvelleResistanceExigee, 0, 0);
+    const { data, error } = await supabase.from("epreuves_beton").insert({
+      chantier_id: chantierId,
+      section_id: null,
+      date_coulage: nouvelleDateCoulage?.toISOString().slice(0, 10) || new Date().toISOString().slice(0, 10),
+      age_jours: nouvelAgeJours ?? 0,
+      resistance_mesuree: nouvelleResistanceMesuree,
+      resistance_exigee: nouvelleResistanceExigee,
+      conforme: conform,
+    }).select().single();
+
+    if (error) { setMessage(traduireErreur(error)); setLoading(false); return; }
+    setEpreuves((prev) => [...prev, data as EpreuveBeton]);
+    setNouvelleDateCoulage(null);
+    setNouvelAgeJours(null);
+    setNouvelleResistanceMesuree(0);
+    setNouvelleResistanceExigee(0);
+    setMessage(conform ? (langue === "fr" ? "Éprouvette enregistrée — conforme." : "Sample recorded — compliant.") : (langue === "fr" ? "Éprouvette enregistrée — NON conforme." : "Sample recorded — NON compliant."));
+    setLoading(false);
     load();
   }
 
@@ -393,6 +427,77 @@ export default function QualitePage() {
               </tbody>
             </table>
           </div>
+        </Card>
+      </section>
+
+      {/* QUA-04 : formulaire nouvel éprouvette béton */}
+      <section className="anim-fade-up anim-delay-2 mb-6">
+        <Card padding="lg">
+          <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+            <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+            {langue === "fr" ? "Nouvelle éprouvette béton" : "New concrete sample"}
+          </h2>
+          <form onSubmit={ajouterEpreuve} className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-foreground">Date de coulage *</label>
+              <input
+                type="date"
+                className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                value={nouvelleDateCoulage ? nouvelleDateCoulage.toISOString().slice(0, 10) : ""}
+                onChange={(e) => {
+                  const val = (e.target as HTMLInputElement).value;
+                  setNouvelleDateCoulage(val ? new Date(val) : null);
+                }}
+                required
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-foreground">Âge (jours) *</label>
+              <input
+                type="number"
+                className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                min="7" max="28" step="1"
+                value={nouvelAgeJours != null ? String(nouvelAgeJours) : ""}
+                onChange={(e) => {
+                  const val = Number((e.target as HTMLInputElement).value);
+                  setNouvelAgeJours(val >= 7 && val <= 28 ? val : null);
+                }}
+                required
+              />
+              <span className="text-xs text-muted ml-2">7, 14 ou 28</span>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-foreground">Résistance mesurée (MPa) *</label>
+              <input
+                type="number"
+                className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                step="0.1"
+                value={nouvelleResistanceMesuree}
+                onChange={(e) => {
+                  const val = Number((e.target as HTMLInputElement).value);
+                  setNouvelleResistanceMesuree(isNaN(val) ? 0 : val);
+                }}
+                required
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-foreground">Résistance exigée (MPa) *</label>
+              <input
+                type="number"
+                className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                step="0.1"
+                value={nouvelleResistanceExigee}
+                onChange={(e) => {
+                  const val = Number((e.target as HTMLInputElement).value);
+                  setNouvelleResistanceExigee(isNaN(val) ? 0 : val);
+                }}
+                required
+              />
+            </div>
+            <Button type="submit" disabled={loading} className="md:col-span-4">
+              {loading ? (langue === "fr" ? "Enregistrement..." : "Recording...") : (langue === "fr" ? "Enregistrer" : "Record")}
+            </Button>
+          </form>
         </Card>
       </section>
 
