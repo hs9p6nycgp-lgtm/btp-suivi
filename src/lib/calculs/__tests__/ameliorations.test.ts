@@ -5,6 +5,7 @@ import {
   nombreRotations,
   projectionCoutFinal,
   serieCumulative,
+  partRealisee,
   stockTheorique,
   calculValeurAcquise,
   impactAvenant,
@@ -23,6 +24,18 @@ describe("ameliorations (priorite S)", () => {
     it("calcule la serie cumulative", () => {
       assert.deepStrictEqual(serieCumulative([10, 20, 30]), [10, 30, 60]);
       assert.deepStrictEqual(serieCumulative([]), []);
+    });
+
+    it("calcule la part realisee d'une tache entre debut et fin", () => {
+      assert.strictEqual(partRealisee(0, 10, 0), 0);
+      assert.strictEqual(partRealisee(0, 10, 5), 0.5);
+      assert.strictEqual(partRealisee(0, 10, 10), 1);
+      assert.strictEqual(partRealisee(0, 10, 15), 1);
+    });
+
+    it("gere une tache d'un seul jour et avant son debut", () => {
+      assert.strictEqual(partRealisee(5, 5, 4), 0);
+      assert.strictEqual(partRealisee(5, 5, 5), 1);
     });
   });
 

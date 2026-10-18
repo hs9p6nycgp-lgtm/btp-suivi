@@ -1,6 +1,7 @@
 "use client";
 
 import { CalendarClock, Flag, Route, TimerReset } from "lucide-react";
+import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from "recharts";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -11,7 +12,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getLangue, traduireErreur } from "@/lib/i18n";
-import { joursEcartDelai } from "@/lib/calculs/metre";
+import { joursEcartDelai, serieCumulative, partRealisee } from "@/lib/calculs/metre";
 
 type Tache = {
   id: string;
@@ -226,6 +227,79 @@ export default function PlanningPage() {
         dateFinPrevue,
       )
     : 0;
+
+  // PLA-05 : courbe en S — avancement cumulé prévu (PERT) vs réel (dates réelles)
+  function calculerCourbeS() {
+    if (pert.length === 0) return null;
+
+    const poidsTotal = pert.reduce((s, p) => s + Math.max(p.duree_jours, 0), 0) || pert.length;
+
+    // J0 = première date connue du planning (prévue ou réelle)
+    const datesConnues = [
+      ...taches.map((t) => t.date_prevue_debut),
+      ...taches.map((t) => t.date_reelle_debut),
+    ]
+      .filter((d): d is string => Boolean(d))
+      .map((d) => new Date(d).getTime())
+      .sort((a, b) => a - b);
+    const debutProjetMs = datesConnues.length > 0 ? datesConnues[0] : Date.now();
+    const jourDe = (date: string) => Math.max(0, Math.round((new Date(date).getTime() - debutProjetMs) / 86400000));
+
+    const aujourdHuiJour = Math.max(0, Math.round((Date.now() - debutProjetMs) / 86400000));
+    // Limite de sécurité : 3 ans de courbe maximum
+    const dernierJour = Math.min(Math.max(dureeProjet, aujourdHuiJour), 1095);
+
+    const incPrevu: number[] = [];
+    const incReel: number[] = [];
+    for (let d = 0; d <= dernierJour; d++) {
+      // Prévu : chaque tâche progresse linéairement de ES à EF (en tâche-jours)
+      let prevuJour = 0;
+      let prevuVeille = 0;
+      for (const p of pert) {
+        const poids = Math.max(p.duree_jours, 0);
+        prevuJour += partRealisee(p.es, p.ef, d) * poids;
+        if (d > 0) prevuVeille += partRealisee(p.es, p.ef, d - 1) * poids;
+      }
+      incPrevu.push(prevuJour - prevuVeille);
+
+      // Réel : chaque tâche progresse de sa date réelle de début à sa date réelle de fin (ou aujourd'hui)
+      let reelJour = 0;
+      let reelVeille = 0;
+      for (const t of taches) {
+        const poids = Math.max(t.duree_jours, 0);
+        if (poids === 0 || !t.date_reelle_debut) continue;
+        const debut = jourDe(t.date_reelle_debut);
+        const fin = t.date_reelle_fin ? jourDe(t.date_reelle_fin) : aujourdHuiJour;
+        const part = (t.avancement_pct ?? 0) / 100;
+        reelJour += partRealisee(debut, Math.max(fin, debut), d) * part * poids;
+        if (d > 0) reelVeille += partRealisee(debut, Math.max(fin, debut), d - 1) * part * poids;
+      }
+      incReel.push(Math.max(reelJour - reelVeille, 0));
+    }
+
+    const cumPrevu = serieCumulative(incPrevu);
+    const cumReel = serieCumulative(incReel);
+    const enPourcent = (v: number) => poidsTotal > 0 ? Math.round((v / poidsTotal) * 1000) / 10 : 0;
+
+    const donnees = cumPrevu.map((v, d) => ({
+      jour: `J${d}`,
+      prevu: enPourcent(v),
+      reel: d <= aujourdHuiJour ? enPourcent(cumReel[d]) : null,
+    }));
+
+    const idxAujourdHui = Math.min(aujourdHuiJour, donnees.length - 1);
+    const prevuAujourdHui = donnees[idxAujourdHui]?.prevu ?? 0;
+    const reelAujourdHui = donnees[idxAujourdHui]?.reel ?? 0;
+
+    return {
+      donnees,
+      prevuAujourdHui,
+      reelAujourdHui,
+      ecart: Math.round((reelAujourdHui - prevuAujourdHui) * 10) / 10,
+    };
+  }
+
+  const courbeS = calculerCourbeS();
 
   async function ajouterTache(e: React.FormEvent) {
     e.preventDefault();
@@ -499,6 +573,89 @@ export default function PlanningPage() {
                 : "J0 = project start. The orange bar is a critical task (zero float); the blue bar has float."}
             </p>
           </div>
+        </Card>
+      </section>
+
+      {/* Courbe en S (PLA-05) */}
+      <section className="anim-fade-up anim-delay-5 mb-6">
+        <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+          <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+          {langue === "fr" ? "Courbe en S — prévu / réel" : "S-curve — planned / actual"}
+        </h2>
+        <Card padding="lg">
+          {courbeS ? (
+            <>
+              <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <StatCard
+                  title={langue === "fr" ? "Prévu à ce jour" : "Planned to date"}
+                  value={`${courbeS.prevuAujourdHui.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")} %`}
+                  icon={<CalendarClock className="h-5 w-5" />}
+                  color="blue"
+                />
+                <StatCard
+                  title={langue === "fr" ? "Réalisé à ce jour" : "Actual to date"}
+                  value={`${courbeS.reelAujourdHui.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")} %`}
+                  icon={<Route className="h-5 w-5" />}
+                  color="orange"
+                />
+                <StatCard
+                  title={langue === "fr" ? "Écart d'avancement" : "Progress gap"}
+                  value={`${courbeS.ecart >= 0 ? "+" : ""}${courbeS.ecart.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")} pts`}
+                  icon={<TimerReset className="h-5 w-5" />}
+                  color={courbeS.ecart >= 0 ? "emerald" : "rose"}
+                  trend={{
+                    value: courbeS.ecart >= 0
+                      ? (langue === "fr" ? "En avance" : "Ahead")
+                      : (langue === "fr" ? "En retard" : "Behind"),
+                    label: langue === "fr" ? "sur le planning prévu" : "vs planned schedule",
+                    positive: courbeS.ecart >= 0,
+                  }}
+                />
+              </div>
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={courbeS.donnees} margin={{ top: 10, left: 10, right: 20, bottom: 10 }}>
+                    <XAxis dataKey="jour" tick={{ fontSize: 11 }} stroke="var(--border)" minTickGap={24} />
+                    <YAxis domain={[0, 100]} unit="%" tick={{ fontSize: 11 }} stroke="var(--border)" />
+                    <Tooltip
+                      formatter={(valeur, nom) => [
+                        `${Number(valeur).toLocaleString(langue === "fr" ? "fr-FR" : "en-US")} %`,
+                        String(nom),
+                      ]}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      name={langue === "fr" ? "Prévu" : "Planned"}
+                      dataKey="prevu"
+                      stroke="var(--primary)"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <Line
+                      type="monotone"
+                      name={langue === "fr" ? "Réel" : "Actual"}
+                      dataKey="reel"
+                      stroke="var(--action)"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <p className="mt-3 text-xs text-muted">
+                {langue === "fr"
+                  ? "Avancement cumulé pondéré par la durée des tâches : prévu selon le PERT (ES → EF), réel selon les dates réelles saisies (limité à aujourd'hui)."
+                  : "Cumulative progress weighted by task duration: planned from PERT (ES → EF), actual from entered real dates (up to today)."}
+              </p>
+            </>
+          ) : (
+            <p className="text-sm text-muted">
+              {langue === "fr"
+                ? "Ajoutez des tâches au planning pour afficher la courbe en S."
+                : "Add tasks to the schedule to display the S-curve."}
+            </p>
+          )}
         </Card>
       </section>
     </main>

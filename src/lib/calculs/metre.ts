@@ -212,6 +212,13 @@ export function serieCumulative(valeurs: number[]): number[] {
   return resultat;
 }
 
+/** PLA-05 (S) : part realisee d'une tache (entre 0 et 1) au jour d, progression lineaire de debut a fin. */
+export function partRealisee(debutJour: number, finJour: number, jour: number): number {
+  if (jour < debutJour) return 0;
+  if (jour >= finJour) return 1;
+  return (jour - debutJour) / Math.max(finJour - debutJour, 1);
+}
+
 /** COU-05 (S) : projection du cout final (EAC = AC + (BAC - EV)). */
 export function projectionCoutFinal(budgetTotal: number, valeurAcquise: number, coutActuel: number): number {
   return coutActuel + (budgetTotal - valeurAcquise);
