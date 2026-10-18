@@ -1,9 +1,11 @@
 "use client";
 
+import { PageHeader } from "@/components/ui/PageHeader";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 import { getLangue } from "@/lib/i18n";
+import { Download } from "lucide-react";
 
 export default function ExportPage() {
   const langue = getLangue();
@@ -135,10 +137,12 @@ export default function ExportPage() {
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground md:text-3xl">Export Excel</h1>
-        <p className="text-sm text-muted">Exportez les données d'un chantier vers un fichier Excel (postes DQE, quantités, dépenses, planning, qualité).</p>
-      </div>
+      <PageHeader
+        eyebrow={langue === "fr" ? "Données" : "Data"}
+        title="Export Excel"
+        description="Exportez les données d'un chantier vers un fichier Excel (postes DQE, quantités, dépenses, planning, qualité)."
+        icon={<Download className="h-5 w-5" />}
+      />
 
       {loading && <p className="text-sm text-muted">Chargement...</p>}
 
@@ -148,7 +152,7 @@ export default function ExportPage() {
           <select
             value={selectedChantier}
             onChange={(e) => setSelectedChantier(e.target.value)}
-            className="mb-4 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm"
+            className="mb-4 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
           >
             <option value="">— Sélectionner —</option>
             {chantiers.map((c) => <option key={c.id} value={c.id}>{c.nom}</option>)}

@@ -1,9 +1,11 @@
 "use client";
 
+import { PageHeader } from "@/components/ui/PageHeader";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getLangue } from "@/lib/i18n";
+import { Users } from "lucide-react";
 
 type Fournisseur = {
   id: string;
@@ -145,15 +147,17 @@ export default function FournisseursPage() {
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground md:text-3xl">Fournisseurs</h1>
-          <p className="text-sm text-muted">Gérez vos fournisseurs de matériaux, loueurs d'engins, transporteurs, sous-traitants et laboratoires.</p>
-        </div>
-        <button onClick={() => { resetForm(); setShowForm(true); }} className="btn-primary">
-          Nouveau fournisseur
-        </button>
-      </div>
+      <PageHeader
+        eyebrow={langue === "fr" ? "Réseau" : "Network"}
+        title="Fournisseurs"
+        description="Gérez vos fournisseurs de matériaux, loueurs d'engins, transporteurs, sous-traitants et laboratoires."
+        icon={<Users className="h-5 w-5" />}
+        actions={
+          <button onClick={() => { resetForm(); setShowForm(true); }} className="btn-primary">
+            Nouveau fournisseur
+          </button>
+        }
+      />
 
       {message && <p className="mb-4 text-sm text-muted">{message}</p>}
 
@@ -164,12 +168,12 @@ export default function FournisseursPage() {
           placeholder="Rechercher..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="rounded-xl border border-border bg-surface px-3 py-2 text-sm"
+          className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
         />
         <select
           value={filtreType}
           onChange={(e) => setFiltreType(e.target.value)}
-          className="rounded-xl border border-border bg-surface px-3 py-2 text-sm"
+          className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
         >
           <option value="">Tous les types</option>
           {TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
@@ -181,17 +185,17 @@ export default function FournisseursPage() {
         <div className="mb-6 card p-4">
           <h2 className="mb-3 text-lg font-medium text-primary">{editing ? "Modifier le fournisseur" : "Nouveau fournisseur"}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <input className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" placeholder="Raison sociale *" value={raisonSociale} onChange={(e) => setRaisonSociale(e.target.value)} required />
-            <select className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" value={type} onChange={(e) => setType(e.target.value)}>
+            <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="Raison sociale *" value={raisonSociale} onChange={(e) => setRaisonSociale(e.target.value)} required />
+            <select className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" value={type} onChange={(e) => setType(e.target.value)}>
               {TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
-            <input className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" placeholder="Adresse" value={adresse} onChange={(e) => setAdresse(e.target.value)} />
-            <input className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" placeholder="Ville" value={ville} onChange={(e) => setVille(e.target.value)} />
-            <input className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" placeholder="Contact (nom)" value={contactNom} onChange={(e) => setContactNom(e.target.value)} />
-            <input className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" placeholder="Téléphone" value={contactTel} onChange={(e) => setContactTel(e.target.value)} />
-            <input className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" placeholder="E-mail" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
-            <input className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" placeholder="NIF" value={nif} onChange={(e) => setNif(e.target.value)} />
-            <input className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" placeholder="RCCM" value={rccm} onChange={(e) => setRccm(e.target.value)} />
+            <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="Adresse" value={adresse} onChange={(e) => setAdresse(e.target.value)} />
+            <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="Ville" value={ville} onChange={(e) => setVille(e.target.value)} />
+            <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="Contact (nom)" value={contactNom} onChange={(e) => setContactNom(e.target.value)} />
+            <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="Téléphone" value={contactTel} onChange={(e) => setContactTel(e.target.value)} />
+            <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="E-mail" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
+            <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="NIF" value={nif} onChange={(e) => setNif(e.target.value)} />
+            <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="RCCM" value={rccm} onChange={(e) => setRccm(e.target.value)} />
             <div className="md:col-span-2 flex gap-3">
               <button type="submit" className="btn-primary" disabled={loading}>{loading ? "Enregistrement..." : (editing ? "Mettre à jour" : "Créer")}</button>
               <button type="button" onClick={resetForm} className="btn-secondary">Annuler</button>

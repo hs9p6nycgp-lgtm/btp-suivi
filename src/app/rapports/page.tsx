@@ -1,8 +1,10 @@
 "use client";
 
+import { PageHeader } from "@/components/ui/PageHeader";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { getLangue } from "@/lib/i18n";
+import { Printer } from "lucide-react";
 
 type Periode = "journalier" | "hebdomadaire" | "mensuel";
 
@@ -89,30 +91,32 @@ export default function RapportsPage() {
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground md:text-3xl">Rapports</h1>
-          <p className="text-sm text-muted">Générez un rapport de synthèse par chantier et période, imprimable en PDF.</p>
-        </div>
-        {reportData && (
-          <button onClick={imprimer} className="btn-primary">
-            Imprimer / PDF
-          </button>
-        )}
-      </div>
+      <PageHeader
+        eyebrow={langue === "fr" ? "Synthèse" : "Summary"}
+        title="Rapports"
+        description="Générez un rapport de synthèse par chantier et période, imprimable en PDF."
+        icon={<Printer className="h-5 w-5" />}
+        actions={
+          reportData ? (
+            <button onClick={imprimer} className="btn-primary">
+              Imprimer / PDF
+            </button>
+          ) : undefined
+        }
+      />
 
       <div className="mb-6 card p-4 max-w-2xl">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div>
             <label className="mb-1 block text-sm font-medium">Chantier</label>
-            <select value={selectedChantier} onChange={(e) => setSelectedChantier(e.target.value)} className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm">
+            <select value={selectedChantier} onChange={(e) => setSelectedChantier(e.target.value)} className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10">
               <option value="">— Sélectionner —</option>
               {chantiers.map((c) => <option key={c.id} value={c.id}>{c.nom}</option>)}
             </select>
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">Période</label>
-            <select value={periode} onChange={(e) => setPeriode(e.target.value as Periode)} className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm">
+            <select value={periode} onChange={(e) => setPeriode(e.target.value as Periode)} className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10">
               <option value="journalier">Journalier</option>
               <option value="hebdomadaire">Hebdomadaire</option>
               <option value="mensuel">Mensuel</option>
@@ -120,11 +124,11 @@ export default function RapportsPage() {
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">Date début</label>
-            <input type="date" value={dateDebut} onChange={(e) => setDateDebut(e.target.value)} className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm" />
+            <input type="date" value={dateDebut} onChange={(e) => setDateDebut(e.target.value)} className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">Date fin</label>
-            <input type="date" value={dateFin} onChange={(e) => setDateFin(e.target.value)} className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm" />
+            <input type="date" value={dateFin} onChange={(e) => setDateFin(e.target.value)} className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" />
           </div>
         </div>
         <button onClick={genererRapport} disabled={generating || !selectedChantier} className="btn-primary mt-4 disabled:opacity-50">

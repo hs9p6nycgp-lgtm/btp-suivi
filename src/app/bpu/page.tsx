@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { getLangue } from "@/lib/i18n";
 
@@ -104,21 +105,21 @@ export default function BpuPage() {
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground md:text-3xl">Bibliothèque de prix (BPU)</h1>
-          <p className="text-sm text-muted">
-            Gérez vos prix unitaires, matériaux et catégories de référence.
-          </p>
-        </div>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-        >
-          <BookOpen className="h-4 w-4" />
-          Retour
-        </Link>
-      </div>
+      <PageHeader
+        eyebrow={langue === "fr" ? "Bibliothèque" : "Library"}
+        title="Bibliothèque de prix (BPU)"
+        description="Gérez vos prix unitaires, matériaux et catégories de référence."
+        icon={<BookOpen className="h-5 w-5" />}
+        actions={
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 rounded-xl border border-border/80 bg-surface px-3.5 py-2 text-sm font-semibold text-muted shadow-sm transition hover:border-primary-light/50 hover:text-foreground"
+          >
+            <BookOpen className="h-4 w-4" />
+            Retour
+          </Link>
+        }
+      />
 
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
         <StatCard

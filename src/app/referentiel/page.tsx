@@ -1,9 +1,11 @@
 "use client";
 
+import { PageHeader } from "@/components/ui/PageHeader";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { getLangue } from "@/lib/i18n";
 import { lignesAffecteesParMiseAJour } from "@/lib/referentiel/prix";
+import { BookOpen } from "lucide-react";
 
 type Prix = {
   id: string;
@@ -195,19 +197,21 @@ export default function ReferentielPage() {
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground md:text-3xl">Référentiel de prix</h1>
-          <p className="text-sm text-muted">Base centralisée des matériaux et matériels (REF-01 à REF-04). Chaque prix porte une source et une date.</p>
-        </div>
-        <button onClick={() => { resetForm(); setShowForm(true); }} className="btn-primary">Nouveau prix</button>
-      </div>
+      <PageHeader
+        eyebrow={langue === "fr" ? "Base de prix" : "Price base"}
+        title="Référentiel de prix"
+        description="Base centralisée des matériaux et matériels (REF-01 à REF-04). Chaque prix porte une source et une date."
+        icon={<BookOpen className="h-5 w-5" />}
+        actions={
+          <button onClick={() => { resetForm(); setShowForm(true); }} className="btn-primary">Nouveau prix</button>
+        }
+      />
 
       {message && <p className="mb-4 text-sm text-muted">{message}</p>}
 
       <div className="mb-4 flex flex-wrap gap-3">
-        <input type="text" placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" />
-        <select value={filtreCategorie} onChange={(e) => setFiltreCategorie(e.target.value)} className="rounded-xl border border-border bg-surface px-3 py-2 text-sm">
+        <input type="text" placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" />
+        <select value={filtreCategorie} onChange={(e) => setFiltreCategorie(e.target.value)} className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10">
           <option value="">Toutes catégories</option>
           {categories.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
@@ -217,20 +221,20 @@ export default function ReferentielPage() {
         <div className="mb-6 card p-4">
           <h2 className="mb-3 text-lg font-medium text-primary">{editing ? "Modifier le prix" : "Nouveau prix"}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            <input className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" placeholder="Code" value={code} onChange={(e) => setCode(e.target.value)} />
-            <input className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" placeholder="Désignation *" value={designation} onChange={(e) => setDesignation(e.target.value)} required />
-            <input className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" placeholder="Catégorie" value={categorie} onChange={(e) => setCategorie(e.target.value)} />
-            <input className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" placeholder="Unité *" value={unite} onChange={(e) => setUnite(e.target.value)} required />
-            <input className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" type="number" placeholder="Prix unitaire (FCFA)" value={prix} onChange={(e) => setPrix(e.target.value)} />
-            <input className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" placeholder="Source (ex: devis fournisseur)" value={source} onChange={(e) => setSource(e.target.value)} />
-            <input className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" type="date" placeholder="Date source" value={dateSource} onChange={(e) => setDateSource(e.target.value)} />
-            <input className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" type="date" placeholder="Date validité" value={dateValidite} onChange={(e) => setDateValidite(e.target.value)} />
-            <select className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" value={statut} onChange={(e) => setStatut(e.target.value)}>
+            <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="Code" value={code} onChange={(e) => setCode(e.target.value)} />
+            <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="Désignation *" value={designation} onChange={(e) => setDesignation(e.target.value)} required />
+            <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="Catégorie" value={categorie} onChange={(e) => setCategorie(e.target.value)} />
+            <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="Unité *" value={unite} onChange={(e) => setUnite(e.target.value)} required />
+            <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" type="number" placeholder="Prix unitaire (FCFA)" value={prix} onChange={(e) => setPrix(e.target.value)} />
+            <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="Source (ex: devis fournisseur)" value={source} onChange={(e) => setSource(e.target.value)} />
+            <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" type="date" placeholder="Date source" value={dateSource} onChange={(e) => setDateSource(e.target.value)} />
+            <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" type="date" placeholder="Date validité" value={dateValidite} onChange={(e) => setDateValidite(e.target.value)} />
+            <select className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" value={statut} onChange={(e) => setStatut(e.target.value)}>
               <option value="valide">Valide</option>
               <option value="a_verifier">À vérifier</option>
             </select>
-            <input className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" placeholder="Zone (ville)" value={zone} onChange={(e) => setZone(e.target.value)} />
-            {editing && <input className="rounded-xl border border-border bg-surface px-3 py-2 text-sm" placeholder="Motif du changement de prix" value={motif} onChange={(e) => setMotif(e.target.value)} />}
+            <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="Zone (ville)" value={zone} onChange={(e) => setZone(e.target.value)} />
+            {editing && <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="Motif du changement de prix" value={motif} onChange={(e) => setMotif(e.target.value)} />}
             <div className="md:col-span-3 flex gap-3">
               <button type="submit" className="btn-primary" disabled={loading}>{loading ? "Enregistrement..." : (editing ? "Mettre à jour" : "Créer")}</button>
               <button type="button" onClick={resetForm} className="btn-secondary">Annuler</button>
