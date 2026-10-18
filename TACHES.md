@@ -18,8 +18,8 @@
 
 | Réf | Tâche | Propriétaire | Fichiers concernés | Code exigence | Priorité |
 |-----|-------|--------------|--------------------|---------------|----------|
-| T-MIG-02 | **BLOQUANT** — Appliquer la migration `0015_reparation_colonnes_chantiers.sql` dans le SQL Editor de Supabase (sans quoi la création de chantier échoue toujours) | Utilisateur (ou Session 3) | `supabase/migrations/0015_reparation_colonnes_chantiers.sql` | CHA-01 | Haute |
-| T-DATA-01 | Doublons dans `bpu_postes` (443 lignes pour 289 postes uniques) : script de nettoyage à préparer, **exécution après accord de l'utilisateur** (suppression de données) | 2 (sur accord) | `supabase/seed/`, migration de nettoyage | REF-05 | Moyenne |
+| T-MIG-02 | **BLOQUANT** — Appliquer la migration `0015_reparation_colonnes_chantiers.sql` dans le SQL Editor de Supabase (sans quoi la création de chantier échoue toujours). L'utilisateur a choisi de l'appliquer lui-même. Vérification possible avec `node scripts/audit-base.mjs`. | Utilisateur | `supabase/migrations/0015_reparation_colonnes_chantiers.sql` | CHA-01 | Haute |
+| T-DATA-01 | Doublons dans `bpu_postes` (154 doublons exacts) : **script prêt** (`supabase/seed/nettoyer_doublons_bpu.sql`) ; **exécution à confirmer** par l'utilisateur (suppression de données) | 2 | `supabase/seed/nettoyer_doublons_bpu.sql` | REF-05 | Moyenne |
 
 ---
 
@@ -56,6 +56,7 @@
 | T-LOG-15 | Liste officielle des types détaillés + messages d'erreur base de données explicites | 2 | `src/lib/chantiers/types.ts`, `src/lib/i18n.ts` | 18/10/2026 |
 | T-LOG-16 | Devis détaillés : 15 modèles enrichis (matériaux, main d'œuvre, engins), 10 existants détaillés + 5 nouveaux, quantités alignées sur les unités du BPU, validation de couverture BPU | 2 | `src/lib/devis/templates.ts` | 18/10/2026 |
 | T-LOG-17 | Tests exécutables : `npm test` opérationnel (imports `.ts` + `tsconfig`), 123 tests verts | 2 | `package.json`, `tsconfig.json`, `src/lib/**/__tests__/` | 18/10/2026 |
+| T-LOG-18 | Outils de contrôle : audit de la base distante (colonnes/tables manquantes) + vérification que chaque ligne de devis trouve un poste du BPU (132 lignes vérifiées) | 2 | `scripts/audit-base.mjs`, `scripts/verifier-devis-bpu.mjs` | 18/10/2026 |
 | T-SEED | Données de départ prix (seed CSV + script idempotent) | 2 | `supabase/seed/prix_ci.csv`, `supabase/seed/load_prix_ci.mjs` | 16/10/2026 |
 | T-MIG-01 | Vérifier et activer les politiques RLS d'isolation multitenant côté base | 3 | `supabase/migrations/0007_phase3_multitenant_isolation.sql`, `supabase/RLS_MANUAL_CHECK.md` | 16/10/2026 |
 | T-TEST-01 | Maintenir `BUGS.md` à jour (ajouter les nouveaux bugs, fermer les corrigés) | 4 | `BUGS.md` | 16/10/2026 |
@@ -87,9 +88,10 @@
 
 ## Prochaine tâche à assigner
 
-- **Session 1 (apparence)** : T-UI-06 (types détaillés dans le formulaire de création) puis T-UI-07 (raccourci devis sur l'accueil). Détails dans `TODO_UI.md` (TODO-UI-005 et TODO-UI-006).
-- **Session 2 (logique)** : T-DATA-01 en préparation (doublons BPU), à exécuter seulement avec l'accord de l'utilisateur.
-- **Session 3 (migrations/déploiement)** : T-MIG-02 — appliquer la migration `0015` dans Supabase (ou guider l'utilisateur). **Bloquant création de chantier.**
+- **Utilisateur (bloquant)** : T-MIG-02 — appliquer la migration `0015` dans le SQL Editor de Supabase (l'utilisateur s'en charge lui-même). Vérification : `node scripts/audit-base.mjs`.
+- **Session 1 (apparence)** : ✅ T-UI-06 et T-UI-07 terminées (sous-type de chantier + outils rapides sur l'accueil). Rien en attente.
+- **Session 2 (logique)** : T-DATA-01 — script de nettoyage des doublons BPU **prêt** (`supabase/seed/nettoyer_doublons_bpu.sql`), à exécuter après confirmation de l'utilisateur.
+- **Session 3 (migrations/déploiement)** : rien à faire pour l'instant (migration `0015` prise en charge par l'utilisateur).
 - **Session 4 (tests)** : aucun test rouge ; suite `npm test` = 123 tests verts.
 
-> Mise à jour du 18/10/2026 (Session 2) : la cause de « je n'arrive pas à créer un chantier » est identifiée et réparée côté code (migration `0015`). **Il reste à appliquer cette migration dans Supabase** pour débloquer l'utilisateur.
+> Mise à jour du 18/10/2026 (Session 2) : la cause de « je n'arrive pas à créer un chantier » est identifiée et réparée côté code (migration `0015`). **Il reste à appliquer cette migration dans Supabase** pour débloquer l'utilisateur. Le compte de test utilisé pour le diagnostic a été supprimé.
