@@ -1,6 +1,6 @@
 "use client";
 
-import { Banknote, Coins, Receipt, Scale } from "lucide-react";
+import { Banknote, Coins, Receipt, Scale, TimerReset } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { offlineInsert, offlineDelete } from "@/lib/offline/mutations";
 import Link from "next/link";
@@ -12,7 +12,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatCard } from "@/components/ui/StatCard";
 import { getLangue, traduireErreur } from "@/lib/i18n";
-import { ecartBudgetaire } from "@/lib/calculs/metre";
+import { ecartBudgetaire, calculValeurAcquise } from "@/lib/calculs/metre";
 
 type PosteDQE = {
   id: string;
@@ -73,6 +73,7 @@ export default function CoutsPage() {
   const [depenses, setDepenses] = useState<DepenseReelle[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
+  const [chantierData, setChantierData] = useState<{ montant_marche: number } | null>(null);
 
   const [categorie, setCategorie] = useState<"materiaux" | "main_doeuvre" | "engins" | "sous_traitance" | "carburant" | "autre">("materiaux");
   const [designation, setDesignation] = useState("");
@@ -90,8 +91,9 @@ export default function CoutsPage() {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.replace("/login"); return; }
-    const { data: chantier } = await supabase.from("chantiers").select("id").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle();
-    if (!chantier) { router.replace("/chantiers"); return; }
+    const { data: cData } = await supabase.from("chantiers").select("id,montant_marche").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle();
+    setChantierData(cData ?? null);
+    if (!cData) { router.replace("/chantiers"); return; }
     const [pRes, qRes, bRes, dRes] = await Promise.all([
       supabase.from("postes_dqe").select("*").eq("chantier_id", chantierId).order("created_at", { ascending: true }),
       supabase.from("quantites_realisees").select("*").eq("chantier_id", chantierId).order("date_saisie", { ascending: true }),
@@ -153,6 +155,13 @@ export default function CoutsPage() {
   const totalCoutReel = coutsParPoste.reduce((s, c) => s + c.cout_reel, 0);
   const totalEcart = totalCoutReel - totalCoutPrevu;
   const totalDepenses = depenses.reduce((s, d) => s + d.montant_total, 0);
+
+  // COU-04 : Méthode de la valeur acquise (EV / AC / PV / CPI / SPI)
+  const bac = Number(chantierData?.montant_marche) || totalCoutPrevu || 0;        // Budget à l'achèvement
+  const pv = bac;                                                                 // Valeur planifiée (approximation sans échéancier temporel)
+  const ev = totalCoutReel;                                                       // Valeur acquise (travail réalisé aux prix de référence)
+  const ac = totalCoutReel + totalDepenses;                                       // Coût réel engagé (quantités réalisées + dépenses)
+  const va = calculValeurAcquise(bac, pv, ev, ac);
 
   async function ajouterDepense(e: React.FormEvent) {
     e.preventDefault();
@@ -261,6 +270,93 @@ export default function CoutsPage() {
           color="amber"
         />
       </div>
+
+      {/* Valeur acquise (COU-04) */}
+      <section className="anim-fade-up anim-delay-1 mb-6">
+        <Card padding="lg">
+          <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+            <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+            {langue === "fr" ? "Valeur acquise (EV / AC / PV)" : "Earned Value (EV / AC / PV)"}
+          </h2>
+          <p className="mb-4 text-sm text-muted">
+            {langue === "fr"
+              ? "Méthode de la valeur acquise : compare le travail planifié, le travail réalisé et le coût réel engagé."
+              : "Earned Value method: compares planned work, completed work and actual cost incurred."}
+          </p>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
+            <StatCard
+              title={langue === "fr" ? "BAC — Budget achèvement" : "BAC — Budget at completion"}
+              value={bac.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
+              subtitle="FCFA"
+              icon={<Coins className="h-5 w-5" />}
+              color="blue"
+            />
+            <StatCard
+              title={langue === "fr" ? "PV — Valeur planifiée" : "PV — Planned value"}
+              value={pv.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
+              subtitle="FCFA"
+              icon={<Scale className="h-5 w-5" />}
+              color="slate"
+            />
+            <StatCard
+              title={langue === "fr" ? "EV — Valeur acquise" : "EV — Earned value"}
+              value={ev.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
+              subtitle="FCFA"
+              icon={<Banknote className="h-5 w-5" />}
+              color="emerald"
+            />
+            <StatCard
+              title={langue === "fr" ? "AC — Coût réel" : "AC — Actual cost"}
+              value={ac.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}
+              subtitle="FCFA"
+              icon={<Receipt className="h-5 w-5" />}
+              color="amber"
+            />
+            <StatCard
+              title={langue === "fr" ? "CPI — Indice coût" : "CPI — Cost index"}
+              value={va.indicePerformanceCout.toFixed(2)}
+              subtitle={langue === "fr" ? ">1 = sous budget" : ">1 = under budget"}
+              icon={<Scale className="h-5 w-5" />}
+              color={va.indicePerformanceCout >= 1 ? "emerald" : "rose"}
+            />
+            <StatCard
+              title={langue === "fr" ? "SPI — Indice délai" : "SPI — Schedule index"}
+              value={va.indicePerformanceDelai.toFixed(2)}
+              subtitle={langue === "fr" ? ">1 = en avance" : ">1 = ahead of schedule"}
+              icon={<TimerReset className="h-5 w-5" />}
+              color={va.indicePerformanceDelai >= 1 ? "emerald" : "rose"}
+            />
+          </div>
+
+          <div className="mt-4 rounded-xl border border-border bg-surface p-3">
+            <div className="flex items-center gap-2 mb-1">
+              <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${va.ecartCout >= 0 ? "bg-emerald/10 text-emerald" : "bg-rose/10 text-rose"}`}>
+                CV = {va.ecartCout >= 0 ? "+" : ""}{va.ecartCout.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")} FCFA
+              </span>
+              <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${va.ecartDelai >= 0 ? "bg-emerald/10 text-emerald" : "bg-rose/10 text-rose"}`}>
+                SV = {va.ecartDelai >= 0 ? "+" : ""}{va.ecartDelai.toLocaleString(langue === "fr" ? "fr-FR" : "en-US")} FCFA
+              </span>
+            </div>
+            <p className="text-sm text-muted">
+              {langue === "fr"
+                ? va.indicePerformanceCout >= 1 && va.indicePerformanceDelai >= 1
+                  ? "✅ Projet sous budget et en avance."
+                  : va.indicePerformanceCout < 1 && va.indicePerformanceDelai < 1
+                    ? "⚠️ Projet au-delà du budget et en retard."
+                    : va.indicePerformanceCout < 1
+                      ? "⚠️ Projet au-delà du budget."
+                      : "⚠️ Projet en retard."
+                : va.indicePerformanceCout >= 1 && va.indicePerformanceDelai >= 1
+                  ? "✅ Project under budget and ahead of schedule."
+                  : va.indicePerformanceCout < 1 && va.indicePerformanceDelai < 1
+                    ? "⚠️ Project over budget and behind schedule."
+                    : va.indicePerformanceCout < 1
+                      ? "⚠️ Project over budget."
+                      : "⚠️ Project behind schedule."}
+            </p>
+          </div>
+        </Card>
+      </section>
 
       {message && (
         <div className="anim-fade-up mb-4 rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
