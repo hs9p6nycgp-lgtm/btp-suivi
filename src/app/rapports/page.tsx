@@ -145,35 +145,35 @@ export default function RapportsPage() {
           <p className="mb-4 text-xs text-muted">Généré le {reportData.dateGeneration}</p>
 
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div className="rounded-xl bg-slate-50 p-3 text-center">
+            <div className="rounded-xl border border-border/70 bg-surface-2 p-3 text-center">
               <p className="text-xs text-muted">Postes DQE</p>
               <p className="text-lg font-bold">{reportData.postes}</p>
             </div>
-            <div className="rounded-xl bg-slate-50 p-3 text-center">
+            <div className="rounded-xl border border-border/70 bg-surface-2 p-3 text-center">
               <p className="text-xs text-muted">Avancement</p>
               <p className="text-lg font-bold">{reportData.avancement} %</p>
             </div>
-            <div className="rounded-xl bg-slate-50 p-3 text-center">
+            <div className="rounded-xl border border-border/70 bg-surface-2 p-3 text-center">
               <p className="text-xs text-muted">Coût prévu</p>
               <p className="text-lg font-bold">{reportData.totalCoutPrevu.toLocaleString("fr-FR")} FCFA</p>
             </div>
-            <div className="rounded-xl bg-slate-50 p-3 text-center">
+            <div className="rounded-xl border border-border/70 bg-surface-2 p-3 text-center">
               <p className="text-xs text-muted">Coût réalisé</p>
               <p className="text-lg font-bold">{reportData.totalCoutReel.toLocaleString("fr-FR")} FCFA</p>
             </div>
-            <div className="rounded-xl bg-slate-50 p-3 text-center">
+            <div className="rounded-xl border border-border/70 bg-surface-2 p-3 text-center">
               <p className="text-xs text-muted">Dépenses</p>
               <p className="text-lg font-bold">{reportData.totalDepenses.toLocaleString("fr-FR")} FCFA</p>
             </div>
-            <div className="rounded-xl bg-slate-50 p-3 text-center">
+            <div className="rounded-xl border border-border/70 bg-surface-2 p-3 text-center">
               <p className="text-xs text-muted">Journaux</p>
               <p className="text-lg font-bold">{reportData.nbJournaux}</p>
             </div>
-            <div className="rounded-xl bg-slate-50 p-3 text-center">
+            <div className="rounded-xl border border-border/70 bg-surface-2 p-3 text-center">
               <p className="text-xs text-muted">Essais qualité</p>
               <p className="text-lg font-bold">{reportData.nbEssais}</p>
             </div>
-            <div className="rounded-xl bg-slate-50 p-3 text-center">
+            <div className="rounded-xl border border-border/70 bg-surface-2 p-3 text-center">
               <p className="text-xs text-muted">Conformité</p>
               <p className="text-lg font-bold">{reportData.tauxConformite} %</p>
             </div>

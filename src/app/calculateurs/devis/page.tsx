@@ -95,7 +95,7 @@ export default function DevisAssistantPage() {
         <Card padding="lg">
           <h2 className="mb-4 text-lg font-bold text-foreground">Type de projet</h2>
           <select
-            className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+            className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
             value={templateId}
             onChange={(e) => setTemplateId(e.target.value)}
           >
@@ -117,7 +117,7 @@ export default function DevisAssistantPage() {
                 {inp.label}
                 {inp.type === "select" ? (
                   <select
-                    className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                    className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                     value={inputs[inp.id] ?? inp.default}
                     onChange={(e) => setInputs((prev) => ({ ...prev, [inp.id]: e.target.value }))}
                   >
@@ -129,7 +129,7 @@ export default function DevisAssistantPage() {
                   </select>
                 ) : (
                   <input
-                    className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                    className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                     type="number"
                     step="0.01"
                     value={inputs[inp.id] ?? ""}
@@ -167,7 +167,7 @@ export default function DevisAssistantPage() {
                   </div>
                   {line.keywords.length > 0 ? (
                     <select
-                      className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                      className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                       value={selections[line.code] ?? ""}
                       onChange={(e) => setSelections((prev) => ({ ...prev, [line.code]: e.target.value }))}
                     >

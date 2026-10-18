@@ -317,7 +317,7 @@ export default function CoutsPage() {
                 )}
               </tbody>
               <tfoot>
-                <tr className="border-t border-border font-bold bg-slate-50 dark:bg-slate-800/40">
+                <tr className="border-t border-border bg-surface-2 font-bold">
                   <td className="p-3">TOTAL</td>
                   <td className="p-3 text-center"></td>
                   <td className="p-3 text-center"></td>

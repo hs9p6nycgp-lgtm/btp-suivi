@@ -68,7 +68,7 @@ export default function CommandPalette({
             value={requete}
             onChange={(e) => setRequete(e.target.value)}
             placeholder={t("topbar.rechercher")}
-            className="w-full rounded-xl border border-border bg-slate-50 px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+            className="w-full rounded-xl border border-border/80 bg-surface-2 px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
           />
           <button
             type="button"

@@ -144,7 +144,7 @@ export default function ChantierEquipe({
         <button
           type="submit"
           disabled={loading}
-          className="rounded bg-orange-600 px-4 py-2 text-white disabled:opacity-50"
+          className="btn-primary disabled:opacity-50"
         >
           {loading ? "Ajout..." : "Ajouter"}
         </button>

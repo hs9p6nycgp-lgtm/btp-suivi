@@ -93,7 +93,7 @@ export default function ChantierDocuments({
           </select>
           <input type="file" className="rounded border p-2" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
         </div>
-        <button type="submit" disabled={loading} className="rounded bg-orange-600 px-4 py-2 text-white disabled:opacity-50">
+        <button type="submit" disabled={loading} className="btn-primary disabled:opacity-50">
           {loading ? "Televersement..." : "Televerser"}
         </button>
       </form>

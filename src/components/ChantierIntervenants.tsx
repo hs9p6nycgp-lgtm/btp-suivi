@@ -71,7 +71,7 @@ export default function ChantierIntervenants({
         <input className="rounded border p-2" placeholder="Fonction" value={fonction} onChange={(e) => setFonction(e.target.value)} />
         <input className="rounded border p-2" placeholder="Telephone" value={telephone} onChange={(e) => setTelephone(e.target.value)} />
         <input className="rounded border p-2" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <button type="submit" disabled={loading} className="rounded bg-orange-600 px-4 py-2 text-white disabled:opacity-50">
+        <button type="submit" disabled={loading} className="btn-primary disabled:opacity-50">
           {loading ? "Ajout..." : "Ajouter"}
         </button>
       </form>

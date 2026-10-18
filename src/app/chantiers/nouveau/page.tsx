@@ -4,9 +4,10 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Building2 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { getLangue, traduireErreur } from "@/lib/i18n";
 
 type TypeChantier = "route" | "batiment";
@@ -75,37 +76,35 @@ export default function NouveauChantierPage() {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-6">
-      <div className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">{langue === "fr" ? "Nouveau chantier" : "New Site"}</h1>
-          <p className="text-sm text-slate-500">
-            {langue === "fr" ? "Créez un nouveau chantier et configurez ses paramètres initiaux." : "Create a new site and configure its initial settings."}
-          </p>
-        </div>
-        <LinkBack />
-      </div>
+    <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
+      <PageHeader
+        eyebrow={langue === "fr" ? "Création" : "Creation"}
+        title={langue === "fr" ? "Nouveau chantier" : "New Site"}
+        description={langue === "fr" ? "Créez un nouveau chantier et configurez ses paramètres initiaux." : "Create a new site and configure its initial settings."}
+        icon={<Building2 className="h-5 w-5" />}
+        actions={<LinkBack />}
+      />
 
       <Card variant="elevated" padding="lg">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1">
                 {langue === "fr" ? "Nom du chantier *" : "Site name *"}
               </label>
               <input
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 value={nom}
                 onChange={(e) => setNom(e.target.value)}
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1">
                 {langue === "fr" ? "Type *" : "Type *"}
               </label>
               <select
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 value={type}
                 onChange={(e) => setType(e.target.value as TypeChantier)}
               >
@@ -116,22 +115,22 @@ export default function NouveauChantierPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               {langue === "fr" ? "Maître d'ouvrage" : "Project Owner"}
             </label>
             <input
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+              className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               value={maitreOuvrage}
               onChange={(e) => setMaitreOuvrage(e.target.value)}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               {langue === "fr" ? "Montant du marché (FCFA)" : "Contract Amount (FCFA)"}
             </label>
             <input
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+              className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               type="number"
               value={montant}
               onChange={(e) => setMontant(e.target.value)}
@@ -140,22 +139,22 @@ export default function NouveauChantierPage() {
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1">
                 {langue === "fr" ? "Date de début" : "Start Date"}
               </label>
               <input
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 type="date"
                 value={dateDebut}
                 onChange={(e) => setDateDebut(e.target.value)}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1">
                 {langue === "fr" ? "Date de fin prévue" : "Planned End Date"}
               </label>
               <input
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 type="date"
                 value={dateFin}
                 onChange={(e) => setDateFin(e.target.value)}
@@ -165,11 +164,11 @@ export default function NouveauChantierPage() {
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1">
                 {langue === "fr" ? "Latitude (optionnel)" : "Latitude (optional)"}
               </label>
               <input
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 type="number"
                 step="0.000001"
                 value={latitude}
@@ -177,11 +176,11 @@ export default function NouveauChantierPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1">
                 {langue === "fr" ? "Longitude (optionnel)" : "Longitude (optional)"}
               </label>
               <input
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 type="number"
                 step="0.000001"
                 value={longitude}
@@ -192,11 +191,11 @@ export default function NouveauChantierPage() {
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1">
                 {langue === "fr" ? "Longueur (m)" : "Length (m)"}
               </label>
               <input
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 type="number"
                 step="0.01"
                 value={longueur}
@@ -204,11 +203,11 @@ export default function NouveauChantierPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1">
                 {langue === "fr" ? "Largeur (m)" : "Width (m)"}
               </label>
               <input
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 type="number"
                 step="0.01"
                 value={largeur}
@@ -216,11 +215,11 @@ export default function NouveauChantierPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1">
                 {langue === "fr" ? "Hauteur (m)" : "Height (m)"}
               </label>
               <input
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 type="number"
                 step="0.01"
                 value={hauteur}
@@ -230,11 +229,11 @@ export default function NouveauChantierPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               {langue === "fr" ? "Seuil d'alerte écart de quantité (%)" : "Quantity variance alert threshold (%)"}
             </label>
             <input
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+              className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               type="number"
               value={seuil}
               onChange={(e) => setSeuil(e.target.value)}
@@ -242,18 +241,14 @@ export default function NouveauChantierPage() {
           </div>
 
           {message && (
-            <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-sm text-rose-700">
+            <div className="rounded-xl border border-rose-600/20 bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
               {message}
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-xl bg-orange-600 px-4 py-3 text-white font-semibold hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
-          >
+          <Button type="submit" size="lg" isLoading={loading} className="w-full">
             {loading ? (langue === "fr" ? "Création..." : "Creating...") : (langue === "fr" ? "Créer le chantier" : "Create Site")}
-          </button>
+          </Button>
         </form>
       </Card>
     </main>
@@ -265,7 +260,7 @@ function LinkBack() {
   return (
     <Link
       href="/chantiers"
-      className="inline-flex items-center gap-2 text-sm text-orange-600 font-semibold hover:underline transition-colors"
+      className="inline-flex items-center gap-2 rounded-xl border border-border/80 bg-surface px-3.5 py-2 text-sm font-semibold text-muted shadow-sm transition hover:border-primary-light/50 hover:text-foreground"
     >
       <span>←</span>
       {langue === "fr" ? "Retour aux chantiers" : "Back to sites"}

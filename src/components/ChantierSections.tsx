@@ -87,7 +87,7 @@ export default function ChantierSections({
         <input className="rounded border p-2" placeholder="Niveau" value={niveau} onChange={(e) => setNiveau(e.target.value)} />
         <input className="rounded border p-2" placeholder="Lot" value={lot} onChange={(e) => setLot(e.target.value)} />
         <input className="rounded border p-2" placeholder="Type d'ouvrage" value={typeOuvrage} onChange={(e) => setTypeOuvrage(e.target.value)} />
-        <button type="submit" disabled={loading} className="rounded bg-orange-600 px-4 py-2 text-white disabled:opacity-50">
+        <button type="submit" disabled={loading} className="btn-primary disabled:opacity-50">
           {loading ? "Ajout..." : "Ajouter"}
         </button>
       </form>

@@ -106,7 +106,7 @@ export default function MurCalculatorPage() {
             <label className="block text-sm font-medium text-foreground">
               Longueur (m)
               <input
-                className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 value={l}
                 onChange={(e) => setL(e.target.value)}
               />
@@ -114,7 +114,7 @@ export default function MurCalculatorPage() {
             <label className="block text-sm font-medium text-foreground">
               Hauteur (m)
               <input
-                className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 value={h}
                 onChange={(e) => setH(e.target.value)}
               />
@@ -122,7 +122,7 @@ export default function MurCalculatorPage() {
             <label className="block text-sm font-medium text-foreground">
               Épaisseur (m)
               <input
-                className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 value={e}
                 onChange={(e) => setE(e.target.value)}
               />
@@ -130,7 +130,7 @@ export default function MurCalculatorPage() {
             <label className="block text-sm font-medium text-foreground">
               Ouvertures (%)
               <input
-                className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 value={ouvertures}
                 onChange={(e) => setOuvertures(e.target.value)}
               />
@@ -138,7 +138,7 @@ export default function MurCalculatorPage() {
             <label className="block text-sm font-medium text-foreground">
               Pertes de blocs (%)
               <input
-                className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 value={pertes}
                 onChange={(e) => setPertes(e.target.value)}
               />
@@ -157,7 +157,7 @@ export default function MurCalculatorPage() {
             <label className="block text-sm font-medium text-foreground">
               Agglo / bloc
               <select
-                className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 value={aggloId}
                 onChange={(e) => setAggloId(e.target.value)}
               >
@@ -170,7 +170,7 @@ export default function MurCalculatorPage() {
             <label className="block text-sm font-medium text-foreground">
               Ciment
               <select
-                className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 value={cimentId}
                 onChange={(e) => setCimentId(e.target.value)}
               >
@@ -183,7 +183,7 @@ export default function MurCalculatorPage() {
             <label className="block text-sm font-medium text-foreground">
               Sable
               <select
-                className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 value={sableId}
                 onChange={(e) => setSableId(e.target.value)}
               >
@@ -196,7 +196,7 @@ export default function MurCalculatorPage() {
             <label className="block text-sm font-medium text-foreground">
               Enduit (optionnel)
               <select
-                className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-primary dark:bg-slate-800 dark:text-slate-200"
+                className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                 value={enduitId}
                 onChange={(e) => setEnduitId(e.target.value)}
               >

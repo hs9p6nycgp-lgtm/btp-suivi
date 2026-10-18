@@ -73,7 +73,7 @@ export default function ChantierParametresMetre({
           <label className="block text-sm font-medium">Capacite benne (m3)</label>
           <input className="w-full rounded border p-2" type="number" step="0.01" value={capacite} onChange={(e) => setCapacite(e.target.value)} />
         </div>
-        <button type="submit" disabled={loading} className="rounded bg-orange-600 px-4 py-2 text-white disabled:opacity-50">
+        <button type="submit" disabled={loading} className="btn-primary disabled:opacity-50">
           {loading ? "Enregistrement..." : "Enregistrer"}
         </button>
       </form>
