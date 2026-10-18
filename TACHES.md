@@ -18,7 +18,7 @@
 
 | Réf | Tâche | Propriétaire | Fichiers concernés | Code exigence | Priorité |
 |-----|-------|--------------|--------------------|---------------|----------|
-| — | Aucune tâche en attente. T-MIG-02 et T-DATA-01 sont terminées (voir la section « Terminé »). | — | — | — | — |
+| T-DEP-01 | **BLOQUANT SITE** — Le site déployé (`7w2i.vercel.app`) ne répond plus : Vercel renvoie `DEPLOYMENT_NOT_FOUND` (le déploiement/projet a été supprimé). Les données sont saines (chantier « B » créé le 18/10 à 19h03 en base) ; build local vérifié OK. Recréer/redéployer le projet Vercel depuis le dépôt GitHub — variables nécessaires : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Utilisateur (compte Vercel) | `vercel.json` | — | Haute |
 
 ---
 
@@ -94,7 +94,7 @@
 
 ## Prochaine tâche à assigner
 
-- **Utilisateur (bloquant)** : ✅ T-MIG-02 terminée (migration `0015` appliquée par l'utilisateur, audit « Base à jour »). Rien en attente. Vous pouvez réessayer de créer un chantier.
+- **Utilisateur (bloquant)** : T-DEP-01 — restaurer le site sur Vercel : le déploiement `7w2i.vercel.app` a été supprimé (Vercel renvoie `DEPLOYMENT_NOT_FOUND`). Recréer le projet depuis le dépôt GitHub `hs9p6nycgp-lgtm/btp-suivi` (voir la ligne T-DEP-01 ci-dessus). Alternative : lancer `npx vercel login` sur le Mac, puis un agent pourra redéployer lui-même. Le reste est réglé : migration `0015` appliquée, doublons BPU nettoyés, création de chantier OK (chantier « B » bien enregistré).
 - **Session 1 (apparence)** : ✅ T-UI-08 terminée (vue 3D du projet dans le calculateur de devis). En continu : harmonisation des sous-pages de chantier (planning, qualité, coûts, livraisons, journaux, métré, modélisation 3D) — même design system que le reste de l'application.
 - **Session 2 (logique)** : ✅ T-DATA-01 terminée (doublons BPU nettoyés : 443 → 289 lignes, devis revérifiés). Rien en attente.
 - **Session 3 (migrations/déploiement)** : rien à faire pour l'instant (migration `0015` appliquée).
@@ -105,3 +105,5 @@
 > Mise à jour du 18/10/2026 (Session 2, suite) : nouvelle fonctionnalité « modèle 3D d'un devis » — la logique de géométrie est prête (`src/lib/devis/model3d.ts`, 18 nouveaux tests, total 141 verts) ; l'affichage dans la page devis est assigné à la Session 1 (TODO-UI-007).
 >
 > Mise à jour du 18/10/2026 (Session 2, suite 2) : vérification demandée par l'utilisateur → migration `0015` **appliquée** par l'utilisateur (audit « Base à jour », création de chantier débloquée) ; doublons BPU **nettoyés** avec son accord (443 → 289 lignes, 154 copies supprimées, aucune anomalie, sauvegarde JSON avant suppression). Plus rien en attente côté utilisateur.
+>
+> Mise à jour du 18/10/2026 (Session 2, suite 3) : diagnostic « la page ne charge pas après la création d'un chantier » → le chantier est bien créé en base ; c'est le **déploiement Vercel qui n'existe plus** (`7w2i.vercel.app` → `DEPLOYMENT_NOT_FOUND`). Le téléphone affichait l'appli depuis le cache (PWA). À faire : recréer le projet Vercel (tâche T-DEP-01). Build local vérifié OK.
