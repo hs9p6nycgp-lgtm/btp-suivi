@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import { ExternalLink, Film, Maximize2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ExternalLink, Film, Maximize2, X } from "lucide-react";
 
 import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
 
 // Page « Démo » : trois vidéos de 30 secondes présentant l'application.
 //
@@ -81,7 +82,52 @@ const VIDEOS = [
 ];
 
 export default function DemoPage() {
+  const [presentation, setPresentation] = useState<number | null>(null);
+  const [instant, setInstant] = useState(0);
+
+  // Mode présentation : le chronomètre avance tout seul, les phrases de la
+  // voix off s'affichent au moment prévu.
+  useEffect(() => {
+    if (presentation === null) return;
+    setInstant(0);
+    const depart = Date.now();
+    const minuteur = window.setInterval(() => {
+      setInstant((Date.now() - depart) / 1000);
+    }, 100);
+    return () => window.clearInterval(minuteur);
+  }, [presentation]);
+
+  useEffect(() => {
+    if (presentation === null) return;
+    function surTouche(evenement: KeyboardEvent) {
+      if (evenement.key === "Escape") setPresentation(null);
+      if (evenement.key === "ArrowRight") {
+        setPresentation((index) => (index === null ? index : (index + 1) % VIDEOS.length));
+      }
+      if (evenement.key === "ArrowLeft") {
+        setPresentation((index) =>
+          index === null ? index : (index - 1 + VIDEOS.length) % VIDEOS.length,
+        );
+      }
+    }
+    window.addEventListener("keydown", surTouche);
+    return () => window.removeEventListener("keydown", surTouche);
+  }, [presentation]);
+
+  const video = presentation !== null ? VIDEOS[presentation] : null;
+  const phraseCourante = useMemo(() => {
+    if (!video) return null;
+    for (const [moment, phrase] of video.voixOff) {
+      const [debut, fin] = moment.split("-");
+      const debutS = Number(debut.replace(" s", "").trim());
+      const finS = Number(fin.replace(" s", "").trim());
+      if (instant >= debutS && instant < finS) return phrase;
+    }
+    return null;
+  }, [video, instant]);
+
   return (
+    <>
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
       <PageHeader
         eyebrow="Présentation"
@@ -91,7 +137,7 @@ export default function DemoPage() {
       />
 
       <div className="space-y-6">
-        {VIDEOS.map((video) => (
+        {VIDEOS.map((video, index) => (
           <Card key={video.fichier} padding="lg">
             <div className="grid gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
               <div>
@@ -103,6 +149,9 @@ export default function DemoPage() {
                   className="w-full rounded-xl border border-border/70 bg-surface-2"
                 />
                 <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Button size="sm" onClick={() => setPresentation(index)}>
+                    <Film className="mr-1.5 h-4 w-4" /> Mode présentation
+                  </Button>
                   <a
                     href={video.fichier}
                     target="_blank"
@@ -151,5 +200,49 @@ export default function DemoPage() {
         (textes, écrans et couleurs y sont modifiables).
       </p>
     </main>
+
+    {/* Mode présentation : la vidéo en grand et la phrase de la voix off à dire. */}
+    {video && (
+      <div className="fixed inset-0 z-[90] flex flex-col bg-[#050c16]">
+        <div className="flex items-center justify-between px-5 py-3 text-white/80">
+          <p className="text-sm font-semibold">
+            {presentation !== null ? `${presentation + 1}. ${video.titre}` : video.titre}
+          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-xs text-white/50">Échap pour quitter · ← → pour changer de vidéo</p>
+            <button
+              type="button"
+              onClick={() => setPresentation(null)}
+              aria-label="Quitter la présentation"
+              className="rounded-lg p-1.5 text-white/70 transition hover:bg-white/10 hover:text-white"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-1 items-center justify-center px-6 pb-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={video.fichier}
+            alt={`Démonstration : ${video.titre}`}
+            className="max-h-full max-w-full rounded-xl border border-white/10"
+          />
+        </div>
+
+        <div className="px-8 pb-8 text-center">
+          <div className="mx-auto mb-4 h-1 w-full max-w-3xl overflow-hidden rounded-full bg-white/15">
+            <div
+              className="h-full rounded-full bg-action transition-[width] duration-100"
+              style={{ width: `${Math.min(100, (instant / 30) * 100)}%` }}
+            />
+          </div>
+          <p className="mx-auto max-w-3xl text-xl font-semibold leading-snug text-white md:text-2xl">
+            {phraseCourante ?? "…"}
+          </p>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
