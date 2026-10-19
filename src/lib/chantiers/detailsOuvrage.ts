@@ -102,6 +102,101 @@ export function nbNiveauxBatiment(details: DetailsOuvrage): number {
   return 1 + Math.min(50, Math.max(0, etages));
 }
 
+/** Libellés des niveaux à suivre : sous-sols, RDC puis R+n. */
+export function niveauxDepuisDetails(details: DetailsOuvrage): string[] {
+  const sousSols = Math.min(10, entier(details.nbSousSols) ?? 0);
+  const etages = Math.min(50, entier(details.nbEtages) ?? 0);
+  const niveaux: string[] = [];
+  for (let k = sousSols; k >= 1; k--) {
+    niveaux.push(sousSols > 1 ? `Sous-sol ${k}` : "Sous-sol");
+  }
+  niveaux.push("RDC");
+  for (let n = 1; n <= etages; n++) niveaux.push(`R+${n}`);
+  return niveaux;
+}
+
+/** Champs de description lus depuis la base (nombres ou textes). */
+export type ChantierDescription = {
+  type: string;
+  nb_sous_sols?: number | null;
+  nb_etages?: number | null;
+  hauteur_niveau?: number | null;
+  nb_travees_longueur?: number | null;
+  nb_travees_largeur?: number | null;
+  type_structure?: string | null;
+  type_toiture?: string | null;
+  nb_voies?: number | null;
+  largeur_accotement?: number | null;
+  type_revetement?: string | null;
+};
+
+export type LigneDescription = { libelle: string; valeur: string };
+
+function libelleOption(
+  options: readonly { value: string; label: string }[],
+  valeur: string | null | undefined,
+): string | null {
+  if (!valeur) return null;
+  return options.find((o) => o.value === valeur)?.label ?? valeur;
+}
+
+/** Lignes lisibles pour la fiche chantier et la fiche imprimable. */
+export function descriptionOuvrage(chantier: ChantierDescription): LigneDescription[] {
+  const lignes: LigneDescription[] = [];
+
+  if (chantier.type === "route") {
+    const voies = entier(chantier.nb_voies as number | null | undefined);
+    if (voies !== null) {
+      lignes.push({ libelle: "Voies", valeur: `${voies} voie${voies > 1 ? "s" : ""}` });
+    }
+    const accotement = nombre(chantier.largeur_accotement as number | null | undefined);
+    if (accotement !== null) {
+      lignes.push({
+        libelle: "Accotements",
+        valeur: `${accotement.toLocaleString("fr-FR")} m`,
+      });
+    }
+    const revetement = libelleOption(REVETEMENTS_ROUTE, chantier.type_revetement);
+    if (revetement) lignes.push({ libelle: "Revêtement", valeur: revetement });
+    return lignes;
+  }
+
+  const sousSols = entier(chantier.nb_sous_sols as number | null | undefined);
+  const etages = entier(chantier.nb_etages as number | null | undefined);
+  if (sousSols !== null && sousSols > 0) {
+    lignes.push({ libelle: "Sous-sols", valeur: String(sousSols) });
+  }
+  if (etages !== null) {
+    lignes.push({
+      libelle: "Niveaux",
+      valeur: etages > 0 ? `RDC + ${etages} étage${etages > 1 ? "s" : ""}` : "RDC seul",
+    });
+  }
+  const hauteurNiveau = nombre(chantier.hauteur_niveau as number | null | undefined);
+  if (hauteurNiveau !== null) {
+    lignes.push({
+      libelle: "Hauteur par niveau",
+      valeur: `${hauteurNiveau.toLocaleString("fr-FR")} m`,
+    });
+  }
+  const traveesX = entier(chantier.nb_travees_longueur as number | null | undefined);
+  const traveesZ = entier(chantier.nb_travees_largeur as number | null | undefined);
+  if (traveesX !== null || traveesZ !== null) {
+    lignes.push({
+      libelle: "Travées",
+      valeur:
+        traveesX !== null && traveesZ !== null
+          ? `${traveesX} × ${traveesZ}`
+          : String(traveesX ?? traveesZ),
+    });
+  }
+  const structure = libelleOption(STRUCTURES_BATIMENT, chantier.type_structure);
+  if (structure) lignes.push({ libelle: "Structure", valeur: structure });
+  const toiture = libelleOption(TOITURES_BATIMENT, chantier.type_toiture);
+  if (toiture) lignes.push({ libelle: "Toiture", valeur: toiture });
+  return lignes;
+}
+
 /** Hauteur totale du bâtiment (sous-sols + RDC + étages), en mètres. */
 export function hauteurTotaleBatiment(details: DetailsOuvrage): number | null {
   const h = nombre(details.hauteurNiveau);

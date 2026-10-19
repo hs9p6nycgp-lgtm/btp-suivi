@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog, type DemandeConfirmation } from "@/components/ui/ConfirmDialog";
+import { toast } from "@/components/ui/toast";
 import { traduireErreur } from "@/lib/i18n";
 import { normaliserTelephone } from "@/lib/chantiers/complet";
 
@@ -87,6 +88,7 @@ export default function ChantierIntervenants({ chantierId }: { chantierId: strin
     setFonction("");
     setTelephone("");
     setEmail("");
+    toast("Intervenant ajouté.");
     load();
   }
 
@@ -97,6 +99,7 @@ export default function ChantierIntervenants({ chantierId }: { chantierId: strin
       setMessage(traduireErreur(error));
       return;
     }
+    toast("Intervenant supprimé.");
     load();
   }
 

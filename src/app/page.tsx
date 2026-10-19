@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import InviteInstallation from "@/components/InviteInstallation";
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -402,6 +403,8 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      <InviteInstallation />
 
       {/* Cartes de chiffres clés */}
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">

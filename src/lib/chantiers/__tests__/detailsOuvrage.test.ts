@@ -3,9 +3,11 @@ import { describe, it } from "node:test";
 
 import {
   colonnesDetailsOuvrage,
+  descriptionOuvrage,
   detailsOuvrageDepuisChantier,
   detailsOuvrageVides,
   hauteurTotaleBatiment,
+  niveauxDepuisDetails,
   type DetailsOuvrage,
 } from "../detailsOuvrage.ts";
 
@@ -115,5 +117,63 @@ describe("description de l'ouvrage (modele 3D)", () => {
     assert.equal(d.nbEtages, "3");
     assert.equal(d.hauteurNiveau, "3.5");
     assert.equal(d.typeToiture, "tole");
+  });
+});
+
+describe("affichage et niveaux a suivre", () => {
+  it("genere les niveaux dans l'ordre sous-sols, RDC puis etages", () => {
+    assert.deepEqual(niveauxDepuisDetails(details({ nbSousSols: "2", nbEtages: "2" })), [
+      "Sous-sol 2",
+      "Sous-sol 1",
+      "RDC",
+      "R+1",
+      "R+2",
+    ]);
+    assert.deepEqual(niveauxDepuisDetails(details({ nbSousSols: "1", nbEtages: "0" })), [
+      "Sous-sol",
+      "RDC",
+    ]);
+    assert.deepEqual(niveauxDepuisDetails(details({ nbSousSols: "0", nbEtages: "1" })), [
+      "RDC",
+      "R+1",
+    ]);
+  });
+
+  it("resume un batiment pour la fiche", () => {
+    const lignes = descriptionOuvrage({
+      type: "batiment",
+      nb_sous_sols: 1,
+      nb_etages: 3,
+      hauteur_niveau: 3,
+      nb_travees_longueur: 4,
+      nb_travees_largeur: 2,
+      type_structure: "poteaux_poutres",
+      type_toiture: "tole",
+    });
+    const valeurs = Object.fromEntries(lignes.map((l) => [l.libelle, l.valeur]));
+    assert.equal(valeurs["Sous-sols"], "1");
+    assert.equal(valeurs["Niveaux"], "RDC + 3 étages");
+    assert.equal(valeurs["Hauteur par niveau"], "3 m");
+    assert.equal(valeurs["Travées"], "4 × 2");
+    assert.equal(valeurs["Structure"], "Poteaux-poutres (ossature)");
+    assert.equal(valeurs["Toiture"], "Toiture tôle (2 pans)");
+  });
+
+  it("resume une route pour la fiche", () => {
+    const lignes = descriptionOuvrage({
+      type: "route",
+      nb_voies: 4,
+      largeur_accotement: 1.5,
+      type_revetement: "beton",
+    });
+    const valeurs = Object.fromEntries(lignes.map((l) => [l.libelle, l.valeur]));
+    assert.equal(valeurs["Voies"], "4 voies");
+    assert.equal(valeurs["Accotements"], "1,5 m");
+    assert.equal(valeurs["Revêtement"], "Béton de ciment");
+  });
+
+  it("ne renvoie rien pour un ancien chantier sans details", () => {
+    assert.deepEqual(descriptionOuvrage({ type: "batiment" }), []);
+    assert.deepEqual(descriptionOuvrage({ type: "route" }), []);
   });
 });

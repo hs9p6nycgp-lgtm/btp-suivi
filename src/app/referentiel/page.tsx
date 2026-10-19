@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { getLangue, traduireErreur } from "@/lib/i18n";
 import { ConfirmDialog, type DemandeConfirmation } from "@/components/ui/ConfirmDialog";
+import { toast } from "@/components/ui/toast";
 import { lignesAffecteesParMiseAJour, exporterReferentielCSV, type LigneReferentiel } from "@/lib/referentiel/prix";
 import { BookOpen } from "lucide-react";
 import ReferentielImport from "@/components/ReferentielImport";
@@ -157,11 +158,11 @@ export default function ReferentielPage() {
 
       const { error } = await supabase.from("referentiel_prix").update(payload).eq("id", editing.id);
       if (error) { setMessage(traduireErreur(error)); setLoading(false); return; }
-      setMessage("Prix mis à jour.");
+      toast("Prix mis à jour.");
     } else {
       const { error } = await supabase.from("referentiel_prix").insert(payload);
       if (error) { setMessage(traduireErreur(error)); setLoading(false); return; }
-      setMessage("Prix créé.");
+      toast("Prix créé.");
     }
     setLoading(false);
     resetForm();
@@ -195,7 +196,7 @@ export default function ReferentielPage() {
     const supabase = createClient();
     const { error } = await supabase.from("referentiel_prix").delete().eq("id", id);
     if (error) { setMessage(traduireErreur(error)); return; }
-    setMessage("Prix supprimé.");
+    toast("Prix supprimé.");
     load();
   }
 
@@ -234,7 +235,7 @@ export default function ReferentielPage() {
     lien.click();
     lien.remove();
     URL.revokeObjectURL(url);
-    setMessage(`${lignes.length} prix exporté(s) — fichier CSV téléchargé.`);
+    toast(`${lignes.length} prix exporté(s) — fichier CSV téléchargé.`);
   }
 
   return (

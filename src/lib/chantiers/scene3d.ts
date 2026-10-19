@@ -109,7 +109,11 @@ export function niveauDepuisTexte(texte: string | null | undefined): number | nu
   if (!texte) return null;
   const t = String(texte).trim().toLowerCase();
   if (!t) return null;
-  if (t.includes("sous") && t.includes("sol")) return -1;
+  if (t.includes("sous") && t.includes("sol")) {
+    // « Sous-sol 2 » designe le deuxieme niveau enterre (-2).
+    const numero = t.match(/sous[\s-]*sol\s*(\d+)/);
+    return numero ? -Number(numero[1]) : -1;
+  }
   if (t.includes("rdc") || t.includes("rez")) return 0;
   const rplus = t.match(/r\s*\+\s*(\d+)/);
   if (rplus) return Number(rplus[1]);

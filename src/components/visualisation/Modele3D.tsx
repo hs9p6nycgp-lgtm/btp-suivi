@@ -27,9 +27,12 @@ function nombreFormat(valeur: number): string {
 export default function Modele3D({
   chantier,
   sections,
+  hauteur = 600,
 }: {
   chantier: ChantierScene | null;
   sections: SectionScene[];
+  /** Hauteur du cadre en pixels (l'aperçu de création est plus compact). */
+  hauteur?: number;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const resetRef = useRef<(() => void) | null>(null);
@@ -345,7 +348,7 @@ export default function Modele3D({
 
   if (!chantier) {
     return (
-      <div className="flex h-[600px] items-center justify-center rounded-xl border border-border bg-surface px-6 text-center">
+      <div className="flex items-center justify-center rounded-xl border border-border bg-surface px-6 text-center" style={{ height: hauteur }}>
         <p className="text-sm text-muted">Aucune donnée de chantier pour la visualisation 3D</p>
       </div>
     );
@@ -377,7 +380,7 @@ export default function Modele3D({
   ];
 
   return (
-    <div className="relative h-[600px] w-full overflow-hidden rounded-xl border border-border bg-surface">
+    <div className="relative w-full overflow-hidden rounded-xl border border-border bg-surface" style={{ height: hauteur }}>
       <div ref={containerRef} className="h-full w-full" />
 
       {/* Bandeau : type du chantier et dimensions reelles */}

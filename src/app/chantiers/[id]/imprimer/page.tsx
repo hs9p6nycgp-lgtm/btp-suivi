@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { avancementMoyenSections, etatEcheance, formaterMetres, formaterPK, joursRestants, libelleTypeDocument, longueurSection } from "@/lib/chantiers/complet";
 import { resumerProgression, type PointAvancement } from "@/lib/chantiers/avancement";
+import { descriptionOuvrage } from "@/lib/chantiers/detailsOuvrage";
 
 // Feuille A4 imprimable : fiche de suivi complete d'un chantier.
 // La coquille de l'application est masquee sur cette page (voir AppShell).
@@ -31,6 +32,16 @@ type Chantier = {
   longueur: number | null;
   largeur: number | null;
   hauteur: number | null;
+  nb_sous_sols?: number | null;
+  nb_etages?: number | null;
+  hauteur_niveau?: number | null;
+  nb_travees_longueur?: number | null;
+  nb_travees_largeur?: number | null;
+  type_structure?: string | null;
+  type_toiture?: string | null;
+  nb_voies?: number | null;
+  largeur_accotement?: number | null;
+  type_revetement?: string | null;
   seuil_ecart_pct: number;
 };
 
@@ -146,6 +157,7 @@ export default function FicheImprimablePage() {
   const lineaire = sections.reduce((total, s) => total + (longueurSection(s.pk_debut, s.pk_fin) ?? 0), 0);
   const progression = resumerProgression(points);
   const typeDetail = chantier.type === "route" ? "Route" : "Bâtiment";
+  const description = descriptionOuvrage(chantier);
 
   return (
     <div className="min-h-screen bg-slate-100 py-6 print:bg-white print:py-0">
@@ -243,6 +255,20 @@ export default function FicheImprimablePage() {
             />
           </div>
         </div>
+
+        {/* Description de l'ouvrage (niveaux, structure, voirie) */}
+        {description.length > 0 && (
+          <div className="mt-5">
+            <h2 className="mb-1 text-[12px] font-bold uppercase tracking-wider text-slate-700">
+              Description de l&apos;ouvrage
+            </h2>
+            <div className="grid grid-cols-2 gap-x-8">
+              {description.map((ligne) => (
+                <Ligne key={ligne.libelle} libelle={ligne.libelle} valeur={ligne.valeur} />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Découpage */}
         <h2 className="mt-6 mb-2 text-[12px] font-bold uppercase tracking-wider text-slate-700">

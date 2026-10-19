@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getLangue, traduireErreur } from "@/lib/i18n";
 import { ConfirmDialog, type DemandeConfirmation } from "@/components/ui/ConfirmDialog";
+import { toast } from "@/components/ui/toast";
 import { Users } from "lucide-react";
 
 type Fournisseur = {
@@ -129,7 +130,7 @@ export default function FournisseursPage() {
     }
     setLoading(false);
     if (error) { setMessage(traduireErreur(error)); return; }
-    setMessage(editing ? "Fournisseur mis à jour." : "Fournisseur créé.");
+    toast(editing ? "Fournisseur mis à jour." : "Fournisseur créé.");
     resetForm();
     load();
   }
@@ -138,7 +139,7 @@ export default function FournisseursPage() {
     const supabase = createClient();
     const { error } = await supabase.from("fournisseurs").delete().eq("id", id);
     if (error) { setMessage(traduireErreur(error)); return; }
-    setMessage("Fournisseur supprimé.");
+    toast("Fournisseur supprimé.");
     load();
   }
 

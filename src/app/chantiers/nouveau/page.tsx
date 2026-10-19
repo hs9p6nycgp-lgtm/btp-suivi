@@ -2,9 +2,10 @@
 
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Building2, CheckCircle2, Coins, Layers, MapPin, Plus, Trash2, Users } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Box, Building2, CheckCircle2, Coins, Layers, MapPin, Plus, Trash2, Users } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -15,8 +16,10 @@ import {
   colonnesDetailsOuvrage,
   detailsOuvrageDepuisChantier,
   detailsOuvrageVides,
+  niveauxDepuisDetails,
   type DetailsOuvrage,
 } from "@/lib/chantiers/detailsOuvrage";
+import type { ChantierScene, SectionScene } from "@/lib/chantiers/scene3d";
 import {
   analyserPK,
   estNomChantierSimilaire,
@@ -24,6 +27,13 @@ import {
   formaterPK,
   longueurSection,
 } from "@/lib/chantiers/complet";
+
+// L'aperçu 3D n'est chargé que lorsque l'utilisateur l'ouvre : la page de
+// création reste légère sur téléphone.
+const Modele3D = dynamic(() => import("@/components/visualisation/Modele3D"), {
+  ssr: false,
+  loading: () => <div className="h-[420px] animate-pulse rounded-xl border border-border bg-surface-2" />,
+});
 
 // Formate un montant FCFA avec des séparateurs de milliers pendant la frappe
 // (« 25000000 » devient « 25 000 000 »), pour ne plus compter les zéros.
@@ -114,6 +124,7 @@ export default function NouveauChantierPage() {
   const [longitude, setLongitude] = useState("");
   const [details, setDetails] = useState<DetailsOuvrage>(detailsOuvrageVides);
   const [detailsOk, setDetailsOk] = useState<boolean | null>(null);
+  const [apercuVisible, setApercuVisible] = useState(false);
   const [seuil, setSeuil] = useState("10");
   const [sections, setSections] = useState<LigneSection[]>([nouvelleSection()]);
   const [intervenants, setIntervenants] = useState<LigneIntervenant[]>([]);
@@ -124,6 +135,62 @@ export default function NouveauChantierPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [gps, setGps] = useState<"repos" | "encours" | "erreur">("repos");
+
+  // Aperçu 3D en direct : mêmes règles de conversion que l'enregistrement.
+  const apercuChantier = useMemo<ChantierScene>(() => {
+    const colonnes = colonnesDetailsOuvrage(type, details);
+    return {
+      id: "apercu",
+      nom: nom.trim() || "Aperçu du chantier",
+      type,
+      longueur: colonnes.longueur,
+      largeur: colonnes.largeur,
+      hauteur: colonnes.hauteur,
+      nb_sous_sols: colonnes.nb_sous_sols,
+      nb_etages: colonnes.nb_etages,
+      hauteur_niveau: colonnes.hauteur_niveau,
+      nb_travees_longueur: colonnes.nb_travees_longueur,
+      nb_travees_largeur: colonnes.nb_travees_largeur,
+      type_structure: colonnes.type_structure,
+      type_toiture: colonnes.type_toiture,
+      nb_voies: colonnes.nb_voies,
+      largeur_accotement: colonnes.largeur_accotement,
+      type_revetement: colonnes.type_revetement,
+    };
+  }, [type, details, nom]);
+
+  const apercuSections = useMemo<SectionScene[]>(
+    () =>
+      sections
+        .filter((s) => s.nom.trim() || s.pkDebut.trim() || s.pkFin.trim() || s.niveau.trim() || s.lot.trim())
+        .map((s) => ({
+          id: s.cle,
+          nom: s.nom.trim() || "Partie",
+          pk_debut: analyserPK(s.pkDebut),
+          pk_fin: analyserPK(s.pkFin),
+          niveau: type === "batiment" ? s.niveau.trim() || null : null,
+          lot: type === "batiment" ? s.lot.trim() || null : null,
+          type_ouvrage: null,
+          avancement_pct: 0,
+        })),
+    [sections, type],
+  );
+
+  const niveauxManquants = niveauxDepuisDetails(details).filter(
+    (niveau) => !sections.some((s) => s.niveau.trim().toLowerCase() === niveau.toLowerCase()),
+  );
+
+  function genererNiveaux() {
+    const niveaux = niveauxDepuisDetails(details);
+    setSections((prev) => {
+      const deja = new Set(prev.map((s) => s.niveau.trim().toLowerCase()).filter(Boolean));
+      const ajouts = niveaux
+        .filter((niveau) => !deja.has(niveau.toLowerCase()))
+        .map((niveau) => ({ ...nouvelleSection(), nom: niveau, niveau }));
+      return ajouts.length > 0 ? [...prev, ...ajouts] : prev;
+    });
+  }
+
 
   // La base sait-elle déjà stocker ville / maître d'œuvre / entreprise / n° marché ?
   useEffect(() => {
@@ -607,6 +674,27 @@ export default function NouveauChantierPage() {
                   valeur={details}
                   onChange={(champ, valeur) => setDetails((prev) => ({ ...prev, [champ]: valeur }))}
                 />
+                <div className="rounded-xl border border-border/70 bg-surface-2/40 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Aperçu 3D</p>
+                      <p className="text-xs text-muted">
+                        {type === "route"
+                          ? "Chaussée, voies et accotements se mettent à jour avec vos saisies."
+                          : "Niveaux, poteaux et toiture se mettent à jour avec vos saisies."}
+                      </p>
+                    </div>
+                    <Button type="button" variant="secondary" onClick={() => setApercuVisible((v) => !v)}>
+                      <Box className="h-4 w-4" />
+                      {apercuVisible ? "Masquer l'aperçu" : "Voir l'aperçu 3D"}
+                    </Button>
+                  </div>
+                  {apercuVisible && (
+                    <div className="mt-3">
+                      <Modele3D chantier={apercuChantier} sections={apercuSections} hauteur={420} />
+                    </div>
+                  )}
+                </div>
               </section>
 
               {/* 4. Découpage (CHA-02) */}
@@ -693,10 +781,18 @@ export default function NouveauChantierPage() {
                     ),
                   )}
                 </div>
-                <Button type="button" variant="secondary" onClick={() => setSections((prev) => [...prev, nouvelleSection()])}>
-                  <Plus className="h-4 w-4" />
-                  Ajouter une {type === "route" ? "section" : "partie"}
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" variant="secondary" onClick={() => setSections((prev) => [...prev, nouvelleSection()])}>
+                    <Plus className="h-4 w-4" />
+                    Ajouter une {type === "route" ? "section" : "partie"}
+                  </Button>
+                  {type === "batiment" && niveauxManquants.length > 0 && (
+                    <Button type="button" variant="secondary" onClick={genererNiveaux}>
+                      <Layers className="h-4 w-4" />
+                      Générer les niveaux ({niveauxManquants.length})
+                    </Button>
+                  )}
+                </div>
                 <datalist id="creation-niveaux">
                   {NIVEAUX.map((n) => (
                     <option key={n} value={n} />

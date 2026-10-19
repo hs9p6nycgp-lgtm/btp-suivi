@@ -6,6 +6,7 @@ import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog, type DemandeConfirmation } from "@/components/ui/ConfirmDialog";
+import { toast } from "@/components/ui/toast";
 import { traduireErreur } from "@/lib/i18n";
 import {
   analyserPK,
@@ -181,6 +182,7 @@ export default function ChantierSections({
       setMessage(traduireErreur(error));
       return;
     }
+    toast("Section supprimée.");
     onReload();
   }
 

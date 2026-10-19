@@ -32,6 +32,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { getLangue } from "@/lib/i18n";
 import { libelleTypeDetail } from "@/lib/chantiers/types";
 import { avancementMoyenSections, etatEcheance, formaterMetres, joursRestants, longueurSection } from "@/lib/chantiers/complet";
+import { descriptionOuvrage } from "@/lib/chantiers/detailsOuvrage";
 
 type Chantier = {
   id: string;
@@ -168,6 +169,7 @@ export default function ChantierDetailPage() {
     echeance === "depasse" ? "rose" : echeance === "proche" ? "amber" : echeance === "normal" ? "emerald" : "slate";
   const lineaire = sections.reduce((total, section) => total + (longueurSection(section.pk_debut, section.pk_fin) ?? 0), 0);
   const avancementGlobal = avancementMoyenSections(sections);
+  const description = descriptionOuvrage(chantier);
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
@@ -380,6 +382,25 @@ export default function ChantierDetailPage() {
             </p>
           </div>
         </div>
+        {description.length > 0 && (
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            {description.map((ligne) => (
+              <span
+                key={ligne.libelle}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-surface px-3 py-1 text-xs shadow-sm"
+              >
+                <span className="text-muted">{ligne.libelle}</span>
+                <span className="font-semibold text-foreground">{ligne.valeur}</span>
+              </span>
+            ))}
+            <Link
+              href={`/chantiers/${chantier.id}/modifier`}
+              className="inline-flex items-center rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary transition hover:bg-primary/10"
+            >
+              Ajuster
+            </Link>
+          </div>
+        )}
         <Card padding="lg">
           <Modele3D
             chantier={{

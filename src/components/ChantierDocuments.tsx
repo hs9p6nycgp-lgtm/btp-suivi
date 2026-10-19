@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog, type DemandeConfirmation } from "@/components/ui/ConfirmDialog";
+import { toast } from "@/components/ui/toast";
 import { traduireErreur } from "@/lib/i18n";
 import {
   LIMITE_DOCUMENT_OCTETS,
@@ -175,6 +176,7 @@ export default function ChantierDocuments({ chantierId }: { chantierId: string }
       setMessage(traduireErreur(error));
       return;
     }
+    toast("Document supprimé.");
     load();
   }
 

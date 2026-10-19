@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { toast } from "@/components/ui/toast";
 import { traduireErreur } from "@/lib/i18n";
 
 type Member = {
@@ -80,7 +81,7 @@ export default function ChantierEquipe({
       ];
     });
     setEmail("");
-    setMessage("Utilisateur ajouté.");
+    toast("Utilisateur ajouté.");
   }
 
   async function handleRoleChange(userId: string, newRole: string) {

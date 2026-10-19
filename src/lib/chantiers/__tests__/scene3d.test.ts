@@ -82,6 +82,8 @@ describe("niveauDepuisTexte", () => {
   it("lit RDC, sous-sol, R+n et etages", () => {
     assert.equal(niveauDepuisTexte("RDC"), 0);
     assert.equal(niveauDepuisTexte("Sous-sol"), -1);
+    assert.equal(niveauDepuisTexte("Sous-sol 2"), -2);
+    assert.equal(niveauDepuisTexte("sous sol 1"), -1);
     assert.equal(niveauDepuisTexte("SOUS-SOL"), -1);
     assert.equal(niveauDepuisTexte("R+3"), 3);
     assert.equal(niveauDepuisTexte("r+10"), 10);

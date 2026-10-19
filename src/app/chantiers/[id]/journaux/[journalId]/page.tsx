@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ConfirmDialog, type DemandeConfirmation } from "@/components/ui/ConfirmDialog";
+import { toast } from "@/components/ui/toast";
 import { getLangue, traduireErreur } from "@/lib/i18n";
 import { compresserImage } from "@/lib/photos/compression";
 import { BUCKET_PHOTOS, urlSignee, urlsSignees } from "@/lib/photos/urls";
@@ -136,7 +137,7 @@ export default function JournalDetailPage() {
     const { error } = await offlineUpdate("journaux", journalId, { meteo: meteo || null, observations: observations || null });
     setLoading(false);
     if (error) { setMessage(traduireErreur(error)); return; }
-    setMessage(langue === "fr" ? "En-tête enregistré." : "Header saved.");
+    toast(langue === "fr" ? "En-tête enregistré." : "Header saved.");
     loadAll();
   }
 
@@ -234,7 +235,7 @@ export default function JournalDetailPage() {
       { id: `local-${Date.now()}`, chemin: path, legende, latitude: lat, longitude: lon, url },
     ]);
     setPhotoFile(null); setPhotoLegende("");
-    setMessage(langue === "fr" ? "Photo ajoutée." : "Photo added.");
+    toast(langue === "fr" ? "Photo ajoutée." : "Photo added.");
   }
 
   async function validateJournal() {
@@ -274,7 +275,7 @@ export default function JournalDetailPage() {
     const { error } = await offlineUpdate("journaux", journalId, { statut: "valide", validated_at: new Date().toISOString() });
     setLoading(false);
     if (error) { setMessage(traduireErreur(error)); return; }
-    setMessage(langue === "fr" ? "Journal validé." : "Journal validated.");
+    toast(langue === "fr" ? "Journal validé." : "Journal validated.");
     loadAll();
   }
 
@@ -285,7 +286,7 @@ export default function JournalDetailPage() {
     const { error } = await offlineUpdate("journaux", journalId, { statut: "brouillon", validated_at: null });
     setLoading(false);
     if (error) { setMessage(traduireErreur(error)); return; }
-    setMessage(langue === "fr" ? "Journal rouvert : la saisie est de nouveau modifiable." : "Log reopened: entries can be edited again.");
+    toast(langue === "fr" ? "Journal rouvert : la saisie est de nouveau modifiable." : "Log reopened: entries can be edited again.");
     loadAll();
   }
 
