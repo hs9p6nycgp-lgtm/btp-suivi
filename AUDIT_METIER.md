@@ -591,6 +591,24 @@ J'ai vérifié que l'enregistrement d'une fiche journal (modification des observ
 
 ---
 
+# Partie 24 — Le mode hors connexion se complète (qualité, photos, non-conformités)
+
+## 47. Photo et traitement d'une non-conformité hors connexion — ✅ **VÉRIFIÉ**
+
+Test réalisé avec une **coupure réseau réelle** (le navigateur passe hors ligne, `navigator.onLine` passe à `false`, le bandeau « Hors connexion » s'affiche) :
+
+1. Sur la fiche d'une non-conformité, j'ouvre le traitement, je choisis une **photo** (image générée dans la page) et je clique sur « **Joindre** », puis je renseigne l'action corrective — **le tout sans réseau**.
+2. **Traitement enregistré** : la base contient bien `responsable = « Ingénieur travaux »` et `action_corrective = « Reprise de la couche — action engagée hors connexion »` — l'écriture a abouti pendant la coupure (file d'attente puis rejeu, ou synchronisation directe).
+3. **Photo partie en file** : elle n'apparaît pas immédiatement en base (normal, le stockage est hors ligne).
+4. **Au retour du réseau** : la photo est **envoyée automatiquement** — contrôle en base : `photos_non_conformite` contient la ligne
+   `non-conformites/<id NC>/<horodatage>-photo-hors-ligne.png`, rattachée à la bonne fiche.
+
+**Contrôle complémentaire** : après ce passage hors ligne, la page Qualité se recharge normalement (fiches de non-conformité **et** essais listés), que le service worker soit actif ou désactivé — pas de page figée au retour du réseau.
+
+→ **La chaîne hors connexion est maintenant complète sur le terrain** : journal, quantités, photos, non-conformités, découpage et qualité. C'était le blocage n°1 remonté par le chef de chantier.
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
