@@ -4,8 +4,9 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { getLangue } from "@/lib/i18n";
-import { lignesAffecteesParMiseAJour } from "@/lib/referentiel/prix";
+import { lignesAffecteesParMiseAJour, exporterReferentielCSV, type LigneReferentiel } from "@/lib/referentiel/prix";
 import { BookOpen } from "lucide-react";
+import ReferentielImport from "@/components/ReferentielImport";
 
 type Prix = {
   id: string;
@@ -195,6 +196,36 @@ export default function ReferentielPage() {
     return true;
   });
 
+  // REF-05 : export des lignes affichées dans un vrai fichier CSV (téléchargé).
+  function exporterCSV() {
+    const lignes = filtres.map((p) => ({
+      id: p.id,
+      code: p.code,
+      designation: p.designation,
+      categorie: p.categorie,
+      unite: p.unite,
+      prix_unitaire: p.prix_unitaire,
+      source: p.source,
+      date_source: p.date_source,
+      date_validite: p.date_validite,
+      statut: p.statut as "valide" | "a_verifier",
+      zone: p.zone,
+    }));
+    const csv = exporterReferentielCSV(lignes);
+    if (!csv) { setMessage("Aucun prix à exporter."); return; }
+    // BOM UTF-8 : les accents restent lisibles à l'ouverture dans Excel.
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const lien = document.createElement("a");
+    lien.href = url;
+    lien.download = `referentiel-prix-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(lien);
+    lien.click();
+    lien.remove();
+    URL.revokeObjectURL(url);
+    setMessage(`${lignes.length} prix exporté(s) — fichier CSV téléchargé.`);
+  }
+
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
       <PageHeader
@@ -215,6 +246,18 @@ export default function ReferentielPage() {
           <option value="">Toutes catégories</option>
           {categories.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
+      </div>
+
+      <button
+        onClick={exporterCSV}
+        className="btn-secondary mb-4"
+        title="Exporte les lignes affichées dans un fichier CSV (séparateur point-virgule, ouvrable dans Excel)."
+      >
+        Exporter CSV ({filtres.length})
+      </button>
+
+      <div className="mb-4">
+        <ReferentielImport onImporte={load} />
       </div>
 
       {showForm && (
