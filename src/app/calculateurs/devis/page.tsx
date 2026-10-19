@@ -1,6 +1,7 @@
 "use client";
 
 import { Box, Calculator, Download, FileText, Save, Trash2 } from "lucide-react";
+import { CalendarRange } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { templates } from "@/lib/devis/templates";
@@ -15,6 +16,11 @@ import {
   validerDevis,
   type DevisEnregistre,
 } from "@/lib/devis/enregistrement";
+import {
+  dureePlanningGenere,
+  liensChaine,
+  tachesDepuisDevis,
+} from "@/lib/planning/planification";
 import { groupesTypesDetailles } from "@/lib/chantiers/types";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
@@ -66,6 +72,11 @@ export default function DevisAssistantPage() {
   const [devisDisponible, setDevisDisponible] = useState<boolean | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Planning créé depuis le devis
+  const [chantierPlanning, setChantierPlanning] = useState("");
+  const [messagePlanning, setMessagePlanning] = useState<string | null>(null);
+  const [creatingPlanning, setCreatingPlanning] = useState(false);
 
   useEffect(() => {
     async function loadDevis() {
@@ -222,6 +233,101 @@ export default function DevisAssistantPage() {
     }
     toast("Devis supprimé.");
     setDevisEnregistres((prev) => prev.filter((d) => d.id !== devis.id));
+  }
+
+  /** Crée le planning du chantier à partir des durées indicatives du devis. */
+  async function creerPlanningDepuisDevis() {
+    if (!chantierPlanning) return;
+    setCreatingPlanning(true);
+    setMessagePlanning(null);
+    const supabase = createClient();
+
+    const [chantierRes, tachesRes] = await Promise.all([
+      supabase.from("chantiers").select("id,nom,date_debut").eq("id", chantierPlanning).maybeSingle(),
+      supabase.from("taches_planning").select("id,nom,date_prevue_fin").eq("chantier_id", chantierPlanning),
+    ]);
+    const chantier = chantierRes.data as { id: string; nom?: string; date_debut?: string | null } | null;
+    const existantes = (tachesRes.data ?? []) as { id: string; nom: string; date_prevue_fin: string | null }[];
+
+    // Démarrage : après la dernière tâche existante, sinon à la date de début
+    // du chantier (ou aujourd'hui).
+    let dateBase = chantier?.date_debut ?? new Date().toISOString().slice(0, 10);
+    let derniereExistante: string | null = null;
+    let finMax = 0;
+    for (const t of existantes) {
+      const fin = t.date_prevue_fin ? new Date(`${t.date_prevue_fin}T00:00:00`).getTime() : 0;
+      if (fin > finMax) {
+        finMax = fin;
+        derniereExistante = t.id;
+      }
+    }
+    if (finMax > 0) {
+      const d = new Date(finMax);
+      const mois = String(d.getMonth() + 1).padStart(2, "0");
+      const jour = String(d.getDate()).padStart(2, "0");
+      dateBase = `${d.getFullYear()}-${mois}-${jour}`;
+    }
+
+    const nouvelles = tachesDepuisDevis(template.taches(inputs), dateBase);
+    if (nouvelles.length === 0) {
+      setMessagePlanning("Ce modèle de devis ne propose aucune tâche de planning.");
+      setCreatingPlanning(false);
+      return;
+    }
+
+    const inserees: { id: string }[] = [];
+    for (const tache of nouvelles) {
+      const { data, error } = await supabase
+        .from("taches_planning")
+        .insert({
+          chantier_id: chantierPlanning,
+          nom: tache.nom,
+          duree_jours: tache.duree_jours,
+          date_prevue_debut: tache.date_prevue_debut,
+          date_prevue_fin: tache.date_prevue_fin,
+          est_jalon: false,
+          statut: "a_faire",
+        })
+        .select()
+        .single();
+      if (error || !data) {
+        setMessagePlanning(traduireErreur(error ?? {}));
+        setCreatingPlanning(false);
+        return;
+      }
+      inserees.push(data as { id: string });
+    }
+
+    // Liens : chaîne continue + lien depuis la dernière tâche existante
+    const liens = liensChaine(inserees.length).map((lien) => ({
+      chantier_id: chantierPlanning,
+      tache_predecesseur_id: inserees[lien.predecesseur].id,
+      tache_successeur_id: inserees[lien.successeur].id,
+      type_dependance: "fin_debut",
+      decalage_jours: 0,
+    }));
+    if (derniereExistante && inserees.length > 0) {
+      liens.push({
+        chantier_id: chantierPlanning,
+        tache_predecesseur_id: derniereExistante,
+        tache_successeur_id: inserees[0].id,
+        type_dependance: "fin_debut",
+        decalage_jours: 0,
+      });
+    }
+    if (liens.length > 0) {
+      const { error: errLiens } = await supabase.from("dependances_planning").insert(liens);
+      if (errLiens) {
+        setMessagePlanning(traduireErreur(errLiens));
+        setCreatingPlanning(false);
+        return;
+      }
+    }
+
+    setCreatingPlanning(false);
+    setMessagePlanning(
+      `${nouvelles.length} tâches créées et enchaînées sur « ${chantier?.nom ?? chantierPlanning} » (durée ${dureePlanningGenere(nouvelles)} j). Ouvrez le planning du chantier pour l'ajuster.`,
+    );
   }
 
   // Vue 3D : recalculée à partir des saisies avec un léger différé,
@@ -579,6 +685,55 @@ export default function DevisAssistantPage() {
             <p className="mt-2 text-xs text-muted">
               Durées indicatives basées sur des rendements moyens. À affiner avec votre planning réel.
             </p>
+
+            {/* Création du planning du chantier à partir du devis */}
+            <div className="mt-5 rounded-2xl border border-border/80 bg-surface-2/50 p-4">
+              <p className="text-sm font-semibold text-foreground">
+                Créer le planning d&apos;un chantier à partir de ce devis
+              </p>
+              <p className="mt-1 text-xs text-muted">
+                Les tâches sont créées enchaînées (fin → début) : le chemin critique et le diagramme de
+                Gantt sont calculés automatiquement. Les tâches existantes sont conservées.
+              </p>
+              <div className="mt-3 flex flex-wrap items-end gap-2">
+                <div className="min-w-56 flex-1">
+                  <label className="mb-1 block text-xs font-medium text-muted">Chantier</label>
+                  <select
+                    className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                    value={chantierPlanning}
+                    onChange={(e) => setChantierPlanning(e.target.value)}
+                  >
+                    <option value="">— Sélectionner —</option>
+                    {chantiers.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.nom}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <Button
+                  type="button"
+                  onClick={creerPlanningDepuisDevis}
+                  disabled={creatingPlanning || !chantierPlanning}
+                >
+                  <CalendarRange className="h-4 w-4" />
+                  {creatingPlanning ? "Création..." : "Créer le planning"}
+                </Button>
+              </div>
+              {messagePlanning && (
+                <p className="mt-3 rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
+                  {messagePlanning}{" "}
+                  {chantierPlanning && (
+                    <Link
+                      href={`/chantiers/${chantierPlanning}/planning`}
+                      className="font-semibold text-primary hover:underline"
+                    >
+                      Ouvrir le planning
+                    </Link>
+                  )}
+                </p>
+              )}
+            </div>
           </Card>
         </section>
       </div>

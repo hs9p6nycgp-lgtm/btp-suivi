@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Download, Printer } from "lucide-react";
+import { ArrowLeft, Download, Printer, Save, Trash2 } from "lucide-react";
 import * as XLSX from "xlsx";
 
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { formaterMontantFcfa } from "@/lib/devis/enregistrement";
+import { toast } from "@/components/ui/toast";
+import { traduireErreur } from "@/lib/i18n";
 
 type Devis = {
   id: string;
@@ -53,8 +56,18 @@ export default function DevisImprimablePage() {
   const [devis, setDevis] = useState<Devis | null>(null);
   const [lignes, setLignes] = useState<LigneDevis[]>([]);
   const [nomChantier, setNomChantier] = useState<string | null>(null);
+  const [chantiers, setChantiers] = useState<{ id: string; nom: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  // Champs modifiables de l'en-tête du devis
+  const [client, setClient] = useState("");
+  const [numero, setNumero] = useState("");
+  const [dateDevis, setDateDevis] = useState("");
+  const [objet, setObjet] = useState("");
+  const [notes, setNotes] = useState("");
+  const [chantierId, setChantierId] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -81,6 +94,21 @@ export default function DevisImprimablePage() {
       }
       setDevis(entete as Devis);
 
+      // Champs modifiables
+      setClient((entete as Devis).client ?? "");
+      setNumero((entete as Devis).numero ?? "");
+      setDateDevis((entete as Devis).date_devis ?? "");
+      setObjet((entete as Devis).objet ?? "");
+      setNotes((entete as Devis).notes ?? "");
+      setChantierId((entete as Devis).chantier_id ?? "");
+
+      const { data: listeChantiers } = await supabase
+        .from("chantiers")
+        .select("id,nom")
+        .eq("proprietaire_id", user.id)
+        .order("nom");
+      setChantiers((listeChantiers ?? []) as { id: string; nom: string }[]);
+
       const { data: lignesData } = await supabase
         .from("devis_lignes")
         .select("*")
@@ -100,6 +128,64 @@ export default function DevisImprimablePage() {
     }
     load();
   }, [devisId, router]);
+
+  async function enregistrerModification(e: React.FormEvent) {
+    e.preventDefault();
+    if (!devis) return;
+    if (!client.trim() || !numero.trim() || !dateDevis) {
+      setMessage("Le client, le numéro et la date du devis sont obligatoires.");
+      return;
+    }
+    setSaving(true);
+    setMessage(null);
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("devis")
+      .update({
+        client: client.trim(),
+        numero: numero.trim(),
+        date_devis: dateDevis,
+        objet: objet.trim() || null,
+        notes: notes.trim() || null,
+        chantier_id: chantierId || null,
+      })
+      .eq("id", devis.id);
+    setSaving(false);
+    if (error) {
+      setMessage(traduireErreur(error));
+      return;
+    }
+    setDevis((prev) =>
+      prev
+        ? {
+            ...prev,
+            client: client.trim(),
+            numero: numero.trim(),
+            date_devis: dateDevis,
+            objet: objet.trim() || null,
+            notes: notes.trim() || null,
+            chantier_id: chantierId || null,
+          }
+        : prev,
+    );
+    const { data: chantier } = chantierId
+      ? await supabase.from("chantiers").select("nom").eq("id", chantierId).maybeSingle()
+      : { data: null };
+    setNomChantier((chantier as { nom?: string } | null)?.nom ?? null);
+    toast("Devis mis à jour.");
+  }
+
+  async function supprimerDevis() {
+    if (!devis) return;
+    const supabase = createClient();
+    const { error } = await supabase.from("devis").delete().eq("id", devis.id);
+    if (error) {
+      setMessage(traduireErreur(error));
+      return;
+    }
+    toast("Devis supprimé.");
+    router.replace("/calculateurs/devis");
+  }
 
   function exporterExcel() {
     if (!devis) return;
@@ -162,6 +248,92 @@ export default function DevisImprimablePage() {
           </Button>
         </div>
       </div>
+
+      {/* Informations du devis — modifiables (masqué à l'impression) */}
+      {devis && (
+        <div className="mx-auto mb-4 w-full max-w-[210mm] px-4 print:hidden">
+          <Card padding="lg">
+            <h2 className="mb-3 text-lg font-bold text-foreground">Informations du devis</h2>
+            <form onSubmit={enregistrerModification} className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <label className="block text-sm font-medium text-foreground">
+                Client *
+                <input
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  value={client}
+                  onChange={(e) => setClient(e.target.value)}
+                  required
+                />
+              </label>
+              <label className="block text-sm font-medium text-foreground">
+                Numéro du devis *
+                <input
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  value={numero}
+                  onChange={(e) => setNumero(e.target.value)}
+                  required
+                />
+              </label>
+              <label className="block text-sm font-medium text-foreground">
+                Date du devis *
+                <input
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  type="date"
+                  value={dateDevis}
+                  onChange={(e) => setDateDevis(e.target.value)}
+                  required
+                />
+              </label>
+              <label className="block text-sm font-medium text-foreground">
+                Chantier rattaché
+                <select
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  value={chantierId}
+                  onChange={(e) => setChantierId(e.target.value)}
+                >
+                  <option value="">Aucun chantier rattaché</option>
+                  {chantiers.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nom}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-sm font-medium text-foreground md:col-span-2">
+                Objet du devis
+                <input
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  value={objet}
+                  onChange={(e) => setObjet(e.target.value)}
+                />
+              </label>
+              <label className="block text-sm font-medium text-foreground md:col-span-2">
+                Observations / conditions
+                <textarea
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  rows={3}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
+              </label>
+              <div className="flex flex-wrap gap-2 md:col-span-2">
+                <Button type="submit" disabled={saving}>
+                  <Save className="h-4 w-4" />
+                  {saving ? "Enregistrement..." : "Enregistrer les modifications"}
+                </Button>
+                <Button type="button" variant="danger" onClick={supprimerDevis}>
+                  <Trash2 className="h-4 w-4" />
+                  Supprimer le devis
+                </Button>
+              </div>
+            </form>
+            {message && (
+              <p className="mt-3 rounded-xl border border-danger/40 bg-danger/10 p-3 text-sm text-foreground">
+                {message}
+              </p>
+            )}
+          </Card>
+        </div>
+      )}
 
       {/* Feuille A4 */}
       <div className="mx-auto w-full max-w-[210mm] bg-white px-10 py-10 text-slate-900 shadow-lg print:max-w-none print:px-0 print:py-0 print:shadow-none">

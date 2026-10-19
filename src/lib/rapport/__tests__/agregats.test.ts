@@ -7,6 +7,7 @@ import {
   comparaisonDelai,
   depensesParCategorie,
   formaterMontant,
+  formaterPourcentage,
   libelleCategorieDepense,
   totalDepenses,
   totalValorisation,
@@ -131,5 +132,12 @@ describe("agrégats du rapport (REP-01, REP-02)", () => {
   it("formate un montant en FCFA sans décimale", () => {
     assert.equal(formaterMontant(2000000.4).replace(/\s/g, " "), "2 000 000 FCFA");
     assert.equal(formaterMontant(null), "0 FCFA");
+  });
+
+  it("formate un pourcentage à la française (virgule)", () => {
+    assert.equal(formaterPourcentage(0.5), "0,5 %");
+    assert.equal(formaterPourcentage(100), "100 %");
+    assert.equal(formaterPourcentage(33.34), "33,3 %");
+    assert.equal(formaterPourcentage(null), "—");
   });
 });

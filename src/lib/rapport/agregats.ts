@@ -129,6 +129,13 @@ export function formaterMontant(valeur: number | null | undefined): string {
   return `${montant.toLocaleString("fr-FR")} FCFA`;
 }
 
+/** Pourcentage affiche a la francaise : « 0,5 % » (virgule, pas point). */
+export function formaterPourcentage(valeur: number | null | undefined): string {
+  const n = Number(valeur);
+  if (valeur === null || valeur === undefined || !Number.isFinite(n)) return "—";
+  return `${String(Math.round(n * 10) / 10).replace(".", ",")} %`;
+}
+
 /** Valorisation poste par poste : quantite de marche, quantite realisee, montants. */
 export function valorisationPostes(
   postes: PosteDqe[],

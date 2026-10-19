@@ -13,6 +13,7 @@ import {
   COLONNE_PARAMETRE,
   COLONNE_PARAMETRE_ALTERNATIVE,
   UNITES_CONTROLE,
+  formaterNombre,
   modelesPlanControle,
   nomParametre,
   parametresEquivalents,
@@ -272,7 +273,7 @@ export default function PlansControleQualite({
                     </Badge>
                   </td>
                   <td className="px-4 py-3 tabular-nums text-muted">
-                    {plan.valeur_exigee} {plan.unite ?? ""}
+                    {formaterNombre(plan.valeur_exigee)} {plan.unite ?? ""}
                   </td>
                   <td className="px-4 py-3 tabular-nums text-muted">
                     {texteIntervalle(plan)}

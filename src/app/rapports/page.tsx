@@ -14,6 +14,7 @@ import {
   comparaisonDelai,
   depensesParCategorie,
   formaterMontant,
+  formaterPourcentage,
   totalDepenses,
   totalValorisation,
   valorisationPostes,
@@ -274,7 +275,7 @@ export default function RapportsPage() {
               </div>
               <div className="rounded-xl border border-border/70 bg-surface-2 p-3 text-center">
                 <p className="text-xs text-muted">Avancement physique</p>
-                <p className="text-lg font-bold">{reportData.avancement} %</p>
+                <p className="text-lg font-bold">{formaterPourcentage(reportData.avancement)}</p>
               </div>
               <div className="rounded-xl border border-border/70 bg-surface-2 p-3 text-center">
                 <p className="text-xs text-muted">Montant du marché (DQE)</p>
@@ -433,7 +434,7 @@ export default function RapportsPage() {
                           {l.quantiteMarche} {l.unite}
                         </td>
                         <td className="px-3 py-2 text-right tabular-nums">{l.quantiteRealisee}</td>
-                        <td className="px-3 py-2 text-right tabular-nums">{Math.round(l.avancement * 10) / 10} %</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{formaterPourcentage(l.avancement)}</td>
                         <td className="px-3 py-2 text-right tabular-nums">{formaterMontant(l.montantRealise)}</td>
                       </tr>
                     ))}
