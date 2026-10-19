@@ -8,7 +8,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 | TODO-UI-002 | Drapeau « English » incorrect (🇫🇧 → 🇬🇧) | ✅ CORRIGÉ |
 | TODO-UI-003 | Libellé « Total items » identique FR/EN | ✅ CORRIGÉ |
 | TODO-UI-004 | Boutons « Supprimer » sans effet sur le journal | ✅ CORRIGÉ |
-| TODO-UI-005 | Impossible de créer un chantier ; types de chantier détaillés manquants | 🟡 INTERFACE FAITE · base : migration 0015 à appliquer (bloquant) |
+| TODO-UI-005 | Impossible de créer un chantier ; types de chantier détaillés manquants | ✅ CORRIGÉ (migration 0015 appliquée le 18/10 — création de chantier débloquée et vérifiée, chantier « B » en base) |
 | TODO-UI-006 | Pas d'icône/raccourci « Calcul de devis » sur la page d'accueil | ✅ CORRIGÉ |
 | TODO-UI-007 | Pas de vue 3D du projet dans le calculateur de devis | ✅ CORRIGÉ |
 | TODO-UI-008 | Journal : « Créer le journal » qui résiste au réseau faible (blocage n°1 du terrain) | ✅ FAIT (18/10/2026) |
