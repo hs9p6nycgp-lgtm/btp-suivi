@@ -394,6 +394,33 @@ Une section **« Conditions tarifaires »** est apparue dans l'écran Fournisseu
 
 ---
 
+# Partie 15 — Deux réponses aux points signalés en partie 1
+
+## 31. Rapport : la période choisie commande réellement la fenêtre — ✅ **CORRIGÉ ET VÉRIFIÉ**
+
+Deux rapports ont été générés sur le même chantier, avec des périodes différentes :
+
+| | 01/09/2026 → 30/09/2026 | 01/10/2026 → 31/12/2026 |
+|---|---|---|
+| Avancement physique | **0 %** | **0,5 %** |
+| Valorisation travaux | **0 FCFA** | **934 000 FCFA** |
+| Dépenses réelles | **0 FCFA** | **170 000 FCFA** |
+| Marge (valorisation − dépenses) | 0 FCFA | **764 000 FCFA** |
+
+→ La période ne sert plus seulement d'affichage : **elle filtre réellement les données**. C'était le point manquant en partie 1 (§5 : « pas de choix qui change réellement le contenu »).
+
+## 32. Journal : réalisé et restant affichés pendant la saisie — ✅ **CORRIGÉ ET VÉRIFIÉ**
+
+En sélectionnant un poste du DQE pendant la saisie, l'écran affiche désormais :
+
+> **Réalisé 2 000 m² sur 8 400 m² — restant 6 400 m² (23,8 %)**
+
+Le calcul est exact (2 000 / 8 400 = 23,8 %). C'était le point manquant en partie 1 (§4 : « les quantités s'ajoutent ligne par ligne, aucune vue total réalisé / restant »).
+
+*Contrôle de non-régression* : la fiche a été rouverte (avec confirmation), vérifiée, puis **revalidée** — elle est laissée dans son état initial (« Journal validé et verrouillé »).
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
