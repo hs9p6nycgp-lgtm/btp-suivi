@@ -706,6 +706,21 @@ Le module `src/components/Dictation.tsx` est en place et **gère ses échecs** :
 
 ---
 
+# Partie 29 — Rapport de suivi en PDF (REP-02) et identité de l'entreprise sur le rapport (REP-05)
+
+## 59. « Télécharger en PDF » — ✅ **NOUVEAU, VÉRIFIÉ**
+
+Le rapport de suivi propose désormais un bouton **« Télécharger en PDF »** (à côté de « Exporter en Excel », « Envoyer par e-mail » et « Imprimer / PDF ») ; l'application confirme « **Rapport PDF téléchargé.** ».
+
+Contrôle du fichier produit : `rapport_<chantier>_<du>_au.pdf`, **PDF 1.3 de 15 Ko**, dont le contenu a été relu et est conforme :
+- **en-tête de l'entreprise** : « MA SOCIETE TEST · MST · Abidjan, Zone 4 · Abidjan · +225 27 55 66 77 · contact@test.ci · NIF · RCCM » → **REP-05 respecté sur le rapport** ;
+- « Rapport de suivi de chantier — TEST INGENIEUR… — période du 19/10/2026 au 19/10/2026 » ;
+- les indicateurs : 193 jours avant la fin contractuelle, avancement physique 0,5 %, montant du marché 196 492 800 FCFA, valorisation des travaux 934 000 FCFA, dépenses réelles 170 000 FCFA, marge 764 000 FCFA, journaux saisis 1, non-conformités.
+
+→ **REP-02 (rapport généré automatiquement en PDF) est couvert**, et le rapport sort désormais du bureau avec l'identité de l'entreprise.
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
