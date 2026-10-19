@@ -144,6 +144,78 @@ export function avancementMoyenSections(
   return Math.round(resultat * 10) / 10;
 }
 
+export type AvancementNiveau = { niveau: string; avancement: number; sections: number };
+
+/**
+ * Regroupe l'avancement des sections d'un batiment par niveau (CHA-02).
+ * Le niveau est lu dans `niveau`, ou dans `nom` s'il correspond a un niveau
+ * connu (sections generees). Les niveaux inconnus sont ajoutes a la fin.
+ */
+export function avancementParNiveau(
+  sections: Array<{
+    niveau?: string | null;
+    nom?: string | null;
+    avancement_pct?: number | null;
+    pk_debut?: number | null;
+    pk_fin?: number | null;
+  }>,
+  ordre: string[],
+): AvancementNiveau[] {
+  const connus = ordre
+    .map((label) => ({ label, cle: label.trim().toLowerCase() }))
+    .filter((n) => n.cle);
+  const groupes = new Map<
+    string,
+    { label: string; sections: Array<{ avancement_pct?: number | null; pk_debut?: number | null; pk_fin?: number | null }> }
+  >();
+
+  for (const section of sections) {
+    const niveau = section.niveau?.trim() ?? "";
+    const nom = section.nom?.trim() ?? "";
+    let label: string | null = null;
+    let cle: string | null = null;
+
+    if (niveau) {
+      const connu = connus.find((n) => n.cle === niveau.toLowerCase());
+      label = connu?.label ?? niveau;
+      cle = connu?.cle ?? niveau.toLowerCase();
+    } else if (nom) {
+      const connu = connus.find((n) => n.cle === nom.toLowerCase());
+      if (connu) {
+        label = connu.label;
+        cle = connu.cle;
+      }
+    }
+
+    if (!label || !cle) continue;
+    const groupe = groupes.get(cle);
+    if (groupe) groupe.sections.push(section);
+    else groupes.set(cle, { label, sections: [section] });
+  }
+
+  const resultat: AvancementNiveau[] = [];
+  for (const niveau of connus) {
+    const groupe = groupes.get(niveau.cle);
+    if (!groupe) continue;
+    resultat.push({
+      niveau: groupe.label,
+      avancement: avancementMoyenSections(groupe.sections) ?? 0,
+      sections: groupe.sections.length,
+    });
+  }
+  const inconnus = [...groupes.entries()]
+    .filter(([cle]) => !connus.some((n) => n.cle === cle))
+    .sort(([, a], [, b]) => a.label.localeCompare(b.label, "fr", { numeric: true }));
+  for (const [, groupe] of inconnus) {
+    resultat.push({
+      niveau: groupe.label,
+      avancement: avancementMoyenSections(groupe.sections) ?? 0,
+      sections: groupe.sections.length,
+    });
+  }
+  return resultat;
+}
+
 /** Nombre de jours restants avant la fin prevue (negatif si depassee), null si pas de date. */
 export function joursRestants(dateFin: string | null | undefined, reference: Date = new Date()): number | null {
   if (!dateFin) return null;

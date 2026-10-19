@@ -8,6 +8,7 @@ import {
   detailsOuvrageVides,
   formaterSurface,
   hauteurTotaleBatiment,
+  niveauxDepuisChantier,
   niveauxDepuisDetails,
   surfacesOuvrage,
   type DetailsOuvrage,
@@ -177,6 +178,20 @@ describe("affichage et niveaux a suivre", () => {
   it("ne renvoie rien pour un ancien chantier sans details", () => {
     assert.deepEqual(descriptionOuvrage({ type: "batiment" }), []);
     assert.deepEqual(descriptionOuvrage({ type: "route" }), []);
+  });
+
+  it("deduit les niveaux d'un chantier deja enregistre", () => {
+    assert.deepEqual(
+      niveauxDepuisChantier({ type: "batiment", nb_sous_sols: 2, nb_etages: 1 }),
+      ["Sous-sol 2", "Sous-sol 1", "RDC", "R+1"],
+    );
+    // Ancien chantier : les etages sont deduits de la hauteur totale.
+    assert.deepEqual(niveauxDepuisChantier({ type: "batiment", hauteur: 9 }), [
+      "RDC",
+      "R+1",
+      "R+2",
+    ]);
+    assert.deepEqual(niveauxDepuisChantier({ type: "batiment" }), ["RDC"]);
   });
 });
 

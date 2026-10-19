@@ -120,6 +120,7 @@ export type ChantierDescription = {
   type: string;
   longueur?: number | null;
   largeur?: number | null;
+  hauteur?: number | null;
   nb_sous_sols?: number | null;
   nb_etages?: number | null;
   hauteur_niveau?: number | null;
@@ -282,6 +283,16 @@ export function detailsOuvrageDepuisChantier(
     largeurAccotement: texteDepuis(data, "largeur_accotement", ""),
     typeRevetement: texteDepuis(data, "type_revetement", base.typeRevetement),
   };
+}
+
+/** Niveaux a suivre d'un chantier deja enregistre (sous-sols, RDC, etages). */
+export function niveauxDepuisChantier(chantier: ChantierDescription): string[] {
+  const details = detailsOuvrageDepuisChantier("batiment", {
+    hauteur: chantier.hauteur,
+    nb_sous_sols: chantier.nb_sous_sols,
+    nb_etages: chantier.nb_etages,
+  });
+  return niveauxDepuisDetails(details);
 }
 
 /** Colonnes `chantiers` a enregistrer (les champs de l'autre type sont remis a null). */

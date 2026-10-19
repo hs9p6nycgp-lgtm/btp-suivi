@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
-import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, Layers, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog, type DemandeConfirmation } from "@/components/ui/ConfirmDialog";
@@ -55,12 +55,14 @@ export default function ChantierSections({
   sections,
   onReload,
   avancementDisponible = true,
+  niveauxSuggeres = [],
 }: {
   chantierId: string;
   typeChantier: string;
   sections: SectionChantier[];
   onReload: () => void;
   avancementDisponible?: boolean;
+  niveauxSuggeres?: string[];
 }) {
   const route = typeChantier === "route";
 
@@ -96,6 +98,15 @@ export default function ChantierSections({
   const lineaireTotal = route
     ? sections.reduce((total, s) => total + (longueurSection(s.pk_debut, s.pk_fin) ?? 0), 0)
     : null;
+  const niveauxExistants = new Set(
+    sections
+      .flatMap((s) => [s.niveau, s.nom])
+      .filter((v): v is string => Boolean(v && v.trim()))
+      .map((v) => v.trim().toLowerCase()),
+  );
+  const niveauxManquants = route
+    ? []
+    : niveauxSuggeres.filter((niveau) => !niveauxExistants.has(niveau.trim().toLowerCase()));
 
   async function ajouter() {
     setMessage(null);
@@ -150,6 +161,38 @@ export default function ChantierSections({
     setLongueur3D("");
     setLargeur3D("");
     setHauteur3D("");
+    onReload();
+  }
+
+  async function genererNiveaux() {
+    if (niveauxManquants.length === 0) return;
+    setMessage(null);
+    setSaving("niveaux");
+    const supabase = createClient();
+    const { error } = await supabase.from("sections_chantier").insert(
+      niveauxManquants.map((niveau) => ({
+        chantier_id: chantierId,
+        nom: niveau,
+        niveau,
+        pk_debut: null,
+        pk_fin: null,
+        lot: null,
+        type_ouvrage: null,
+        longueur: null,
+        largeur: null,
+        hauteur: null,
+      })),
+    );
+    setSaving(null);
+    if (error) {
+      setMessage(traduireErreur(error));
+      return;
+    }
+    toast(
+      `${niveauxManquants.length} niveau${niveauxManquants.length > 1 ? "x" : ""} ajouté${
+        niveauxManquants.length > 1 ? "s" : ""
+      }.`,
+    );
     onReload();
   }
 
@@ -279,6 +322,31 @@ export default function ChantierSections({
           </div>
         )}
       </div>
+
+      {!route && niveauxManquants.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-action/30 bg-action/5 px-4 py-3">
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              {niveauxManquants.length} niveau{niveauxManquants.length > 1 ? "x" : ""} décrit
+              {niveauxManquants.length > 1 ? "s" : ""} sans section
+            </p>
+            <p className="mt-0.5 text-xs text-muted">
+              {niveauxManquants.join(", ")} — ajoutez-les pour suivre leur avancement.
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={genererNiveaux}
+            disabled={saving === "niveaux"}
+          >
+            <Layers className="h-4 w-4" />
+            {saving === "niveaux"
+              ? "Ajout…"
+              : `Générer les niveaux (${niveauxManquants.length})`}
+          </Button>
+        </div>
+      )}
 
       {/* Formulaire d'ajout */}
       <div className="rounded-2xl border border-border/80 bg-surface-2/50 p-4">

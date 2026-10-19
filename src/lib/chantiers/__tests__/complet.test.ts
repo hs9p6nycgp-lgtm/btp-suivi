@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import {
   analyserPK,
   avancementMoyenSections,
+  avancementParNiveau,
   detailSection,
   estNomChantierSimilaire,
   etatEcheance,
@@ -101,6 +102,43 @@ describe("chantiers : suivi complet (CHA-01, CHA-02, CHA-03)", () => {
 
     it("renvoie null sans section", () => {
       assert.strictEqual(avancementMoyenSections([]), null);
+    });
+
+    it("regroupe l'avancement par niveau de batiment", () => {
+      const niveaux = avancementParNiveau(
+        [
+          { niveau: "RDC", avancement_pct: 100 },
+          { niveau: "R+1", avancement_pct: 50 },
+          { niveau: "R+1", avancement_pct: 30 },
+          { nom: "Bâtiment A", avancement_pct: 20 },
+        ],
+        ["RDC", "R+1"],
+      );
+      assert.deepEqual(niveaux, [
+        { niveau: "RDC", avancement: 100, sections: 1 },
+        { niveau: "R+1", avancement: 40, sections: 2 },
+      ]);
+    });
+
+    it("reconnait le niveau dans le nom et garde les niveaux hors description", () => {
+      const niveaux = avancementParNiveau(
+        [
+          { nom: "RDC", avancement_pct: 60 },
+          { niveau: "R+9", avancement_pct: 10 },
+          { niveau: "R+1", avancement_pct: 20 },
+        ],
+        ["RDC", "R+1"],
+      );
+      assert.deepEqual(niveaux, [
+        { niveau: "RDC", avancement: 60, sections: 1 },
+        { niveau: "R+1", avancement: 20, sections: 1 },
+        { niveau: "R+9", avancement: 10, sections: 1 },
+      ]);
+    });
+
+    it("ne renvoie rien sans niveau identifiable", () => {
+      assert.deepEqual(avancementParNiveau([], ["RDC"]), []);
+      assert.deepEqual(avancementParNiveau([{ nom: "Bâtiment A" }], ["RDC"]), []);
     });
 
     it("calcule les jours restants", () => {

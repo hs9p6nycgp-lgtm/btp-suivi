@@ -31,8 +31,8 @@ import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { getLangue } from "@/lib/i18n";
 import { libelleTypeDetail } from "@/lib/chantiers/types";
-import { avancementMoyenSections, etatEcheance, formaterMetres, joursRestants, longueurSection } from "@/lib/chantiers/complet";
-import { descriptionOuvrage, surfacesOuvrage } from "@/lib/chantiers/detailsOuvrage";
+import { avancementMoyenSections, avancementParNiveau, etatEcheance, formaterMetres, joursRestants, longueurSection } from "@/lib/chantiers/complet";
+import { descriptionOuvrage, niveauxDepuisChantier, surfacesOuvrage } from "@/lib/chantiers/detailsOuvrage";
 
 type Chantier = {
   id: string;
@@ -170,6 +170,9 @@ export default function ChantierDetailPage() {
   const lineaire = sections.reduce((total, section) => total + (longueurSection(section.pk_debut, section.pk_fin) ?? 0), 0);
   const avancementGlobal = avancementMoyenSections(sections);
   const description = [...descriptionOuvrage(chantier), ...surfacesOuvrage(chantier)];
+  const niveaux = chantier.type === "batiment" ? niveauxDepuisChantier(chantier) : [];
+  const avancementNiveaux =
+    chantier.type === "batiment" ? avancementParNiveau(sections, niveaux) : [];
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
@@ -304,6 +307,7 @@ export default function ChantierDetailPage() {
             sections={sections}
             onReload={chargerSections}
             avancementDisponible={avancementSectionOk}
+            niveauxSuggeres={niveaux}
           />
         </div>
 
@@ -353,6 +357,53 @@ export default function ChantierDetailPage() {
           )}
         </Card>
       </div>
+
+      {/* Avancement par niveau (batiment) */}
+      {avancementNiveaux.length > 0 && (
+        <div className="anim-fade-up anim-delay-2 mb-6">
+          <Card padding="lg">
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
+                  <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+                  Avancement par niveau
+                </h2>
+                <p className="mt-1 text-sm text-muted">
+                  Moyenne des sections de chaque niveau, du plus haut au sous-sol.
+                </p>
+              </div>
+              <span className="text-xs font-medium text-muted">
+                {avancementNiveaux.length} niveau{avancementNiveaux.length > 1 ? "x" : ""} suivi
+                {avancementNiveaux.length > 1 ? "s" : ""}
+              </span>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {[...avancementNiveaux].reverse().map((niveau) => (
+                <div
+                  key={niveau.niveau}
+                  className="rounded-xl border border-border/70 bg-surface-2/40 p-3"
+                >
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-sm font-semibold text-foreground">{niveau.niveau}</span>
+                    <span className="text-sm font-bold tabular-nums text-foreground">
+                      {String(niveau.avancement).replace(".", ",")} %
+                    </span>
+                  </div>
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-2">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-action to-action-strong transition-all duration-500"
+                      style={{ width: `${Math.min(100, Math.max(0, niveau.avancement))}%` }}
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-muted">
+                    {niveau.sections} section{niveau.sections > 1 ? "s" : ""}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* Avancement dans le temps (points datés + courbe) */}
       <div className="anim-fade-up anim-delay-3 mb-6">
