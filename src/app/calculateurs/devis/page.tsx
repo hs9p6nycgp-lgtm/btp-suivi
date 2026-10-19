@@ -17,6 +17,14 @@ import {
   type DevisEnregistre,
 } from "@/lib/devis/enregistrement";
 import {
+  appliquerParametres,
+  ecrireParametres,
+  lireParametres,
+  normaliserParametres,
+  PARAMETRES_DEFAUT,
+  type ParametresCalcul,
+} from "@/lib/devis/parametres";
+import {
   dureePlanningGenere,
   liensChaine,
   tachesDepuisDevis,
@@ -56,7 +64,10 @@ export default function DevisAssistantPage() {
   const template = templates.find((t) => t.id === templateId) ?? templates[0];
 
   const [inputs, setInputs] = useState<Record<string, string>>(() =>
-    Object.fromEntries(template.inputs.map((inp) => [inp.id, inp.default])),
+    appliquerParametres(
+      Object.fromEntries(template.inputs.map((inp) => [inp.id, inp.default])),
+      lireParametres(typeof window === "undefined" ? null : window.localStorage),
+    ),
   );
   const [bpu, setBpu] = useState<Bpu[]>([]);
   const [selections, setSelections] = useState<Record<string, string>>({});
@@ -77,6 +88,28 @@ export default function DevisAssistantPage() {
   const [chantierPlanning, setChantierPlanning] = useState("");
   const [messagePlanning, setMessagePlanning] = useState<string | null>(null);
   const [creatingPlanning, setCreatingPlanning] = useState(false);
+
+  // Paramètres de calcul (MET-04), communs à tous les modèles
+  const [parametres, setParametres] = useState<ParametresCalcul>(() =>
+    lireParametres(typeof window === "undefined" ? null : window.localStorage),
+  );
+
+  function majParametre(cle: keyof ParametresCalcul, valeur: string) {
+    const suivant = { ...parametres, [cle]: valeur };
+    setParametres(suivant);
+    ecrireParametres(
+      typeof window === "undefined" ? null : window.localStorage,
+      normaliserParametres(suivant),
+    );
+  }
+
+  function reinitialiserParametres() {
+    setParametres({ ...PARAMETRES_DEFAUT });
+    ecrireParametres(
+      typeof window === "undefined" ? null : window.localStorage,
+      PARAMETRES_DEFAUT,
+    );
+  }
 
   useEffect(() => {
     async function loadDevis() {
@@ -115,10 +148,15 @@ export default function DevisAssistantPage() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setInputs(Object.fromEntries(template.inputs.map((inp) => [inp.id, inp.default])));
+    setInputs(
+      appliquerParametres(
+        Object.fromEntries(template.inputs.map((inp) => [inp.id, inp.default])),
+        parametres,
+      ),
+    );
     setSelections({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [templateId]);
+  }, [templateId, parametres]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -401,6 +439,58 @@ export default function DevisAssistantPage() {
                 <p className="mt-1 text-xs font-normal text-muted">
                   Proposé automatiquement selon le type de chantier ; vous pouvez le changer si besoin.
                 </p>
+              </label>
+            </div>
+          </Card>
+        </section>
+
+        <section className="anim-fade-up anim-delay-2 mb-6">
+          <Card padding="lg">
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="mb-1 text-lg font-bold">Paramètres de calcul</h2>
+                <p className="text-sm text-muted">
+                  Coefficient de foisonnement, capacité de la benne et pertes : ils s&apos;appliquent à
+                  tous les modèles de calcul et restent mémorisés sur cet appareil.
+                </p>
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={reinitialiserParametres}>
+                Valeurs par défaut
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <label className="block text-sm font-medium text-foreground">
+                Coefficient de foisonnement
+                <input
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  type="number"
+                  step="0.05"
+                  min="1"
+                  value={parametres.foisonnement}
+                  onChange={(e) => majParametre("foisonnement", e.target.value)}
+                />
+              </label>
+              <label className="block text-sm font-medium text-foreground">
+                Capacité de la benne (m³)
+                <input
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  type="number"
+                  step="1"
+                  min="1"
+                  value={parametres.capacite_benne}
+                  onChange={(e) => majParametre("capacite_benne", e.target.value)}
+                />
+              </label>
+              <label className="block text-sm font-medium text-foreground">
+                Pertes par défaut (%)
+                <input
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  type="number"
+                  step="1"
+                  min="0"
+                  value={parametres.pertes}
+                  onChange={(e) => majParametre("pertes", e.target.value)}
+                />
               </label>
             </div>
           </Card>

@@ -369,6 +369,8 @@ export const templates: DevisTemplate[] = [
       { id: "hauteur", label: "Hauteur / profondeur (m)", type: "number", default: "0.6" },
       { id: "ratio_acier", label: "Ratio acier (kg/m3)", type: "number", default: "90" },
       { id: "ep_proprete", label: "Beton de propreté - épaisseur (m)", type: "number", default: "0.05" },
+      { id: "foisonnement", label: "Coeff. foisonnement (fouille)", type: "number", default: "1.2" },
+      { id: "capacite_benne", label: "Capacite benne (m3)", type: "number", default: "15" },
     ],
     lignes: [
       {
@@ -463,28 +465,30 @@ export const templates: DevisTemplate[] = [
       {
         code: "FOND-TERRASSEMENT",
         designation: "Terrassement des fouilles",
-        calcul: "volume beton x 1.2 (foisonnement de fouille)",
+        calcul: "volume beton x coeff. foisonnement (m3)",
         unite: "m3",
         quantite: (i) =>
-          n(i, "nb") * n(i, "longueur") * n(i, "largeur") * n(i, "hauteur") * 1.2,
+          n(i, "nb") * n(i, "longueur") * n(i, "largeur") * n(i, "hauteur") * (n(i, "foisonnement", 1.2) || 1.2),
         keywords: ["terrassement", "fouilles", "excavation"],
       },
       {
         code: "FOND-REMBLAI",
         designation: "Remblai des fouilles",
-        calcul: "fouille x 1.2 - volume beton",
+        calcul: "fouille x coeff. foisonnement - volume beton",
         unite: "m3",
         quantite: (i) => {
           const v = n(i, "nb") * n(i, "longueur") * n(i, "largeur") * n(i, "hauteur");
-          return Math.max(v * 1.2 - v, 0);
+          return Math.max(v * (n(i, "foisonnement", 1.2) || 1.2) - v, 0);
         },
         keywords: ["remblai manuel des fouilles", "remblai de terre"],
       },
     ],
     taches: (i) => {
       const v = n(i, "nb") * n(i, "longueur") * n(i, "largeur") * n(i, "hauteur");
+      const foisonnement = n(i, "foisonnement", 1.2) || 1.2;
+      const capaciteBenne = n(i, "capacite_benne", 15) || 15;
       return [
-        { nom: "Implantation et terrassement", jours: Math.max(1, Math.ceil((v * 1.2) / 15)) },
+        { nom: "Implantation et terrassement", jours: Math.max(1, Math.ceil((v * foisonnement) / capaciteBenne)) },
         { nom: "Beton de propreté", jours: 1 },
         { nom: "Coffrage", jours: Math.max(1, Math.ceil((n(i, "nb") * 2 * (n(i, "longueur") + n(i, "largeur")) * n(i, "hauteur")) / 20)) },
         { nom: "Ferraillage", jours: Math.max(1, Math.ceil((v * n(i, "ratio_acier", 90)) / 100)) },
@@ -602,6 +606,7 @@ export const templates: DevisTemplate[] = [
       { id: "profondeur", label: "Profondeur (m)", type: "number", default: "8" },
       { id: "dosage", label: "Dosage ciment (kg/m3)", type: "number", default: "400" },
       { id: "ratio_acier", label: "Ratio acier (kg/m3)", type: "number", default: "120" },
+      { id: "foisonnement", label: "Coeff. foisonnement (deblais)", type: "number", default: "1.3" },
     ],
     lignes: [
       {
@@ -681,10 +686,10 @@ export const templates: DevisTemplate[] = [
       {
         code: "PIEUX-SPOIL",
         designation: "Deblais et évacuation (foisonné)",
-        calcul: "volume x 1.3",
+        calcul: "volume x coeff. foisonnement (m3)",
         unite: "m3",
         quantite: (i) =>
-          n(i, "nb") * Math.PI * Math.pow(n(i, "diametre") / 2, 2) * n(i, "profondeur") * 1.3,
+          n(i, "nb") * Math.PI * Math.pow(n(i, "diametre") / 2, 2) * n(i, "profondeur") * (n(i, "foisonnement", 1.3) || 1.3),
         keywords: ["épandage", "évacuation"],
       },
       {

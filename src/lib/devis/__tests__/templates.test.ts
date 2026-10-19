@@ -30,6 +30,37 @@ describe("templates de devis - structure", () => {
     }
   });
 
+  it("exposent les paramètres de calcul (MET-04) : foisonnement et benne", () => {
+    const modeles = [
+      "terrassement-route",
+      "chaussee-bitume",
+      "assainissement-fouille",
+      "remblai-apport",
+      "fondations-semelles",
+      "fondations-profondes",
+    ];
+    for (const id of modeles) {
+      const t = templates.find((x) => x.id === id)!;
+      const ids = t.inputs.map((inp) => inp.id);
+      assert.ok(ids.includes("foisonnement"), `${id} : coefficient de foisonnement absent`);
+    }
+    for (const id of modeles.filter((m) => m !== "fondations-profondes")) {
+      const t = templates.find((x) => x.id === id)!;
+      const ids = t.inputs.map((inp) => inp.id);
+      assert.ok(ids.includes("capacite_benne"), `${id} : capacité de benne absente`);
+    }
+  });
+
+  it("le coefficient de foisonnement des fondations est paramétrable", () => {
+    // 4 semelles de 1,2 x 1,2 x 0,6 m = 3,456 m³ de béton.
+    // Défaut : coefficient 1,2 → 4,147 m³ de fouille.
+    const parDefaut = qte("fondations-semelles", "FOND-TERRASSEMENT");
+    assert.strictEqual(Math.round(parDefaut * 1000) / 1000, 4.147);
+    // Coefficient ramené à 1,0 : le terrassement suit le paramètre saisi.
+    const sansFoisonnement = qte("fondations-semelles", "FOND-TERRASSEMENT", { foisonnement: "1" });
+    assert.strictEqual(Math.round(sansFoisonnement * 1000) / 1000, 3.456);
+  });
+
   it("toutes les quantites sont finies et positives pour les valeurs par defaut", () => {
     for (const t of templates) {
       const i = Object.fromEntries(t.inputs.map((inp) => [inp.id, inp.default]));
