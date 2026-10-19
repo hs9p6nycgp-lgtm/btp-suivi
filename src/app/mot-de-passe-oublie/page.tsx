@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { traduireErreur } from "@/lib/i18n";
 
 export default function MotDePasseOubliePage() {
   const [email, setEmail] = useState("");
@@ -23,10 +24,10 @@ export default function MotDePasseOubliePage() {
     });
     setLoading(false);
     if (error) {
-      setMessage(error.message);
+      setMessage(traduireErreur(error));
       return;
     }
-    setMessage("Un lien de réinitialisation a ete envoye par e-mail.");
+    setMessage("Un lien de réinitialisation a été envoyé par e-mail.");
   }
 
   return (

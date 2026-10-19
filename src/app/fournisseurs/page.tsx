@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getLangue } from "@/lib/i18n";
+import { getLangue, traduireErreur } from "@/lib/i18n";
 import { Users } from "lucide-react";
 
 type Fournisseur = {
@@ -63,7 +63,7 @@ export default function FournisseursPage() {
       .select("*")
       .eq("proprietaire_id", user.id)
       .order("raison_sociale", { ascending: true });
-    if (error) { setMessage(error.message); setLoading(false); return; }
+    if (error) { setMessage(traduireErreur(error)); setLoading(false); return; }
     setItems((data ?? []) as Fournisseur[]);
     setLoading(false);
   }
@@ -126,7 +126,7 @@ export default function FournisseursPage() {
       error = res.error;
     }
     setLoading(false);
-    if (error) { setMessage(error.message); return; }
+    if (error) { setMessage(traduireErreur(error)); return; }
     setMessage(editing ? "Fournisseur mis à jour." : "Fournisseur créé.");
     resetForm();
     load();
@@ -136,7 +136,7 @@ export default function FournisseursPage() {
     if (!confirm("Supprimer ce fournisseur ?")) return;
     const supabase = createClient();
     const { error } = await supabase.from("fournisseurs").delete().eq("id", id);
-    if (error) { setMessage(error.message); return; }
+    if (error) { setMessage(traduireErreur(error)); return; }
     setMessage("Fournisseur supprimé.");
     load();
   }

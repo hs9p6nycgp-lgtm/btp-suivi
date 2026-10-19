@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
-import { getLangue } from "@/lib/i18n";
+import { getLangue, traduireErreur } from "@/lib/i18n";
 
 type Row = {
   id: string;
@@ -44,7 +44,7 @@ export default function BpuPage() {
       .from("bpu_postes")
       .select("*")
       .order("created_at", { ascending: false });
-    if (error) setMessage(error.message);
+    if (error) setMessage(traduireErreur(error));
     else setItems((data ?? []) as Row[]);
   }
 
@@ -71,7 +71,7 @@ export default function BpuPage() {
       .single();
     setLoading(false);
     if (error) {
-      setMessage(error.message);
+      setMessage(traduireErreur(error));
       return;
     }
     setItems((prev) => [data as Row, ...prev]);
@@ -87,7 +87,7 @@ export default function BpuPage() {
     const supabase = createClient();
     const { error } = await supabase.from("bpu_postes").delete().eq("id", id);
     if (error) {
-      setMessage(error.message);
+      setMessage(traduireErreur(error));
       return;
     }
     setItems((prev) => prev.filter((m) => m.id !== id));

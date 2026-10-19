@@ -64,6 +64,7 @@ export const DICTIONNAIRE: Record<string, Record<Langue, string>> = {
   "inscription_erreur": { fr: "Erreur lors de la création du compte.", en: "Failed to create account." },
   "connexion_erreur": { fr: "Identifiants incorrects ou réseau indisponible.", en: "Invalid credentials or network unavailable." },
   "err.not_null": { fr: "Un champ obligatoire est vide.", en: "A required field is empty." },
+  "err.check": { fr: "Valeur refusée par la base de données (règle non respectée).", en: "Value rejected by the database (rule not satisfied)." },
 
   // Accueil
   "home.titre": { fr: "Tableau de bord", en: "Dashboard" },

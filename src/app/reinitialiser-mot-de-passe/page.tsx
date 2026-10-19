@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { traduireErreur } from "@/lib/i18n";
 
 export default function ReinitialiserMotDePassePage() {
   const router = useRouter();
@@ -26,10 +27,10 @@ export default function ReinitialiserMotDePassePage() {
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
     if (error) {
-      setMessage(error.message);
+      setMessage(traduireErreur(error));
       return;
     }
-    setMessage("Mot de passe mis a jour. Redirection...");
+    setMessage("Mot de passe mis à jour. Redirection...");
     router.replace("/");
     router.refresh();
   }

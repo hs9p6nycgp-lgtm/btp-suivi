@@ -9,6 +9,7 @@ import { CalendarDays, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { getLangue, traduireErreur } from "@/lib/i18n";
 import { compresserImage } from "@/lib/photos/compression";
 import { BUCKET_PHOTOS, urlSignee, urlsSignees } from "@/lib/photos/urls";
@@ -288,7 +289,23 @@ export default function JournalDetailPage() {
     loadAll();
   }
 
-  if (!journal) return <div className="p-4">Chargement...</div>;
+  if (!journal) {
+    return (
+      <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
+        <div className="mx-auto w-full max-w-5xl space-y-4">
+          <div className="anim-fade-up flex items-center gap-3">
+            <Skeleton variant="rect" width="2.75rem" height="2.75rem" />
+            <div className="flex-1 space-y-2">
+              <Skeleton width="45%" />
+              <Skeleton width="70%" />
+            </div>
+          </div>
+          <Skeleton variant="rect" height="11rem" />
+          <Skeleton variant="rect" height="15rem" />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">

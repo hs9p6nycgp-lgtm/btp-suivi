@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
-import { getLangue } from "@/lib/i18n";
+import { getLangue, traduireErreur } from "@/lib/i18n";
 import { lignesAffecteesParMiseAJour, exporterReferentielCSV, type LigneReferentiel } from "@/lib/referentiel/prix";
 import { BookOpen } from "lucide-react";
 import ReferentielImport from "@/components/ReferentielImport";
@@ -70,7 +70,7 @@ export default function ReferentielPage() {
       .from("referentiel_prix")
       .select("*")
       .order("designation", { ascending: true });
-    if (error) { setMessage(error.message); setLoading(false); return; }
+    if (error) { setMessage(traduireErreur(error)); setLoading(false); return; }
     setItems((data ?? []) as Prix[]);
     setLoading(false);
   }
@@ -154,11 +154,11 @@ export default function ReferentielPage() {
       }
 
       const { error } = await supabase.from("referentiel_prix").update(payload).eq("id", editing.id);
-      if (error) { setMessage(error.message); setLoading(false); return; }
+      if (error) { setMessage(traduireErreur(error)); setLoading(false); return; }
       setMessage("Prix mis à jour.");
     } else {
       const { error } = await supabase.from("referentiel_prix").insert(payload);
-      if (error) { setMessage(error.message); setLoading(false); return; }
+      if (error) { setMessage(traduireErreur(error)); setLoading(false); return; }
       setMessage("Prix créé.");
     }
     setLoading(false);
@@ -172,7 +172,7 @@ export default function ReferentielPage() {
     const supabase = createClient();
     const { error } = await supabase.from("referentiel_prix").update({ prix_unitaire: pendingPrice.prix }).eq("id", pendingPrice.id);
     setLoading(false);
-    if (error) { setMessage(error.message); return; }
+    if (error) { setMessage(traduireErreur(error)); return; }
     setMessage(`Prix mis à jour (${pendingPrice.ancienPrix} → ${pendingPrice.prix} FCFA). ${affectedDQE.length + affectedBPU.length} poste(s) DQE/BPU concerné(s) — mise à jour manuelle recommandée.`);
     setPropagating(false);
     setPendingPrice(null);
@@ -193,7 +193,7 @@ export default function ReferentielPage() {
     if (!confirm("Supprimer ce prix du référentiel ?")) return;
     const supabase = createClient();
     const { error } = await supabase.from("referentiel_prix").delete().eq("id", id);
-    if (error) { setMessage(error.message); return; }
+    if (error) { setMessage(traduireErreur(error)); return; }
     setMessage("Prix supprimé.");
     load();
   }

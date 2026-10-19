@@ -107,139 +107,9 @@ body {
   }
 }
 
-/* ---------- Cartes modernes ---------- */
-.card {
-  background: var(--surface);
-  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
-  border-radius: 1rem;
-  box-shadow: 0 1px 2px 0 rgb(15 23 42 / 0.05), 0 12px 28px -18px rgb(15 23 42 / 0.22);
-  transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
-}
-
-.card:hover {
-  border-color: color-mix(in srgb, var(--primary-light) 30%, var(--border));
-  box-shadow: 0 2px 4px 0 rgb(15 23 42 / 0.05), 0 18px 36px -20px rgb(15 23 42 / 0.3);
-}
-
-/* Carte mise en avant (héros, total, résumé) */
-.card-elevated {
-  box-shadow: 0 2px 4px 0 rgb(15 23 42 / 0.04), 0 24px 48px -24px rgb(15 23 42 / 0.35);
-}
-
-/* ---------- Boutons ---------- */
-.btn-primary {
-  background-image: linear-gradient(135deg, var(--action) 0%, var(--action-strong) 100%);
-  color: #ffffff;
-  border-radius: 0.875rem;
-  padding: 0.75rem 1.5rem;
-  font-weight: 700;
-  border: none;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-  box-shadow: 0 1px 2px rgb(249 115 22 / 0.35), 0 12px 26px -12px rgb(249 115 22 / 0.6);
-}
-
-.btn-primary:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.04);
-  box-shadow: 0 2px 4px rgb(249 115 22 / 0.3), 0 18px 34px -14px rgb(249 115 22 / 0.65);
-}
-
-.btn-primary:active {
-  transform: translateY(0) scale(0.985);
-}
-
-.btn-primary:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.btn-secondary {
-  background: var(--surface);
-  color: var(--primary);
-  border: 1.5px solid color-mix(in srgb, var(--primary) 75%, transparent);
-  border-radius: 0.875rem;
-  padding: 0.75rem 1.5rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-secondary:hover {
-  background: var(--primary);
-  color: #ffffff;
-  transform: translateY(-1px);
-  box-shadow: 0 12px 26px -14px rgb(15 42 74 / 0.7);
-}
-
-/* ---------- Badges ---------- */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 9999px;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-.badge-success { background: #dcfce7; color: #15803d; }
-.badge-warning { background: #fef3c7; color: #b45309; }
-.badge-danger { background: #fee2e2; color: #b91c1c; }
-.badge-info { background: #dbeafe; color: #1d4ed8; }
-.badge-primary { background: #dbeafe; color: #1e3a5f; }
-
-/* ---------- Header ---------- */
-.app-header {
-  background: var(--primary);
-  color: #ffffff;
-  border-bottom: 1px solid rgba(255,255,255,0.15);
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
-}
-
-.app-header a {
-  color: #ffffff;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-/* ---------- Titres ---------- */
-.section-title {
-  color: var(--primary);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-/* ---------- Liens nav ---------- */
-.nav-link {
-  color: rgba(255,255,255,0.9);
-  font-weight: 600;
-  transition: color 0.2s;
-}
-
-.nav-link:hover {
-  color: #ffffff;
-}
-
-/* ---------- Barre de progression ---------- */
-.progress-bar {
-  height: 8px;
-  border-radius: 9999px;
-  background: var(--border);
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: 9999px;
-  background-image: linear-gradient(90deg, var(--action), var(--action-strong));
-  transition: width 0.5s ease;
-}
 
 /* ---------- Utilitaires ---------- */
 .text-muted { color: var(--muted); }
-.border-subtle { border-color: var(--border); }
 
 /* Ombres douces en couches (cartes, panneaux) */
 @utility shadow-soft {
@@ -248,10 +118,6 @@ body {
 
 @utility shadow-soft-lg {
   box-shadow: 0 2px 4px 0 rgb(15 23 42 / 0.04), 0 24px 48px -24px rgb(15 23 42 / 0.35);
-}
-
-@utility glow-action {
-  box-shadow: 0 1px 2px rgb(249 115 22 / 0.35), 0 12px 26px -12px rgb(249 115 22 / 0.6);
 }
 
 /* Effet verre dépoli (barres d'outils) */
@@ -284,11 +150,6 @@ body {
 
 .hover-lift:hover {
   transform: translateY(-3px);
-}
-
-/* Ombre portée colorée pour l'action principale */
-.glow-action {
-  box-shadow: 0 1px 2px rgb(249 115 22 / 0.35), 0 14px 30px -12px rgb(249 115 22 / 0.6);
 }
 
 /* Finition "squelette" : balayage lumineux */
@@ -335,8 +196,6 @@ body {
 .anim-delay-4 { animation-delay: 0.24s; }
 .anim-delay-5 { animation-delay: 0.3s; }
 .anim-delay-6 { animation-delay: 0.36s; }
-.anim-delay-7 { animation-delay: 0.42s; }
-.anim-delay-8 { animation-delay: 0.48s; }
 
 /* ---------- Effets premium (logo, pages de connexion) ---------- */
 @keyframes float-slow {
@@ -376,7 +235,7 @@ input, select, textarea {
 }
 
 /* Boutons plus larges pour le tactile */
-button, a.btn-primary, a.btn-secondary {
+button {
   min-height: 48px;
   min-width: 48px;
 }
@@ -386,26 +245,9 @@ input, select {
   min-height: 48px;
 }
 
-/* Cartes avec padding adapté mobile */
-.card {
-  padding: 1rem;
-}
-
 /* Éviter le overflow sur les tableaux mobile */
 .overflow-x-auto {
   -webkit-overflow-scrolling: touch;
-}
-
-/* Liens de navigation plus faciles à cliquer */
-.nav-link {
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-}
-
-/* Badges plus clairs sur petit écran */
-.badge {
-  white-space: nowrap;
 }
 
 /* Sélecteur de langue mobile plus visible */
