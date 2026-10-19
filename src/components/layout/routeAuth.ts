@@ -4,6 +4,14 @@
 // leur propre mise en page plein écran.
 const MOTIF_ROUTES_AUTH = /^\/(login|mot-de-passe-oublie|reinitialiser-mot-de-passe)(\/|$)/;
 
+// Pages d'impression : elles doivent sortir proprement sur une feuille A4
+// (sans barre latérale ni bouton). Ex. : /chantiers/<id>/imprimer
+const MOTIF_ROUTES_IMPRESSION = /\/imprimer(\/|$)/;
+
 export function estRouteAuth(chemin: string): boolean {
   return MOTIF_ROUTES_AUTH.test(chemin);
+}
+
+export function estRouteImpression(chemin: string): boolean {
+  return MOTIF_ROUTES_IMPRESSION.test(chemin);
 }

@@ -11,6 +11,7 @@ import {
   ExternalLink,
   MapPin,
   Pencil,
+  Printer,
   ShieldAlert,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -231,6 +232,7 @@ export default function ChantierDetailPage() {
               { href: `/chantiers/${chantier.id}/couts`, label: langue === "fr" ? "Coûts & Budget" : "Costs & Budget", icon: <Coins className="h-4 w-4" /> },
               { href: `/chantiers/${chantier.id}/qualite`, label: langue === "fr" ? "Qualité" : "Quality", icon: <ClipboardCheck className="h-4 w-4" /> },
               { href: `/chantiers/${chantier.id}/modelisation3d`, label: langue === "fr" ? "Modélisation 3D" : "3D Modeling", icon: <Box className="h-4 w-4" /> },
+              { href: `/chantiers/${chantier.id}/imprimer`, label: langue === "fr" ? "Imprimer la fiche" : "Print sheet", icon: <Printer className="h-4 w-4" /> },
             ].map((lien) => (
               <Link
                 key={lien.href}
