@@ -10,15 +10,15 @@ décrites avec le détail.
 
 | Réf  | Description courte                                                    |
 |------|---------------------------------------------------------------------|
-| TODO-LOGIC-001 | Indicateurs de la section 5 jamais appelés par les écrans          |
-| TODO-LOGIC-002 | validerBasePrix jamais appelée lors de l’import                  |
-| TODO-LOGIC-003 | estConforme jamais appelée dans la page qualité                   |
-| TODO-LOGIC-004 | Date de fin prévue du planning copiée de la date de début        |
-| TODO-LOGIC-005 | Isolation multitenant non fonctionnelle                          |
-| TODO-LOGIC-006 | Plans de contrôle qualité : logique de création (T-LOG-36)       |
-| TODO-LOGIC-007 | Enregistrer un devis : table + logique (T-LOG-37)                |
-| TODO-LOGIC-008 | Planning : liens entre les tâches (T-LOG-38)                     |
-| TODO-LOGIC-009 | Rapport complet : agrégats + export (T-LOG-39)                   |
+| TODO-LOGIC-001 | Indicateurs de la section 5 jamais appelés par les écrans | ✅ CORRIGÉ (5.1 à 5.11 utilisés par les écrans) |
+| TODO-LOGIC-002 | validerBasePrix jamais appelée lors de l’import | ✅ CORRIGÉ (19/10) — point de repère unique de la règle REF-04 |
+| TODO-LOGIC-003 | estConforme jamais appelée dans la page qualité | ✅ CORRIGÉ (constaté) |
+| TODO-LOGIC-004 | Date de fin prévue du planning copiée de la date de début | ✅ CORRIGÉ |
+| TODO-LOGIC-005 | Isolation multitenant non fonctionnelle | ✅ CORRIGÉ (filtre applicatif + script appliqué en base + test à 2 comptes) |
+| TODO-LOGIC-006 | Plans de contrôle qualité : logique de création (T-LOG-36) | ✅ CORRIGÉ (19/10) — modèles par type d'ouvrage, essai hors tolérance → fiche NC automatique (RG-04) |
+| TODO-LOGIC-007 | Enregistrer un devis : table + logique (T-LOG-37) | ✅ CORRIGÉ (19/10) — tables `devis` / `devis_lignes`, export Excel, impression |
+| TODO-LOGIC-008 | Planning : liens entre les tâches (T-LOG-38) | ✅ CORRIGÉ (19/10) — enchaînement des tâches, cycle refusé, chemin critique recalculé |
+| TODO-LOGIC-009 | Rapport complet : agrégats + export (T-LOG-39) | ✅ CORRIGÉ (19/10) — journaux, dépenses, non-conformités, valorisation, export |
 | TODO-LOGIC-010 | BPU : dédoublonnage + conditions fournisseurs (T-LOG-40) | 🔶 PARTIEL (19/10) — unités normalisées, doublons et familles à vérifier détectés (écran + rapport) ; arbitrage des prix et suppression des doublons restent à la main de l'utilisateur |
 | TODO-LOGIC-011 | Calculateur de murs : prix dans la bonne unité + montants sans décimale (T-LOG-41) | ✅ CORRIGÉ (19/10) |
 | TODO-LOGIC-012 | Base de prix : date de source obligatoire + lien avec le Référentiel (T-LOG-42) | ✅ CORRIGÉ (19/10) — date obligatoire à la saisie, référentiel alimenté (289 prix), historique REF-03, liste de travail des 131 postes « à vérifier ». |

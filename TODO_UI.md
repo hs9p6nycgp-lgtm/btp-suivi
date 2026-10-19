@@ -21,12 +21,12 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 | TODO-UI-015 | Accueil : « 1 chantiers » (pluriel) + dates des mini-courbes coupées | ✅ CORRIGÉ (19/10/2026) |
 | TODO-UI-016 | Connexion : la coquille (barres latérale/haut/bas) s'affiche avant connexion | ✅ CORRIGÉ (18/10/2026, Session 1 — commit `45ee2b8`) |
 | TODO-UI-017 | Accueil : détail d'alerte lisible + finitions (pluriel « 1 chantier », dates des graphiques) | ✅ CORRIGÉ (18/10/2026, Session 2) |
-| TODO-UI-018 | Qualité : créer les plans de contrôle (T-UI-22) — bloquant, fiches NC automatiques inaccessibles | 🔜 À FAIRE |
-| TODO-UI-019 | Devis : enregistrer, nommer, exporter (T-UI-23) — le devis disparaît à la fermeture | 🔜 À FAIRE |
-| TODO-UI-020 | Planning : liens entre tâches + modifier / supprimer une tâche (T-UI-24) | 🔜 À FAIRE |
-| TODO-UI-021 | Rapports : sections détaillées + libellés « Valorisation travaux / Dépenses réelles » (T-UI-25) | 🔜 À FAIRE |
-| TODO-UI-022 | Export Excel : feuilles manquantes + valeurs traduites et dates JJ/MM/AAAA (T-UI-20) | 🔜 À FAIRE |
-| TODO-UI-023 | Fiche chantier : un seul affichage du statut (T-UI-21) | 🔜 À FAIRE |
+| TODO-UI-018 | Qualité : créer les plans de contrôle (T-UI-22) — bloquant, fiches NC automatiques inaccessibles | ✅ FAIT (19/10) — modèles par type d'ouvrage, essai hors tolérance → fiche NC créée (RG-04) |
+| TODO-UI-019 | Devis : enregistrer, nommer, exporter (T-UI-23) — le devis disparaît à la fermeture | ✅ FAIT (19/10) — fiche devis, export Excel, impression |
+| TODO-UI-020 | Planning : liens entre tâches + modifier / supprimer une tâche (T-UI-24) | ✅ FAIT (19/10) — enchaînement, lien à l'envers refusé, chemin critique |
+| TODO-UI-021 | Rapports : sections détaillées + libellés « Valorisation travaux / Dépenses réelles » (T-UI-25) | ✅ FAIT (19/10) — agrégats, libellés, export Excel, impression |
+| TODO-UI-022 | Export Excel : feuilles manquantes + valeurs traduites et dates JJ/MM/AAAA (T-UI-20) | ✅ FAIT (19/10) — 9 feuilles, statuts et dates en français |
+| TODO-UI-023 | Fiche chantier : un seul affichage du statut (T-UI-21) | ✅ FAIT (19/10) — la pastille est le menu de changement |
 | TODO-UI-024 | Calculateur de murs : prix du sac de ciment appliqué à des kilos + total avec décimales (T-UI-26) | ✅ FAIT (19/10/2026) — quantités converties dans l'unité du prix, total en FCFA sans décimale, format français |
 | TODO-UI-025 | Base de prix : date de source + postes « à vérifier » (T-UI-27) | ✅ FAIT (19/10/2026) — date de source affichée et obligatoire, recherche rétablie, filtre « À vérifier » + liste de travail, synchronisation vers le Référentiel |
 | TODO-UI-026 | Fournisseurs : écran « Conditions tarifaires » (T-UI-28) | ✅ FAIT (19/10/2026) — saisie des offres, comparaison par poste, choix motivé, report du prix dans la base de prix |
