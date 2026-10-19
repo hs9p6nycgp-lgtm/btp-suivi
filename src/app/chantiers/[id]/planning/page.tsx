@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClock, Flag, Route, TimerReset } from "lucide-react";
+import { CalendarClock, Check, Flag, Link2, Pencil, Route, TimerReset, Trash2 } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from "recharts";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -11,9 +11,16 @@ import { Button } from "@/components/ui/Button";
 import { StatCard } from "@/components/ui/StatCard";
 import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { ConfirmDialog, type DemandeConfirmation } from "@/components/ui/ConfirmDialog";
 import { getLangue, traduireErreur } from "@/lib/i18n";
 import { joursEcartDelai, serieCumulative, partRealisee } from "@/lib/calculs/metre";
 import { calculPert } from "@/lib/calculs/pert";
+import {
+  ajouterJours,
+  chaineCritique,
+  libelleLien,
+  verifierLien,
+} from "@/lib/planning/liens";
 
 type Tache = {
   id: string;
@@ -52,6 +59,15 @@ type CalculPert = {
   est_jalon: boolean;
 };
 
+/** Date au format AAAA-MM-JJ (heure locale, sans passage UTC). */
+function formaterIso(ms: number): string {
+  const d = new Date(ms);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const j = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${j}`;
+}
+
 export default function PlanningPage() {
   const params = useParams();
   const router = useRouter();
@@ -63,11 +79,17 @@ export default function PlanningPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [dateFinPrevue, setDateFinPrevue] = useState<string | null>(null);
+  const [dateDebutChantier, setDateDebutChantier] = useState<string | null>(null);
+  const [confirmation, setConfirmation] = useState<DemandeConfirmation | null>(null);
 
   const [nomTache, setNomTache] = useState("");
   const [dureeTache, setDureeTache] = useState("1");
   const [dateDebutTache, setDateDebutTache] = useState("");
   const [estJalon, setEstJalon] = useState(false);
+  const [predecesseurTache, setPredecesseurTache] = useState("");
+  const [tacheEnEdition, setTacheEnEdition] = useState<Tache | null>(null);
+  const [lienPredecesseur, setLienPredecesseur] = useState("");
+  const [lienSuccesseur, setLienSuccesseur] = useState("");
 
   useEffect(() => {
     if (chantierId) load();
@@ -82,7 +104,7 @@ export default function PlanningPage() {
     const [tRes, dRes, cRes] = await Promise.all([
       supabase.from("taches_planning").select("*").eq("chantier_id", chantierId).order("created_at", { ascending: true }),
       supabase.from("dependances_planning").select("*").eq("chantier_id", chantierId),
-      supabase.from("chantiers").select("date_fin_prevue").eq("id", chantierId).maybeSingle(),
+      supabase.from("chantiers").select("date_fin_prevue, date_debut").eq("id", chantierId).maybeSingle(),
     ]);
     if (tRes.error) { setMessage(traduireErreur(tRes.error)); return; }
     if (dRes.error) { setMessage(traduireErreur(dRes.error)); return; }
@@ -90,6 +112,7 @@ export default function PlanningPage() {
     setTaches((tRes.data ?? []) as Tache[]);
     setDependances((dRes.data ?? []) as Dependance[]);
     setDateFinPrevue(cRes.data?.date_fin_prevue ?? null);
+    setDateDebutChantier(cRes.data?.date_debut ?? null);
     setLoading(false);
   }
 
@@ -133,18 +156,32 @@ export default function PlanningPage() {
   const tachesCritiques = pert.filter((p) => p.est_critique).length;
   const terminees = taches.filter((t) => t.statut === "termine").length;
 
-  // 5.4 - Écart de délai : fin prévue du projet vs date contractuelle du chantier
-  const dernierFinPrevue = pert.length > 0
-    ? Math.max(...pert.map((p) => {
-        const t = taches.find((t) => t.id === p.tache_id);
-        return t?.date_prevue_fin ? new Date(t.date_prevue_fin).getTime() : 0;
-      }))
-    : 0;
-  const ecartDelaiJours = dateFinPrevue && dernierFinPrevue > 0
-    ? joursEcartDelai(
-        new Date(dernierFinPrevue).toISOString().split("T")[0],
-        dateFinPrevue,
-      )
+  // Noms des tâches (prédécesseurs affichés) et chaîne critique
+  const nomsParId = new Map(taches.map((t) => [t.id, t.nom]));
+  const predicteursDe = (id: string) =>
+    dependances
+      .filter((d) => d.tache_successeur_id === id)
+      .map((d) => nomsParId.get(d.tache_predecesseur_id) ?? "?");
+  const cheminCritique = chaineCritique(
+    taches.map((t) => ({ id: t.id, nom: t.nom, duree_jours: t.duree_jours })),
+    dependances,
+  );
+
+  // 5.4 - Écart de délai : fin prévue du planning (PERT) vs date contractuelle du chantier
+  const dateFinProjet = dateDebutChantier ? ajouterJours(dateDebutChantier, dureeProjet) : null;
+  const dernierFinTaches =
+    pert.length > 0
+      ? Math.max(
+          ...pert.map((p) => {
+            const t = taches.find((x) => x.id === p.tache_id);
+            return t?.date_prevue_fin ? new Date(`${t.date_prevue_fin}T00:00:00`).getTime() : 0;
+          }),
+        )
+      : 0;
+  const dernierFinPrevue =
+    dateFinProjet ?? (dernierFinTaches > 0 ? formaterIso(dernierFinTaches) : null);
+  const ecartDelaiJours = dateFinPrevue && dernierFinPrevue
+    ? joursEcartDelai(dernierFinPrevue, dateFinPrevue)
     : 0;
 
   // PLA-05 : courbe en S — avancement cumulé prévu (PERT) vs réel (dates réelles)
@@ -220,29 +257,145 @@ export default function PlanningPage() {
 
   const courbeS = calculerCourbeS();
 
-  async function ajouterTache(e: React.FormEvent) {
+  function reinitialiserFormulaire() {
+    setNomTache("");
+    setDureeTache("1");
+    setDateDebutTache("");
+    setEstJalon(false);
+    setPredecesseurTache("");
+    setTacheEnEdition(null);
+  }
+
+  function commencerEdition(t: Tache) {
+    setTacheEnEdition(t);
+    setNomTache(t.nom);
+    setDureeTache(String(t.duree_jours ?? 1));
+    setDateDebutTache(t.date_prevue_debut ?? "");
+    setEstJalon(Boolean(t.est_jalon));
+    setMessage(
+      langue === "fr"
+        ? `Modification de « ${t.nom} » : corrigez les champs puis enregistrez.`
+        : `Editing "${t.nom}": change the fields then save.`,
+    );
+  }
+
+  async function enregistrerTache(e: React.FormEvent) {
     e.preventDefault();
     if (!nomTache.trim()) return;
     setLoading(true);
     setMessage(null);
     const supabase = createClient();
+    const duree = Number(dureeTache) || 1;
+    const finPrevue = dateDebutTache
+      ? new Date(new Date(`${dateDebutTache}T00:00:00`).getTime() + duree * 86400000)
+          .toISOString()
+          .slice(0, 10)
+      : null;
+
+    if (tacheEnEdition) {
+      const { error } = await supabase
+        .from("taches_planning")
+        .update({
+          nom: nomTache.trim(),
+          duree_jours: duree,
+          date_prevue_debut: dateDebutTache || null,
+          date_prevue_fin: finPrevue,
+          est_jalon: estJalon,
+        })
+        .eq("id", tacheEnEdition.id);
+      setLoading(false);
+      if (error) { setMessage(traduireErreur(error)); return; }
+      reinitialiserFormulaire();
+      setMessage(langue === "fr" ? "Tâche modifiée." : "Task updated.");
+      load();
+      return;
+    }
+
     const { data, error } = await supabase.from("taches_planning").insert({
       chantier_id: chantierId,
       nom: nomTache.trim(),
-      duree_jours: Number(dureeTache) || 1,
+      duree_jours: duree,
       date_prevue_debut: dateDebutTache || null,
-      date_prevue_fin: dateDebutTache ? new Date(new Date(dateDebutTache).getTime() + (Number(dureeTache) || 1) * 86400000).toISOString() : null,
+      date_prevue_fin: finPrevue,
       est_jalon: estJalon,
       statut: "a_faire",
     }).select().single();
     setLoading(false);
     if (error) { setMessage(traduireErreur(error)); return; }
-    setTaches((prev) => [...prev, data as Tache]);
-    setNomTache("");
-    setDureeTache("1");
-    setDateDebutTache("");
-    setEstJalon(false);
+
+    // Chaînage direct : la nouvelle tâche commence après la tâche précédente.
+    if (predecesseurTache) {
+      const { error: errLien } = await supabase.from("dependances_planning").insert({
+        chantier_id: chantierId,
+        tache_predecesseur_id: predecesseurTache,
+        tache_successeur_id: (data as Tache).id,
+        type_dependance: "fin_debut",
+        decalage_jours: 0,
+      });
+      if (errLien) {
+        setMessage(traduireErreur(errLien));
+        reinitialiserFormulaire();
+        load();
+        return;
+      }
+    }
+
+    reinitialiserFormulaire();
     setMessage(langue === "fr" ? "Tâche ajoutée." : "Task added.");
+    load();
+  }
+
+  async function ajouterLien(e: React.FormEvent) {
+    e.preventDefault();
+    setMessage(null);
+    const controle = verifierLien(
+      taches.map((t) => ({ id: t.id, nom: t.nom, duree_jours: t.duree_jours })),
+      dependances,
+      lienPredecesseur,
+      lienSuccesseur,
+    );
+    if (!controle.ok) {
+      setMessage(controle.raison);
+      return;
+    }
+    setLoading(true);
+    const supabase = createClient();
+    const { error } = await supabase.from("dependances_planning").insert({
+      chantier_id: chantierId,
+      tache_predecesseur_id: lienPredecesseur,
+      tache_successeur_id: lienSuccesseur,
+      type_dependance: "fin_debut",
+      decalage_jours: 0,
+    });
+    setLoading(false);
+    if (error) { setMessage(traduireErreur(error)); return; }
+    setLienPredecesseur("");
+    setLienSuccesseur("");
+    setMessage(
+      langue === "fr"
+        ? "Lien ajouté : le chemin critique est recalculé."
+        : "Link added: the critical path has been recalculated.",
+    );
+    load();
+  }
+
+  async function supprimerLien(id: string) {
+    const supabase = createClient();
+    const { error } = await supabase.from("dependances_planning").delete().eq("id", id);
+    if (error) { setMessage(traduireErreur(error)); return; }
+    setMessage(
+      langue === "fr" ? "Lien supprimé." : "Link removed.",
+    );
+    load();
+  }
+
+  async function supprimerTache(t: Tache) {
+    const supabase = createClient();
+    const { error } = await supabase.from("taches_planning").delete().eq("id", t.id);
+    if (error) { setMessage(traduireErreur(error)); return; }
+    if (tacheEnEdition?.id === t.id) reinitialiserFormulaire();
+    setMessage(langue === "fr" ? "Tâche supprimée." : "Task deleted.");
+    load();
   }
 
   async function toggleStatut(t: Tache) {
@@ -321,13 +474,19 @@ export default function PlanningPage() {
         />
       </div>
 
-      {/* Formulaire d'ajout de tâche */}
+      {/* Formulaire d'ajout / de modification de tâche */}
       <section className="anim-fade-up anim-delay-2 mb-6">
         <Card padding="lg">
           <h2 className="mb-4 text-lg font-bold text-foreground">
-            {langue === "fr" ? "Nouvelle tâche" : "New task"}
+            {tacheEnEdition
+              ? langue === "fr"
+                ? `Modifier la tâche « ${tacheEnEdition.nom} »`
+                : `Edit task "${tacheEnEdition.nom}"`
+              : langue === "fr"
+                ? "Nouvelle tâche"
+                : "New task"}
           </h2>
-          <form onSubmit={ajouterTache} className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <form onSubmit={enregistrerTache} className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <input
               className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               placeholder={langue === "fr" ? "Nom de la tâche *" : "Task name *"}
@@ -359,10 +518,135 @@ export default function PlanningPage() {
                 {langue === "fr" ? "Jalon" : "Milestone"}
               </label>
             </div>
-            <Button type="submit" disabled={loading} className="md:col-span-4">
-              {loading ? (langue === "fr" ? "Création..." : "Creating...") : (langue === "fr" ? "Ajouter" : "Add")}
+            {!tacheEnEdition && (
+              <div className="md:col-span-4">
+                <label className="mb-1 block text-xs font-medium text-muted">
+                  {langue === "fr"
+                    ? "Précédente (facultatif) : la tâche commencera à la fin de celle-ci"
+                    : "Predecessor (optional): the task will start when it ends"}
+                </label>
+                <select
+                  className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  value={predecesseurTache}
+                  onChange={(e) => setPredecesseurTache(e.target.value)}
+                >
+                  <option value="">
+                    {langue === "fr" ? "Aucune (démarrage à J0)" : "None (starts at J0)"}
+                  </option>
+                  {taches.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.nom} ({t.duree_jours} j)
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div className="flex flex-wrap gap-3 md:col-span-4">
+              <Button type="submit" disabled={loading}>
+                {loading
+                  ? langue === "fr"
+                    ? "Enregistrement..."
+                    : "Saving..."
+                  : tacheEnEdition
+                    ? langue === "fr"
+                      ? "Enregistrer les modifications"
+                      : "Save changes"
+                    : langue === "fr"
+                      ? "Ajouter"
+                      : "Add"}
+              </Button>
+              {tacheEnEdition && (
+                <Button type="button" variant="outline" onClick={reinitialiserFormulaire}>
+                  {langue === "fr" ? "Annuler" : "Cancel"}
+                </Button>
+              )}
+            </div>
+          </form>
+        </Card>
+      </section>
+
+      {/* Liens entre tâches (chemin critique) */}
+      <section className="anim-fade-up anim-delay-2 mb-6">
+        <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+          <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+          {langue === "fr" ? "Enchaînement des tâches" : "Task sequence"}
+        </h2>
+        <Card padding="lg">
+          <p className="mb-4 text-sm text-muted">
+            {langue === "fr"
+              ? "Reliez les tâches dans l'ordre réel des travaux (fin → début). Le chemin critique, les marges et le diagramme de Gantt sont recalculés immédiatement."
+              : "Link tasks in the real order of work (end → start). The critical path, floats and the Gantt chart are recalculated immediately."}
+          </p>
+          <form onSubmit={ajouterLien} className="grid grid-cols-1 items-end gap-3 md:grid-cols-5">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted">
+                {langue === "fr" ? "Tâche précédente" : "Preceding task"}
+              </label>
+              <select
+                className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                value={lienPredecesseur}
+                onChange={(e) => setLienPredecesseur(e.target.value)}
+              >
+                <option value="">{langue === "fr" ? "Choisir…" : "Choose…"}</option>
+                {taches.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.nom}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="pb-2 text-center text-muted">→</div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted">
+                {langue === "fr" ? "Tâche suivante" : "Following task"}
+              </label>
+              <select
+                className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                value={lienSuccesseur}
+                onChange={(e) => setLienSuccesseur(e.target.value)}
+              >
+                <option value="">{langue === "fr" ? "Choisir…" : "Choose…"}</option>
+                {taches.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.nom}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Button type="submit" disabled={loading} className="md:col-span-2">
+              <Link2 className="h-4 w-4" />
+              {langue === "fr" ? "Lier les tâches" : "Link tasks"}
             </Button>
           </form>
+
+          {dependances.length > 0 ? (
+            <ul className="mt-4 divide-y divide-border/60">
+              {dependances.map((d) => (
+                <li key={d.id} className="flex items-center justify-between gap-3 py-2">
+                  <span className="text-sm text-foreground">
+                    {libelleLien(
+                      taches.map((t) => ({ id: t.id, nom: t.nom, duree_jours: t.duree_jours })),
+                      d,
+                    )}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => supprimerLien(d.id)}
+                    className="rounded-lg p-2 text-muted transition hover:bg-danger/10 hover:text-danger"
+                    aria-label={langue === "fr" ? "Supprimer le lien" : "Delete the link"}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-foreground">
+              {langue === "fr"
+                ? "Aucun lien : toutes les tâches démarrent à J0, le chemin critique affiché n'est donc pas le véritable enchaînement des travaux (décapage → remblai → base → revêtement)."
+                : "No link: every task starts at J0, so the critical path shown is not the real sequence of work."}
+            </p>
+          )}
         </Card>
       </section>
 
@@ -373,11 +657,24 @@ export default function PlanningPage() {
           {langue === "fr" ? "Calcul PERT" : "PERT calculation"}
         </h2>
         <Card padding="lg">
+          <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-border/70 bg-surface-2/40 px-4 py-3">
+            <span className="text-sm font-semibold text-foreground">
+              {langue === "fr" ? "Chaîne critique :" : "Critical path:"}
+            </span>
+            <span className="text-sm text-muted">
+              {cheminCritique.length > 0
+                ? cheminCritique.map((t) => t.nom).join(" → ")
+                : langue === "fr"
+                  ? "aucune (reliez les tâches pour obtenir le vrai enchaînement)"
+                  : "none (link tasks to get the real sequence)"}
+            </span>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border/80 bg-surface-2 text-left">
                   <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted">Tâche</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted">Prédécesseurs</th>
                   <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">Durée</th>
                   <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">ES</th>
                   <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">EF</th>
@@ -385,38 +682,107 @@ export default function PlanningPage() {
                   <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">LF</th>
                   <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">Marge</th>
                   <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">Critique</th>
+                  <th className="w-24 px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {pert.map((p) => (
-                  <tr
-                    key={p.tache_id}
-                    className={`border-b border-border/60 transition last:border-0 hover:bg-surface-2/70 ${p.est_critique ? "bg-primary/10" : ""}`}
-                  >
-                    <td className="px-3 py-2.5">
-                      {p.nom}
-                      {p.est_jalon && <span className="ml-1 text-xs font-semibold text-primary">◊</span>}
-                    </td>
-                    <td className="px-3 py-2.5 text-center tabular-nums">{p.duree_jours}</td>
-                    <td className="px-3 py-2.5 text-center tabular-nums">{p.es}</td>
-                    <td className="px-3 py-2.5 text-center tabular-nums">{p.ef}</td>
-                    <td className="px-3 py-2.5 text-center tabular-nums">{p.ls}</td>
-                    <td className="px-3 py-2.5 text-center tabular-nums">{p.lf}</td>
-                    <td className={`px-3 py-2.5 text-center font-semibold tabular-nums ${p.est_critique ? "text-action" : "text-muted"}`}>
-                      {p.marge}
-                    </td>
-                    <td className="px-3 py-2.5 text-center">
-                      {p.est_critique ? (
-                        <Badge variant="danger">OUI</Badge>
-                      ) : (
-                        <Badge variant="default">—</Badge>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {pert.map((p) => {
+                  const tache = taches.find((t) => t.id === p.tache_id);
+                  const predecesseurs = predicteursDe(p.tache_id);
+                  return (
+                    <tr
+                      key={p.tache_id}
+                      className={`border-b border-border/60 transition last:border-0 hover:bg-surface-2/70 ${p.est_critique ? "bg-primary/10" : ""}`}
+                    >
+                      <td className="px-3 py-2.5">
+                        {p.nom}
+                        {p.est_jalon && <span className="ml-1 text-xs font-semibold text-primary">◊</span>}
+                        {tache?.statut === "termine" && (
+                          <span className="ml-1 text-xs font-semibold text-success">✓</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2.5 text-xs text-muted">
+                        {predecesseurs.length > 0 ? predecesseurs.join(", ") : "—"}
+                      </td>
+                      <td className="px-3 py-2.5 text-center tabular-nums">{p.duree_jours}</td>
+                      <td className="px-3 py-2.5 text-center tabular-nums">{p.es}</td>
+                      <td className="px-3 py-2.5 text-center tabular-nums">{p.ef}</td>
+                      <td className="px-3 py-2.5 text-center tabular-nums">{p.ls}</td>
+                      <td className="px-3 py-2.5 text-center tabular-nums">{p.lf}</td>
+                      <td className={`px-3 py-2.5 text-center font-semibold tabular-nums ${p.est_critique ? "text-action" : "text-muted"}`}>
+                        {p.marge}
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        {p.est_critique ? (
+                          <Badge variant="danger">OUI</Badge>
+                        ) : (
+                          <Badge variant="default">—</Badge>
+                        )}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => tache && toggleStatut(tache)}
+                            className={`rounded-lg p-1.5 transition ${tache?.statut === "termine" ? "bg-success/10 text-success" : "text-muted hover:bg-success/10 hover:text-success"}`}
+                            aria-label={
+                              langue === "fr"
+                                ? `Marquer « ${p.nom} » comme terminée`
+                                : `Mark "${p.nom}" as completed`
+                            }
+                            title={
+                              langue === "fr"
+                                ? tache?.statut === "termine"
+                                  ? "Réouvrir la tâche"
+                                  : "Marquer comme terminée"
+                                : tache?.statut === "termine"
+                                  ? "Reopen the task"
+                                  : "Mark as completed"
+                            }
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => tache && commencerEdition(tache)}
+                            className="rounded-lg p-1.5 text-muted transition hover:bg-primary/10 hover:text-primary"
+                            aria-label={langue === "fr" ? `Modifier ${p.nom}` : `Edit ${p.nom}`}
+                            title={langue === "fr" ? "Corriger la tâche" : "Edit the task"}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              tache &&
+                              setConfirmation({
+                                titre:
+                                  langue === "fr"
+                                    ? `Supprimer la tâche « ${tache.nom} » ?`
+                                    : `Delete the task "${tache.nom}"?`,
+                                message:
+                                  langue === "fr"
+                                    ? "La tâche et ses liaisons seront supprimées du planning."
+                                    : "The task and its links will be removed from the schedule.",
+                                confirmerLibelle: langue === "fr" ? "Supprimer" : "Delete",
+                                danger: true,
+                                action: () => supprimerTache(tache),
+                              })
+                            }
+                            className="rounded-lg p-1.5 text-muted transition hover:bg-danger/10 hover:text-danger"
+                            aria-label={langue === "fr" ? `Supprimer ${p.nom}` : `Delete ${p.nom}`}
+                            title={langue === "fr" ? "Supprimer la tâche" : "Delete the task"}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {pert.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="p-4 text-center text-muted">Aucune tâche. Ajoutez une tâche ci-dessus.</td>
+                    <td colSpan={10} className="p-4 text-center text-muted">Aucune tâche. Ajoutez une tâche ci-dessus.</td>
                   </tr>
                 )}
               </tbody>
@@ -577,6 +943,8 @@ export default function PlanningPage() {
           )}
         </Card>
       </section>
+
+      <ConfirmDialog demande={confirmation} onFermer={() => setConfirmation(null)} />
     </main>
   );
 }
