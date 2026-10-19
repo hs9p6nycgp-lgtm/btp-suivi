@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ClipboardList, Plus, Trash2, Wand2 } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
+import { offlineInsert } from "@/lib/offline/mutations";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -77,26 +78,31 @@ export default function PlansControleQualite({
 
   // La base stocke le parametre dans la colonne accentuee « paramètre ».
   // On tente cette colonne, puis l'ecriture sans accent en cas d'erreur.
+  // L'écriture passe par la file hors connexion : un plan de contrôle peut
+  // être créé sur le chantier, même sans réseau.
   async function insererPlans(valeurs: ValeursPlan[]) {
-    const supabase = createClient();
-    const base = valeurs.map((v) => ({
-      chantier_id: chantierId,
-      type_ouvrage: v.type_ouvrage,
-      valeur_exigee: v.valeur_exigee,
-      tolerance_pos: v.tolerance_pos,
-      tolerance_neg: v.tolerance_neg,
-      unite: v.unite,
-    }));
-    const premier = await supabase
-      .from("plans_controle")
-      .insert(base.map((b, i) => ({ ...b, [COLONNE_PARAMETRE]: valeurs[i].parametre })))
-      .select();
-    if (!premier.error) return premier;
-    if (!/param/i.test(premier.error.message)) return premier;
-    return await supabase
-      .from("plans_controle")
-      .insert(base.map((b, i) => ({ ...b, [COLONNE_PARAMETRE_ALTERNATIVE]: valeurs[i].parametre })))
-      .select();
+    for (const v of valeurs) {
+      const base = {
+        chantier_id: chantierId,
+        type_ouvrage: v.type_ouvrage,
+        valeur_exigee: v.valeur_exigee,
+        tolerance_pos: v.tolerance_pos,
+        tolerance_neg: v.tolerance_neg,
+        unite: v.unite,
+      };
+      const premier = await offlineInsert("plans_controle", {
+        ...base,
+        [COLONNE_PARAMETRE]: v.parametre,
+      });
+      if (!premier.error) continue;
+      if (!/param/i.test(premier.error.message)) return premier;
+      const second = await offlineInsert("plans_controle", {
+        ...base,
+        [COLONNE_PARAMETRE_ALTERNATIVE]: v.parametre,
+      });
+      if (second.error) return second;
+    }
+    return { error: null };
   }
 
   async function ajouterPlan(e: React.FormEvent) {

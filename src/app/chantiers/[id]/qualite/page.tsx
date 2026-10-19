@@ -2,6 +2,8 @@
 
 import { BadgeCheck, ClipboardCheck, FlaskConical, ShieldAlert } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { offlineInsert, offlineUpdate } from "@/lib/offline/mutations";
+import { creerId } from "@/lib/chantiers/identifiant";
 import { estConforme } from "@/lib/calculs/qualite";
 import PlansControleQualite from "@/components/qualite/PlansControleQualite";
 import {
@@ -109,6 +111,7 @@ export default function QualitePage() {
   const [nouvelEssaiType, setNouvelEssaiType] = useState("");
   const [nouvelleValeur, setNouvelleValeur] = useState("");
   const [nouvelleSection, setNouvelleSection] = useState("");
+  const [sections, setSections] = useState<{ id: string; nom: string }[]>([]);
   const [nouveauResponsable, setNouveauResponsable] = useState("");
   const [nouvellesObservations, setNouvellesObservations] = useState("");
 
@@ -123,16 +126,18 @@ export default function QualitePage() {
     const { data: chantier } = await supabase.from("chantiers").select("id, type").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle();
     if (!chantier) { router.replace("/chantiers"); return; }
     setTypeChantier((chantier as { type?: string }).type ?? "route");
-    const [pRes, eRes, ncRes, epRes] = await Promise.all([
+    const [pRes, eRes, ncRes, epRes, secRes] = await Promise.all([
       supabase.from("plans_controle").select("*").eq("chantier_id", chantierId),
       supabase.from("essais_qualite").select("*").eq("chantier_id", chantierId).order("date_controle", { ascending: false }),
       supabase.from("non_conformites").select("*").eq("chantier_id", chantierId).order("created_at", { ascending: false }),
       supabase.from("epreuves_beton").select("*").eq("chantier_id", chantierId).order("date_coulage", { ascending: false }),
+      supabase.from("sections_chantier").select("id,nom").eq("chantier_id", chantierId).order("created_at", { ascending: true }),
     ]);
     if (pRes.data) setPlans(pRes.data as PlanControle[]);
     if (eRes.data) setEssais(eRes.data as Essai[]);
     if (ncRes.data) setNonConformites(ncRes.data as NonConformite[]);
     if (epRes.data) setEpreuves(epRes.data as EpreuveBeton[]);
+    if (secRes.data) setSections(secRes.data as { id: string; nom: string }[]);
     await chargerPhotosNC(ncRes.data ?? []);
     setLoading(false);
   }
@@ -199,7 +204,6 @@ export default function QualitePage() {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
-    const supabase = createClient();
     const valeur = Number(nouvelleValeur) || 0;
     const plan = plans.find((p) => parametresEquivalents(nomParametre(p), nouvelEssaiType));
     const valeurExigee = plan ? plan.valeur_exigee : 0;
@@ -207,7 +211,11 @@ export default function QualitePage() {
     const tolNeg = plan ? plan.tolerance_neg : 0;
     const conforme = estConforme(valeur, valeurExigee, tolPos, tolNeg);
 
-    const { data, error } = await supabase.from("essais_qualite").insert({
+    // Identifiant généré côté navigateur : la saisie reste possible hors
+    // connexion (l'essai et sa fiche de non-conformité partent ensemble).
+    const essaiId = creerId();
+    const { error } = await offlineInsert("essais_qualite", {
+      id: essaiId,
       chantier_id: chantierId,
       plan_controle_id: plan?.id || null,
       section_id: nouvelleSection || null,
@@ -221,13 +229,14 @@ export default function QualitePage() {
       responsable: nouveauResponsable || null,
       observations: nouvellesObservations || null,
       date_controle: new Date().toISOString().slice(0, 10),
-    }).select().single();
+    });
 
     // Si non conforme, créer automatiquement une fiche NC (RG-04)
-    if (!conforme && !error && data) {
-      await supabase.from("non_conformites").insert({
+    if (!conforme && !error) {
+      await offlineInsert("non_conformites", {
+        id: creerId(),
         chantier_id: chantierId,
-        essai_id: (data as any).id,
+        essai_id: essaiId,
         description: `Controle non conforme : ${nouvelEssaiType} = ${valeur}${plan?.unite || ""} (exige : ${valeurExigee}${plan?.unite || ""} +${tolPos}/-${tolNeg})`,
         gravite: Math.abs(valeur - valeurExigee) > Math.max(tolPos, tolNeg) * 2 ? "critique" : "majeure",
         statut: "ouverte",
@@ -283,10 +292,7 @@ export default function QualitePage() {
       champs.statut = "cloturee";
       champs.date_cloture = new Date().toISOString().slice(0, 10);
     }
-    const { error } = await supabase
-      .from("non_conformites")
-      .update(champs)
-      .eq("id", ncEnTraitement.id);
+    const { error } = await offlineUpdate("non_conformites", ncEnTraitement.id, champs);
     if (error) {
       setNcMessage(traduireErreur(error));
       return;
@@ -449,12 +455,18 @@ export default function QualitePage() {
               onChange={(e) => setNouvelleValeur(e.target.value)}
               required
             />
-            <input
+            <select
               className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
-              placeholder={langue === "fr" ? "Section (optionnel)" : "Section (optional)"}
               value={nouvelleSection}
               onChange={(e) => setNouvelleSection(e.target.value)}
-            />
+            >
+              <option value="">{langue === "fr" ? "Section (optionnel)" : "Section (optional)"}</option>
+              {sections.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.nom}
+                </option>
+              ))}
+            </select>
             <input
               className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               placeholder={langue === "fr" ? "Responsable (optionnel)" : "Owner (optional)"}

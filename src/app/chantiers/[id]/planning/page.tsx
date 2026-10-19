@@ -3,6 +3,8 @@
 import { CalendarClock, Check, Flag, Link2, Pencil, Route, TimerReset, Trash2 } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from "recharts";
 import { createClient } from "@/lib/supabase/client";
+import { offlineDelete, offlineInsert, offlineUpdate } from "@/lib/offline/mutations";
+import { creerId } from "@/lib/chantiers/identifiant";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
@@ -365,10 +367,7 @@ export default function PlanningPage() {
       if (posteDqeDisponible) {
         champs.poste_dqe_id = posteDqeTache || null;
       }
-      const { error } = await supabase
-        .from("taches_planning")
-        .update(champs)
-        .eq("id", tacheEnEdition.id);
+      const { error } = await offlineUpdate("taches_planning", tacheEnEdition.id, champs);
       setLoading(false);
       if (error) { setMessage(traduireErreur(error)); return; }
       reinitialiserFormulaire();
@@ -393,16 +392,21 @@ export default function PlanningPage() {
     if (posteDqeDisponible) {
       champs.poste_dqe_id = posteDqeTache || null;
     }
-    const { data, error } = await supabase.from("taches_planning").insert(champs).select().single();
+    const tacheId = creerId();
+    const { error } = await offlineInsert("taches_planning", {
+      id: tacheId,
+      ...champs,
+    });
     setLoading(false);
     if (error) { setMessage(traduireErreur(error)); return; }
 
     // Chaînage direct : la nouvelle tâche commence après la tâche précédente.
     if (predecesseurTache) {
-      const { error: errLien } = await supabase.from("dependances_planning").insert({
+      const { error: errLien } = await offlineInsert("dependances_planning", {
+        id: creerId(),
         chantier_id: chantierId,
         tache_predecesseur_id: predecesseurTache,
-        tache_successeur_id: (data as Tache).id,
+        tache_successeur_id: tacheId,
         type_dependance: "fin_debut",
         decalage_jours: 0,
       });
@@ -433,8 +437,8 @@ export default function PlanningPage() {
       return;
     }
     setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase.from("dependances_planning").insert({
+    const { error } = await offlineInsert("dependances_planning", {
+      id: creerId(),
       chantier_id: chantierId,
       tache_predecesseur_id: lienPredecesseur,
       tache_successeur_id: lienSuccesseur,
@@ -454,8 +458,7 @@ export default function PlanningPage() {
   }
 
   async function supprimerLien(id: string) {
-    const supabase = createClient();
-    const { error } = await supabase.from("dependances_planning").delete().eq("id", id);
+    const { error } = await offlineDelete("dependances_planning", id);
     if (error) { setMessage(traduireErreur(error)); return; }
     setMessage(
       langue === "fr" ? "Lien supprimé." : "Link removed.",
@@ -464,8 +467,7 @@ export default function PlanningPage() {
   }
 
   async function supprimerTache(t: Tache) {
-    const supabase = createClient();
-    const { error } = await supabase.from("taches_planning").delete().eq("id", t.id);
+    const { error } = await offlineDelete("taches_planning", t.id);
     if (error) { setMessage(traduireErreur(error)); return; }
     if (tacheEnEdition?.id === t.id) reinitialiserFormulaire();
     setMessage(langue === "fr" ? "Tâche supprimée." : "Task deleted.");
@@ -474,13 +476,12 @@ export default function PlanningPage() {
 
   async function toggleStatut(t: Tache) {
     const nouveauStatut = t.statut === "termine" ? "a_faire" : "termine";
-    const supabase = createClient();
     const updates: Partial<Tache> & { avancement_pct: number; date_reelle_fin: string | null } = {
       statut: nouveauStatut,
       avancement_pct: nouveauStatut === "termine" ? 100 : 0,
       date_reelle_fin: nouveauStatut === "termine" ? new Date().toISOString().slice(0, 10) : null,
     };
-    const { error } = await supabase.from("taches_planning").update(updates).eq("id", t.id);
+    const { error } = await offlineUpdate("taches_planning", t.id, updates);
     if (error) { setMessage(traduireErreur(error)); return; }
     setTaches((prev) => prev.map((x) => x.id === t.id ? { ...x, ...updates } : x));
   }
