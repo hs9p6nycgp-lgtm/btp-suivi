@@ -285,4 +285,63 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 
 ---
 
+## TODO-UI-017 — Qualité : créer les plans de contrôle (T-UI-22)
+
+- **Écran** : Qualité du chantier (`/chantiers/[id]/qualite`) — `src/app/chantiers/[id]/qualite/page.tsx`.
+- **Constaté (test ingénieur du 19/10/2026)** : le menu « Sélectionner un paramètre » est **vide** ; aucun écran ne permet de créer un plan de contrôle (paramètre, valeur exigée, tolérances +/−, unité). Sans plan, impossible de saisir un essai (QUA-02) ni de déclencher la **fiche de non-conformité automatique** (RG-04) — le code existe mais reste inatteignable.
+- **À faire** : formulaire créer / modifier d'un plan de contrôle + choix d'un modèle par type d'ouvrage (route / bâtiment) — brancher sur la logique **T-LOG-36** (Session 2).
+- **Priorité** : **haute — bloquante métier** (le module Qualité n'est pas utilisable en l'état).
+- **Référence** : `AUDIT_METIER.md` §7 ; exigences QUA-01, QUA-02, RG-04.
+
+---
+
+## TODO-UI-018 — Devis : enregistrer, nommer, exporter (T-UI-23)
+
+- **Écran** : Calcul de devis (`/calculateurs/devis`) — `src/app/calculateurs/devis/page.tsx`.
+- **Constaté (test ingénieur du 19/10/2026)** : les calculs sont exacts (total **230 120 800 FCFA** vérifié au franc près) mais **aucun bouton Enregistrer / Exporter / Imprimer** : le devis disparaît en quittant la page ; ni client, ni numéro, ni date, ni rattachement au chantier.
+- **À faire** : bouton « Enregistrer » + fiche devis (client, numéro, date, lignes, total), export PDF / Excel, reprise d'un devis existant — brancher sur la logique **T-LOG-37** (Session 2) et la nouvelle table `devis`.
+- **Priorité** : **haute** (c'est le document qu'attend le client).
+- **Référence** : `AUDIT_METIER.md` §3 ; exigences MET-02, MET-03.
+
+---
+
+## TODO-UI-019 — Planning : liens entre tâches + modifier / supprimer (T-UI-24)
+
+- **Écran** : Planning du chantier (`/chantiers/[id]/planning`) — `src/app/chantiers/[id]/planning/page.tsx`.
+- **Constaté (test ingénieur du 19/10/2026)** : aucun moyen de créer un lien entre tâches. Toutes démarrent à J0 ; le chemin critique affiché est faux (la plus longue tâche seulement — « Revêtement », 20 j). Impossible aussi de **modifier / supprimer** une tâche (seulement ajouter et cocher « terminé »).
+- **À faire** : choix d'un prédécesseur (finition-début) à la saisie + affichage / suppression des liens + recalcul du chemin critique ; modifier / supprimer une tâche — brancher sur la logique **T-LOG-38** (Session 2).
+- **Priorité** : **haute** (le planning n'est pas réaliste sans liens).
+- **Référence** : `AUDIT_METIER.md` §2 ; exigences PLA-01, PLA-02.
+
+---
+
+## TODO-UI-020 — Rapports : sections détaillées + libellés (T-UI-25)
+
+- **Écran** : Rapports (`/rapports`) — `src/app/rapports/page.tsx`.
+- **Constaté (test ingénieur du 19/10/2026)** : le rapport ne contient que **8 chiffres** — ni journaux (météo, effectifs, engins, incidents), ni photos, ni détail des postes, ni non-conformités, ni dépenses par catégorie. « Coût réalisé » et « Dépenses » sont deux notions différentes aux noms trop proches.
+- **À faire** : afficher les sections détaillées (à partir des agrégats **T-LOG-39**, Session 2), renommer « Coût réalisé » → « **Valorisation travaux** » et « Dépenses » → « **Dépenses réelles** », export PDF / Excel du rapport.
+- **Priorité** : moyenne (c'est le document que lit le bureau).
+- **Référence** : `AUDIT_METIER.md` §5 ; exigences REP-01, REP-02, REP-03.
+
+---
+
+## TODO-UI-021 — Export Excel : feuilles manquantes + lisibilité (T-UI-20)
+
+- **Écran** : Export (`/export`) — `src/app/export/page.tsx`.
+- **Constaté (test ingénieur du 19/10/2026)** : le fichier `.xlsx` fonctionne (feuilles Postes DQE, Dépenses, Planning ; chiffres exacts) mais **feuilles manquantes** : journaux (effectifs, engins, incidents), livraisons, non-conformités, photos. Valeurs **brutes** : statut `a_faire`, catégorie `materiaux`, dates `2026-10-19`, cellules `null`.
+- **À faire** : ajouter les feuilles manquantes ; traduire statuts et catégories en français ; dates JJ/MM/AAAA ; en-têtes et ligne de totaux.
+- **Priorité** : moyenne.
+- **Référence** : `AUDIT_METIER.md` §6 ; exigence REP-03.
+
+---
+
+## TODO-UI-022 — Fiche chantier : un seul affichage du statut (T-UI-21)
+
+- **Écran** : fiche chantier (`/chantiers/[id]`) — `src/app/chantiers/[id]/page.tsx`.
+- **Constaté (test ingénieur du 19/10/2026)** : le statut apparaît **deux fois** côte à côte (pastille « En préparation » + menu déroulant « En préparation »). Fusionner en un seul élément cliquable.
+- **Priorité** : basse (finition).
+- **Référence** : `AUDIT_METIER.md` §1 ; exigence CHA-04.
+
+---
+
 *Fin de TODO_UI.md.*
