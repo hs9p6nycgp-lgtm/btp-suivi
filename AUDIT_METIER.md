@@ -261,6 +261,25 @@ Une troisième correction a été livrée pendant le test (commit `1abc805`, tab
 
 ---
 
+# Partie 6 — Vérification de la correction « rapport complet »
+
+Une quatrième correction a été livrée pendant le test (commit `0d78076`).
+
+## 22. Rapports : agrégats, libellés et export — ✅ **CORRIGÉ ET VÉRIFIÉ**
+
+Rapport généré sur la période 01/10/2026 → 31/12/2026 sur le chantier de test :
+
+- **Nouvelles sections** : « Journaux de la période » (journaux 1, validés 1, effectifs cumulés, heures de marche, disponibilité, incidents et photos), « Dépenses réelles par catégorie » (Matériaux : 1 → 170 000 FCFA, total 170 000), « Non-conformités » (total 1, ouvertes 1, clôturées 0, gravité critique 1) et « Valorisation des travaux par poste » (quantité marché / quantité réalisée / avancement / valorisation par poste du DQE).
+- **Libellés corrigés comme demandé** : « **Valorisation travaux** » (quantités × prix = 934 000 FCFA) et « **Dépenses réelles** » (argent décaissé = 170 000 FCFA), avec la phrase d'explication des deux notions et la **marge calculée (764 000 FCFA)**.
+- **Export Excel** du rapport : fichier `rapport_TEST INGENIEUR — Voirie 1,2 km + assainissement_2026-10-01.xlsx` (21,7 Ko) ✓ — bouton « Imprimer / PDF » présent.
+- Sélecteur de périodicité (« Période : journalier ») présent.
+
+**Réserve mineure** : l'avancement s'affiche « 0.5 % » avec un **point** décimal alors que le reste de l'application utilise la virgule française (« 0,5 % ») — incohérence d'affichage à corriger (sans impact sur les calculs).
+
+→ **Les exigences REP-01 à REP-03 sont couvertes.** Le rapport est enfin exploitable par le bureau.
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
