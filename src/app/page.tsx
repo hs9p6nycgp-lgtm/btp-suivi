@@ -11,6 +11,8 @@ import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { getLangue } from "@/lib/i18n";
+import { chargerAvecCache } from "@/lib/offline/cacheDonnees";
+import { BandeauDonneesCachees } from "@/components/ui/BandeauDonneesCachees";
 import { detailAlerte, libelleTypeAlerte } from "@/lib/alertes";
 import { lireDernierChantier } from "@/lib/chantiers/dernier";
 import { actionsDuJour } from "@/lib/journal/actionsDuJour";
@@ -229,6 +231,8 @@ export default function Home() {
   const [journauxAujourdhui, setJournauxAujourdhui] = useState<string[]>([]);
   const [nonConformitesOuvertes, setNonConformitesOuvertes] = useState<Record<string, number>>({});
   const [dernierChantier, setDernierChantier] = useState<string | null>(null);
+  const [horsLigne, setHorsLigne] = useState(false);
+  const [dateCache, setDateCache] = useState<number | null>(null);
 
   useEffect(() => {
     setDernierChantier(lireDernierChantier());
@@ -243,9 +247,28 @@ export default function Home() {
         return;
       }
 
-      const { data } = await supabase.from("chantiers").select("*").eq("proprietaire_id", user.id).order("created_at", { ascending: false });
-      setChantiers((data ?? []) as Chantier[]);
-      setLoading(false);
+      // Copie locale : hors connexion, le portefeuille reste lisible.
+      try {
+        const resultat = await chargerAvecCache<Chantier[]>(
+          `accueil-chantiers:${user.id}`,
+          async () => {
+            const { data, error } = await supabase
+              .from("chantiers")
+              .select("*")
+              .eq("proprietaire_id", user.id)
+              .order("created_at", { ascending: false });
+            if (error) throw error;
+            return (data ?? []) as Chantier[];
+          },
+        );
+        setChantiers(resultat.donnees);
+        setHorsLigne(resultat.horsLigne);
+        setDateCache(resultat.horodatage);
+      } catch {
+        setChantiers([]);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, [router]);
@@ -405,6 +428,8 @@ export default function Home() {
       </div>
 
       <InviteInstallation />
+
+      {horsLigne && <BandeauDonneesCachees horodatage={dateCache} />}
 
       {/* Cartes de chiffres clés */}
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">

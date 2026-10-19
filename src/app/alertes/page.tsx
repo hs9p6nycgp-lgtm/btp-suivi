@@ -13,6 +13,9 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { BandeauDonneesCachees } from "@/components/ui/BandeauDonneesCachees";
+import { createClient } from "@/lib/supabase/client";
+import { chargerAvecCache } from "@/lib/offline/cacheDonnees";
 import {
   chargerNotifications,
   detailNotification,
@@ -70,13 +73,25 @@ export default function AlertesPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [chargement, setChargement] = useState(true);
   const [filtre, setFiltre] = useState<Filtre>("toutes");
+  const [horsLigne, setHorsLigne] = useState(false);
+  const [dateCache, setDateCache] = useState<number | null>(null);
 
   useEffect(() => {
     let actif = true;
     (async () => {
       try {
-        const liste = await chargerNotifications();
-        if (actif) setNotifications(liste);
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        // Copie locale : hors connexion, les dernières alertes connues restent
+        // consultables (la copie est propre à chaque compte).
+        const resultat = await chargerAvecCache<Notification[]>(
+          `alertes:${user?.id ?? "anonyme"}`,
+          () => chargerNotifications(),
+        );
+        if (!actif) return;
+        setNotifications(resultat.donnees);
+        setHorsLigne(resultat.horsLigne);
+        setDateCache(resultat.horodatage);
       } catch {
         if (actif) setNotifications([]);
       } finally {
@@ -102,6 +117,8 @@ export default function AlertesPage() {
         description="Tout ce qui demande votre attention, sur tous vos chantiers."
         icon={<Bell className="h-5 w-5" />}
       />
+
+      {horsLigne && <BandeauDonneesCachees horodatage={dateCache} />}
 
       {/* Résumé par gravité */}
       <div className="mb-6 grid gap-3 sm:grid-cols-3">

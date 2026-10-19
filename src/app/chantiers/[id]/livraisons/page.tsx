@@ -11,6 +11,8 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getLangue, traduireErreur } from "@/lib/i18n";
+import { chargerAvecCache } from "@/lib/offline/cacheDonnees";
+import { BandeauDonneesCachees } from "@/components/ui/BandeauDonneesCachees";
 import { enregistrerPhotoEnAttente } from "@/lib/photos/attente";
 import { cheminPhoto, doitMettreEnFile } from "@/lib/photos/regles";
 import { verifierStockBas, materiauxEnAlerte } from "@/lib/stock/stock";
@@ -80,6 +82,8 @@ export default function LivraisonsPage() {
   const [messageOk, setMessageOk] = useState(false);
   const [seuils, setSeuils] = useState<Record<string, number>>({});
   const [seuilsLocaux, setSeuilsLocaux] = useState(false);
+  const [horsLigne, setHorsLigne] = useState(false);
+  const [dateCache, setDateCache] = useState<number | null>(null);
   // Materiaux proposés a la saisie : catalogue BPU, postes du DQE du chantier
   // et materiaux deja livres (APP-03).
   const [materiauxDisponibles, setMateriauxDisponibles] = useState<SuggestionMateriau[]>([]);
@@ -94,24 +98,55 @@ export default function LivraisonsPage() {
     if (!user) { router.replace("/login"); return; }
     const { data: chantier } = await supabase.from("chantiers").select("id").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle();
     if (!chantier) { router.replace("/chantiers"); return; }
-    const [livRes, seuilsRes, bpuRes, postesRes] = await Promise.all([
-      supabase
-        .from("livraisons")
-        .select("*")
-        .eq("chantier_id", chantierId)
-        .order("date_livraison", { ascending: false }),
-      supabase
-        .from("seuils_stock_chantier")
-        .select("materiau,seuil")
-        .eq("chantier_id", chantierId),
+
+    // Copie locale : hors connexion, les livraisons et les seuils restent
+    // consultables (dernier etat connu sur l'appareil).
+    const resultat = await chargerAvecCache<{
+      livraisons: Livraison[];
+      seuils: Record<string, number>;
+      seuilsLocaux: boolean;
+    }>(
+      `livraisons:${chantierId}:${user.id}`,
+      async () => {
+        const [livRes, seuilsRes] = await Promise.all([
+          supabase
+            .from("livraisons")
+            .select("*")
+            .eq("chantier_id", chantierId)
+            .order("date_livraison", { ascending: false }),
+          supabase
+            .from("seuils_stock_chantier")
+            .select("materiau,seuil")
+            .eq("chantier_id", chantierId),
+        ]);
+        if (livRes.error) throw livRes.error;
+        const livraisons = (livRes.data ?? []) as Livraison[];
+        const seuils: Record<string, number> = {};
+        if (seuilsRes.error) {
+          // Table de seuils pas encore creee en base : repli sur ce navigateur
+          Object.assign(seuils, lireSeuilsLocaux(chantierId));
+        } else {
+          for (const s of (seuilsRes.data ?? []) as { materiau: string; seuil: number }[]) {
+            // Le seuil est identifie par la cle canonique du materiau.
+            seuils[cleMateriau(s.materiau)] = Number(s.seuil) || 0;
+          }
+        }
+        return { livraisons, seuils, seuilsLocaux: Boolean(seuilsRes.error) };
+      },
+    ).catch(() => null);
+
+    const livraisons = resultat?.donnees.livraisons ?? [];
+    setItems(livraisons);
+    setSeuils(resultat?.donnees.seuils ?? {});
+    setSeuilsLocaux(resultat?.donnees.seuilsLocaux ?? false);
+    setHorsLigne(resultat?.horsLigne ?? false);
+    setDateCache(resultat?.horodatage ?? null);
+
+    // Suggestions de saisie : BPU + postes du chantier + materiaux deja livres.
+    const [bpuRes, postesRes] = await Promise.all([
       supabase.from("bpu_postes").select("designation").limit(500),
       supabase.from("postes_dqe").select("designation").eq("chantier_id", chantierId),
     ]);
-    if (livRes.error) return;
-    const livraisons = (livRes.data ?? []) as Livraison[];
-    setItems(livraisons);
-
-    // Suggestions de saisie : BPU + postes du chantier + materiaux deja livres.
     setMateriauxDisponibles(
       suggestionsMateriaux({
         bpu: ((bpuRes.data ?? []) as { designation: string }[]).map((p) => p.designation),
@@ -119,20 +154,6 @@ export default function LivraisonsPage() {
         livraisons: livraisons.map((l) => l.materiau),
       }),
     );
-
-    if (seuilsRes.error) {
-      // Table de seuils pas encore creee en base : repli sur ce navigateur
-      setSeuils(lireSeuilsLocaux(chantierId));
-      setSeuilsLocaux(true);
-    } else {
-      const map: Record<string, number> = {};
-      for (const s of (seuilsRes.data ?? []) as { materiau: string; seuil: number }[]) {
-        // Le seuil est identifie par la cle canonique du materiau.
-        map[cleMateriau(s.materiau)] = Number(s.seuil) || 0;
-      }
-      setSeuils(map);
-      setSeuilsLocaux(false);
-    }
   }
 
   async function handleAdd(e: React.FormEvent) {
@@ -341,12 +362,13 @@ export default function LivraisonsPage() {
           <Link
             href={`/chantiers/${chantierId}`}
             className="inline-flex items-center gap-2 rounded-xl border border-border/80 bg-surface px-3.5 py-2 text-sm font-semibold text-muted shadow-sm transition hover:border-primary-light/50 hover:text-foreground"
-          >
-            <span>←</span>
+          >            <span>←</span>
             {langue === "fr" ? "Retour au chantier" : "Back to site"}
           </Link>
         }
       />
+
+      {horsLigne && <BandeauDonneesCachees horodatage={dateCache} />}
 
       <Card variant="elevated" padding="lg" className="anim-fade-up anim-delay-1 mb-8">
         <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
