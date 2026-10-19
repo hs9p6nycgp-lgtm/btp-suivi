@@ -20,7 +20,7 @@ listés dans `TODO_LOGIQUE.md`.
 | BUG-006   | logique     | validerBasePrix jamais appelée lors de l’import         |
 | BUG-007   | logique     | estConforme jamais appelée dans la page qualité          |
 | BUG-008   | logique     | Date de fin prévue du planning copiée de la date de début |
-| BUG-009   | logique     | Isolation multitenant non fonctionnelle                 |
+| BUG-009   | logique     | Isolation multitenant non fonctionnelle                 | ✅ CORRIGÉ (Session 3, 19/10) — filtre `proprietaire_id` côté code + script d'isolation appliqué en base ; reste le test à 2 comptes. |
 | BUG-010   | logique+UI  | Journal : observations perdues + « Créer le journal » sans réponse sur réseau faible |
 | BUG-011   | UI          | Photos : galerie du tableau de bord cassée, aucune vignette au journal |
 | BUG-012   | UI          | Titre « Tableau de bord » affiché sur les écrans de chantier |
@@ -275,8 +275,19 @@ listés dans `TODO_LOGIQUE.md`.
   - **Correctif applicatif appliqué** : filtre `proprietaire_id` ajouté sur
     le tableau de bord, la liste des chantiers, la page de détail et les pages
     enfant (qualité, planning, journaux, coûts, livraisons, métré), ainsi que
-    la mise à jour du statut. La vérification RLS côté base reste à faire
-    (voir `supabase/RLS_MANUAL_CHECK.md`).
+    la mise à jour du statut.
+  - **Correctif base appliqué (Session 3, 19/10)** : le script
+    `supabase/APPLIQUER_ISOLATION.sql` a été exécuté dans le SQL Editor de
+    Supabase — RLS activé sur toutes les tables, anciennes policies trop
+    ouvertes supprimées, nouvelles policies d'isolation par compte en place
+    (`user_can_access_chantier` / `user_can_manage_chantier` /
+    `user_can_access_journal`). Contrôles après application : audit de la base
+    « Base à jour » (migrations 0016 → 0019 appliquées), sites en ligne
+    opérationnels, et aucune donnée lisible avec la clé publique (tout est
+    filtré pour un visiteur non connecté). **Reste :** le test d'isolation à
+    2 comptes (`supabase/RLS_MANUAL_CHECK.md` §4) et, si le compteur
+    « chantiers sans propriétaire » est > 0, le rattachement des anciens
+    chantiers à leur compte.
 - **Référence de code** : requêtes dans `src/app/page.tsx`,
   `src/app/chantiers/page.tsx`, `src/app/chantiers/[id]/page.tsx`,
   `src/components/ChantierStatut.tsx` ;

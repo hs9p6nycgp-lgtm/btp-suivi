@@ -8,8 +8,8 @@
 | Gravité | Catégorie | État |
 |---------|-----------|------|
 | 🔴 **Critique** | Clés d'accès exposées dans `.env.local` | ✅ **Corrigé** - SUPABASE_SERVICE_ROLE_KEY retirée |
-| 🔴 **Critique** | RLS non actif / anciennes policies `using (true)` | ✅ **Corrigé côté code** - Script à exécuter : `supabase/APPLIQUER_ISOLATION.sql` |
-| 🟠 **Élevée** | Isolement multitenant non appliqué en base | ⚠️ **À EXÉCUTER** - Script prêt et relançable : `supabase/APPLIQUER_ISOLATION.sql` (inclut la table manquante de 0016) |
+| 🔴 **Critique** | RLS non actif / anciennes policies `using (true)` | ✅ **Corrigé** - script `supabase/APPLIQUER_ISOLATION.sql` appliqué en base le 19/10 |
+| 🟠 **Élevée** | Isolement multitenant non appliqué en base | ✅ **Corrigé** - script appliqué le 19/10 (RLS actif partout) ; reste le test d'isolation à 2 comptes |
 | 🟠 **Élevée** | Clé `SUPABASE_SERVICE_ROLE_KEY` utilisée dans des scripts | ✅ **Corrigé** - Avertissements dans 4 scripts, clés remplacées dans 2 |
 | 🟡 **Moyenne** | Validation d'entrées de formulaire insuffisante | ⚠️ **En amélioration** - Validations renforcées en cours |
 | 🟡 **Moyenne** | Stockage local (localStorage) sans chiffrement | ℹ️ **Non modifié** - Risque faible, fonctionnalité commodité |
@@ -39,7 +39,7 @@ La `SUPABASE_SERVICE_ROLE_KEY` (clé secrète donnant accès complet à la base 
 
 ---
 
-### 🔴 C2 - RLS non actif / anciennes policies `using (true)` ✅ **CORRIGÉ CÔTÉ CODE — RESTE À EXÉCUTER**
+### 🔴 C2 - RLS non actif / anciennes policies `using (true)` ✅ **CORRIGÉ** *(script d'isolation appliqué en base le 19/10/2026)*
 
 **État** : Toutes les migrations ont été mises à jour pour remplacer les policies `using (true)` par des policies basées sur les fonctions d'autorisation `user_can_access_chantier()` et `user_can_manage_chantier()`. Les tables suivantes ont été corrigées :
 
@@ -71,21 +71,27 @@ La `SUPABASE_SERVICE_ROLE_KEY` (clé secrète donnant accès complet à la base 
 | `historique_prix` | 0011 | Partagé par conception (référence) |
 | `bpu_postes` | 0007 | Partagé par conception (référence commune) |
 
-**Action requise** :
-- Exécuter **`supabase/APPLIQUER_ISOLATION.sql`** dans le SQL Editor de Supabase (un seul copier-coller, relançable, sans perte de données) : il remplace les anciennes policies trop ouvertes par les nouvelles et crée la table `seuils_stock_chantier` manquante (0016).
-- Lire le résultat affiché à la fin du script : `chantiers sans proprietaire` (à traiter si > 0) et `politiques inattendues restantes` (attendu : 0).
-- Tester l'isolation multitenant avec deux comptes utilisateurs différents (voir `supabase/RLS_MANUAL_CHECK.md` §4).
+**Action effectuée (19/10/2026 — Session 3)** :
+- ✅ Script **`supabase/APPLIQUER_ISOLATION.sql`** exécuté dans le SQL Editor de Supabase (un seul copier-coller, relançable, sans perte de données) : les anciennes policies trop ouvertes ont été remplacées par les nouvelles, le RLS a été activé partout et la table `seuils_stock_chantier` (0016) créée.
+- ✅ Contrôles après application : audit de la base « Base à jour » (migrations 0016 → 0019 appliquées), sites en ligne opérationnels, et aucune donnée lisible avec la clé publique (tout est filtré pour un visiteur non connecté).
+- ⏳ Reste à faire : lire le résultat affiché à la fin du script (`chantiers sans proprietaire` — à traiter si > 0, `politiques inattendues restantes` — attendu : 0) et tester l'isolation multitenant avec deux comptes utilisateurs différents (voir `supabase/RLS_MANUAL_CHECK.md` §4).
 
 **Note** : Les tables `referentiel_prix`, `historique_prix` et `bpu_postes` restent en accès partagé (data de référence commune) par choix architectonique. Leur accès `using (true)` est assumé et documenté.
 
 ---
 
-### 🟠 C3 - Isolement multitenant non appliqué en base ⚠️ **À APPLIQUER** *(script prêt : `supabase/APPLIQUER_ISOLATION.sql`)*
+### 🟠 C3 - Isolement multitenant non appliqué en base ✅ **CORRIGÉ** *(script `supabase/APPLIQUER_ISOLATION.sql` appliqué en base le 19/10/2026)*
 
 **Description** :
-Bien que les policies RLS soient maintenant correctement définies dans les fichiers migration, elles ne sont **pas encore actives** dans l'instance Supabase en cours. C'est la étape critique qui manque : les policies définissent *ce qui devrait être interdit*, mais elles ne prennent effet que lorsqu'elles sont appliquées dans la base de données.
+Les policies RLS sont correctement définies dans les fichiers migration et sont maintenant **actives en base** (script d’isolation appliqué le 19/10/2026). Elles définissent *ce qui doit être interdit*, mais ne s’appliquent qu’une fois exécutées dans Supabase.
 
-**Actions requises dans Supabase SQL Editor** :
+**Correction effectuée (Session 3, 19/10/2026)** :
+Le script unique et relançable `supabase/APPLIQUER_ISOLATION.sql` a été collé et exécuté dans le SQL Editor de Supabase : RLS activé sur toutes les tables concernées, anciennes policies trop ouvertes supprimées, policies d'isolation par compte créées (propriétaire + membres), table `seuils_stock_chantier` (0016) créée, et vérifications finales affichées (« chantiers sans proprietaire », « politiques inattendues restantes »).
+
+Contrôles après application : audit de la base « Base à jour » (migrations 0016 → 0019 appliquées), sites en ligne opérationnels, et **aucune donnée lisible avec la clé publique** (tout est filtré pour un visiteur non connecté).
+**Reste à faire :** le test d'isolation à 2 comptes (`supabase/RLS_MANUAL_CHECK.md` §4) et, si le compteur « chantiers sans proprietaire » est > 0, le rattachement des anciens chantiers à leur compte.
+
+**Pour mémoire — la procédure appliquée dans Supabase SQL Editor** :
 
 1. **Activer le RLS sur toutes les tables** (si ce n'est pas déjà fait) :
 ```sql
@@ -298,9 +304,9 @@ if (type && !estTypeDetailValide(type, typeDetail) && typeDetail !== "") {
 
 ## Recommandations prioritaires
 
-1. **Immédiat (Critique) :** Exécuter le script **`supabase/APPLIQUER_ISOLATION.sql`** dans l'éditeur SQL de Supabase : un seul copier-coller, relançable, il active les nouvelles policies RLS et crée la table manquante `seuils_stock_chantier` (0016).
+1. ✅ **Fait (19/10/2026) :** le script **`supabase/APPLIQUER_ISOLATION.sql`** a été exécuté dans l'éditeur SQL de Supabase : un seul copier-coller, relançable, il a activé les nouvelles policies RLS et créé la table manquante `seuils_stock_chantier` (0016).
 
-2. **Immédiat (Critique) :** Tester l'isolation multitenant avec deux comptes utilisateurs différents après avoir appliqué les migrations. Vérifier qu'un utilisateur ne voit que ses propres chantiers et données.
+2. **En cours (Critique) :** Tester l'isolation multitenant avec deux comptes utilisateurs différents (après application des migrations, le 19/10). Vérifier qu'un utilisateur ne voit que ses propres chantiers et données.
 
 3. **À court terme (Élevée) :** Améliorer la validation des formulaires côté client (GPS, noms, types de détails) comme décrit ci-dessus.
 
@@ -312,7 +318,7 @@ if (type && !estTypeDetailValide(type, typeDetail) && typeDetail !== "") {
 
 ## Instructions d'application des migrations RLS
 
-Le script **`supabase/APPLIQUER_ISOLATION.sql`** contient tout ce qu'il faut pour la base déjà en service (il remplace les étapes 0001→0011 pour ce besoin et inclut la table `seuils_stock_chantier` de la migration 0016, absente en ligne) :
+Le script **`supabase/APPLIQUER_ISOLATION.sql`** contient tout ce qu'il faut pour la base déjà en service (il remplace les étapes 0001→0011 pour ce besoin et inclut la table `seuils_stock_chantier` de la migration 0016, absente en ligne). **Appliqué le 19/10/2026** — la procédure ci-dessous est celle qui a été suivie :
 
 1. Ouvrir Supabase → **SQL Editor** → **New query**.
 2. Copier-coller **tout** le contenu de `supabase/APPLIQUER_ISOLATION.sql`, puis cliquer **Run**.
