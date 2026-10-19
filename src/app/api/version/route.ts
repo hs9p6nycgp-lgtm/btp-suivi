@@ -5,7 +5,10 @@
 export const dynamic = "force-dynamic";
 
 export function GET() {
+  // VERSION_COMMIT est figé au build (voir next.config.ts) : la version servie
+  // correspond donc toujours exactement au code déployé.
   const version =
+    process.env.VERSION_COMMIT ??
     process.env.VERCEL_GIT_COMMIT_SHA ??
     process.env.VERCEL_DEPLOYMENT_ID ??
     "dev";
