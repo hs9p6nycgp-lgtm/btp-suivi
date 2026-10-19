@@ -339,6 +339,17 @@ Une phrase explicative est affichée sous le tableau : « Les quantités sont co
 
 ---
 
+# Partie 10 — Vérification de « créer le planning depuis le devis » et « modifier un devis »
+
+## 28. Devis → planning et modification d'un devis enregistré — ✅ **CORRIGÉ ET VÉRIFIÉ**
+
+- **Bouton « Créer le planning »** sur le calculateur : le devis propose de générer le planning d'un chantier à partir de ses durées, avec l'explication « Les tâches sont créées **enchaînées (fin → début)** : le chemin critique et le diagramme de Gantt sont calculés automatiquement. **Les tâches existantes sont conservées.** » — la demande formulée en partie 1 (§3) est donc satisfaite.
+- **Fiche devis modifiable** : sur `/calculateurs/devis/<id>`, les champs (client, numéro, date, objet) deviennent éditables, avec « **Enregistrer les modifications** » et « **Supprimer le devis** » — la reprise d'un devis existant est possible.
+
+*(Les tâches n'ont pas été créées sur le chantier de test, pour ne pas polluer ses données.)*
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
