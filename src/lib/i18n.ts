@@ -124,6 +124,7 @@ export const DICTIONNAIRE: Record<string, Record<Langue, string>> = {
   "detail.modelisation3d": { fr: "Modélisation 3D", en: "3D Modeling" },
   "detail.quality": { fr: "Qualité", en: "Quality" },
   "detail.securite": { fr: "Sécurité (HSE)", en: "Safety (HSE)" },
+  "detail.situations": { fr: "Situations de paiement", en: "Payment statements" },
 
   // Journal de chantier — création robuste réseau
   "journal.enregistre_hors_ligne": { fr: "Pas de réseau : la fiche du jour a été enregistrée sur votre appareil. Elle sera créée automatiquement dès le retour du réseau.", en: "No network: today's log was saved on your device. It will be created automatically once the network is back." },
