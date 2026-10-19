@@ -16,8 +16,12 @@ const ROUTES: ItemRoute[] = [
   { href: "/", cle: "home.titre" },
   { href: "/chantiers", cle: "chantiers.titre" },
   { href: "/bpu", cle: "nav.bpu" },
+  { href: "/fournisseurs", cle: "nav.fournisseurs" },
+  { href: "/referentiel", cle: "nav.referentiel" },
   { href: "/calculateurs/devis", cle: "nav.devis" },
   { href: "/calculateurs/mur", cle: "nav.mur" },
+  { href: "/export", cle: "nav.export" },
+  { href: "/rapports", cle: "nav.rapports" },
 ];
 
 export default function CommandPalette({
@@ -34,7 +38,7 @@ export default function CommandPalette({
   const resultats = ROUTES.filter((item) =>
     t(item.cle).toLowerCase().includes(requete.toLowerCase()) ||
     item.href.includes(requete),
-  ).slice(0, 8);
+  ).slice(0, 10);
 
   // Réinitialise la recherche à l'ouverture et met le curseur dans la saisie
   useEffect(() => {

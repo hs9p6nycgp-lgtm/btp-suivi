@@ -236,7 +236,26 @@ export default function BpuPage() {
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-4 py-8 text-center text-muted">
-                    Aucun poste BPU pour le moment.
+                    {search.trim() || filterStatut ? (
+                      <>
+                        <p>
+                          Aucun poste ne correspond à{" "}
+                          {search.trim() ? `« ${search.trim()} »` : "ce filtre"}.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSearch("");
+                            setFilterStatut("");
+                          }}
+                          className="mt-2 cursor-pointer text-xs font-semibold text-primary hover:underline"
+                        >
+                          Réinitialiser les filtres
+                        </button>
+                      </>
+                    ) : (
+                      <p>Aucun poste BPU pour le moment.</p>
+                    )}
                   </td>
                 </tr>
               )}

@@ -51,10 +51,13 @@ export default function NetworkStatus() {
     updateStatus();
     window.addEventListener("online", updateStatus);
     window.addEventListener("offline", updateStatus);
+    // La file hors connexion prévient dès qu'une saisie y entre ou en sort.
+    window.addEventListener("btp-file-attente", updateStatus);
     const timer = window.setInterval(updateStatus, 15000);
     return () => {
       window.removeEventListener("online", updateStatus);
       window.removeEventListener("offline", updateStatus);
+      window.removeEventListener("btp-file-attente", updateStatus);
       window.clearInterval(timer);
     };
   }, []);
@@ -63,6 +66,7 @@ export default function NetworkStatus() {
 
   return (
     <div
+      role="status"
       className={`fixed bottom-4 right-4 z-50 rounded-full px-4 py-2 text-sm font-semibold shadow-lg ${
         online ? "bg-warning text-white" : "bg-danger text-white"
       }`}

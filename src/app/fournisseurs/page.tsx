@@ -225,9 +225,28 @@ export default function FournisseursPage() {
         </div>
       )}
       {!loading && filtres.length === 0 && (
-        <p className="rounded-xl border border-dashed border-border bg-surface-2/50 p-6 text-center text-sm text-muted">
-          Aucun fournisseur pour le moment.
-        </p>
+        <div className="rounded-xl border border-dashed border-border bg-surface-2/50 p-6 text-center text-sm text-muted">
+          {search.trim() || filtreType ? (
+            <>
+              <p>
+                Aucun fournisseur ne correspond à{" "}
+                {search.trim() ? `« ${search.trim()} »` : "ce filtre"}.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch("");
+                  setFiltreType("");
+                }}
+                className="mt-2 cursor-pointer text-xs font-semibold text-primary hover:underline"
+              >
+                Réinitialiser les filtres
+              </button>
+            </>
+          ) : (
+            <p>Aucun fournisseur pour le moment.</p>
+          )}
+        </div>
       )}
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {filtres.map((f) => (

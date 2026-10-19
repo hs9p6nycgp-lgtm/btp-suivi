@@ -370,7 +370,26 @@ export default function ReferentielPage() {
             {!loading && filtres.length === 0 && (
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-center text-muted">
-                  Aucun prix dans le référentiel.
+                  {search.trim() || filtreCategorie ? (
+                    <>
+                      <p>
+                        Aucun prix ne correspond à{" "}
+                        {search.trim() ? `« ${search.trim()} »` : "ce filtre"}.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearch("");
+                          setFiltreCategorie("");
+                        }}
+                        className="mt-2 cursor-pointer text-xs font-semibold text-primary hover:underline"
+                      >
+                        Réinitialiser les filtres
+                      </button>
+                    </>
+                  ) : (
+                    <p>Aucun prix dans le référentiel.</p>
+                  )}
                 </td>
               </tr>
             )}

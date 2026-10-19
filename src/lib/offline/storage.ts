@@ -64,6 +64,13 @@ export type QueuedOp = {
   createdAt: number;
 };
 
+// Prévient l'interface qu'une opération vient d'entrer ou de sortir de la file.
+function annoncerFile() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("btp-file-attente"));
+  }
+}
+
 // Retourne true si l'opération a bien été mise en file (false si le stockage est indisponible).
 export async function queueAdd(op: Omit<QueuedOp, "id" | "createdAt">): Promise<boolean> {
   try {
@@ -72,7 +79,10 @@ export async function queueAdd(op: Omit<QueuedOp, "id" | "createdAt">): Promise<
       const tx = db.transaction("queue", "readwrite");
       const store = tx.objectStore("queue");
       store.add({ ...op, createdAt: Date.now() });
-      tx.oncomplete = () => resolve(true);
+      tx.oncomplete = () => {
+        annoncerFile();
+        resolve(true);
+      };
       tx.onerror = () => resolve(false);
       tx.onabort = () => resolve(false);
     });
@@ -103,7 +113,10 @@ export async function queueRemove(id: number): Promise<void> {
       const tx = db.transaction("queue", "readwrite");
       const store = tx.objectStore("queue");
       store.delete(id);
-      tx.oncomplete = () => resolve();
+      tx.oncomplete = () => {
+        annoncerFile();
+        resolve();
+      };
       tx.onerror = () => resolve();
     });
   } catch {

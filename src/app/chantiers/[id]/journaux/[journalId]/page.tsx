@@ -65,6 +65,21 @@ export default function JournalDetailPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<DemandeConfirmation | null>(null);
 
+  // Message d'enregistrement : rassure l'utilisateur hors connexion
+  // (la saisie part dans la file locale et sera synchronisée automatiquement).
+  function toastEnregistre(fr: string, en: string) {
+    const base = langue === "fr" ? fr : en;
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      toast(
+        langue === "fr"
+          ? `${base} Hors connexion : la saisie sera synchronisée automatiquement.`
+          : `${base} Offline: the entry will sync automatically.`,
+      );
+      return;
+    }
+    toast(base);
+  }
+
   const [postes, setPostes] = useState<any[]>([]);
   const [sections, setSections] = useState<any[]>([]);
   const [effectifs, setEffectifs] = useState<any[]>([]);
@@ -137,7 +152,7 @@ export default function JournalDetailPage() {
     const { error } = await offlineUpdate("journaux", journalId, { meteo: meteo || null, observations: observations || null });
     setLoading(false);
     if (error) { setMessage(traduireErreur(error)); return; }
-    toast(langue === "fr" ? "En-tête enregistré." : "Header saved.");
+    toastEnregistre("En-tête enregistré.", "Header saved.");
     loadAll();
   }
 
@@ -235,7 +250,7 @@ export default function JournalDetailPage() {
       { id: `local-${Date.now()}`, chemin: path, legende, latitude: lat, longitude: lon, url },
     ]);
     setPhotoFile(null); setPhotoLegende("");
-    toast(langue === "fr" ? "Photo ajoutée." : "Photo added.");
+    toastEnregistre("Photo ajoutée.", "Photo added.");
   }
 
   async function validateJournal() {
@@ -275,7 +290,7 @@ export default function JournalDetailPage() {
     const { error } = await offlineUpdate("journaux", journalId, { statut: "valide", validated_at: new Date().toISOString() });
     setLoading(false);
     if (error) { setMessage(traduireErreur(error)); return; }
-    toast(langue === "fr" ? "Journal validé." : "Journal validated.");
+    toastEnregistre("Journal validé.", "Journal validated.");
     loadAll();
   }
 
@@ -286,7 +301,7 @@ export default function JournalDetailPage() {
     const { error } = await offlineUpdate("journaux", journalId, { statut: "brouillon", validated_at: null });
     setLoading(false);
     if (error) { setMessage(traduireErreur(error)); return; }
-    toast(langue === "fr" ? "Journal rouvert : la saisie est de nouveau modifiable." : "Log reopened: entries can be edited again.");
+    toastEnregistre("Journal rouvert : la saisie est de nouveau modifiable.", "Log reopened: entries can be edited again.");
     loadAll();
   }
 
