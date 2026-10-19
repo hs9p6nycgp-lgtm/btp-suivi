@@ -428,4 +428,14 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 
 ---
 
+## TODO-UI-031 — Identité de l'entreprise sur le PV, le carnet et le devis (T-UI-33)
+
+- **Écrans** : Procès-verbal journalier (`/chantiers/<id>/journaux/<journalId>/imprimer`), Carnet de chantier (`/chantiers/<id>/carnet`), Devis enregistré (`/calculateurs/devis/<id>`).
+- **Constaté (test ingénieur du 19/10/2026)** : l'identité de l'entreprise (logo, nom, coordonnées — module `useEntreprise`, « Mon entreprise ») n'est appliquée qu'à la **fiche imprimable du chantier** et aux **rapports**. Les trois documents ci-dessus n'affichent que « BTP SUIVI PRO » en en-tête, **sans les coordonnées de la société** — alors que le PV et le carnet sont précisément les documents **remis et signés** par le client (exigence REP-05 : « Rapport personnalisé avec logo de l'entreprise »).
+- **À faire** : reprendre le hook `useEntreprise` dans ces trois pages et afficher le logo et l'identité en tête de document, comme c'est déjà fait sur la fiche imprimable et les rapports.
+- **Priorité** : moyenne (cohérence des documents commerciaux).
+- **Référence** : `AUDIT_METIER.md` partie 27 §54 ; exigence REP-05.
+
+---
+
 *Fin de TODO_UI.md.*

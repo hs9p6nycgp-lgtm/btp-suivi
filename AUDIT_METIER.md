@@ -652,6 +652,44 @@ Depuis la fiche chantier, le lien « **Imprimer le carnet** » ouvre `/chantiers
 
 ---
 
+# Partie 27 — Après l'application des migrations : quatre modules débloqués
+
+Contrôle de l'audit du projet : « **Base à jour** — toutes les migrations sont appliquées ». J'ai repris les quatre modules qui étaient bloqués et je les ai testés.
+
+## 51. Déclarations d'incident HSE — ✅ **DÉBLOQUÉ ET VÉRIFIÉ**
+
+La déclaration s'enregistre : l'écran affiche « **Déclarations (1)** » avec la fiche créée (« Incident », gravité « Faible », statut « Action à faire », 19/10/2026, lieu « Chantier de test - accès principal », description « Chute de gravats près de la grue, injuries légères », personnes concernées). Le module HSE est donc pleinement utilisable.
+
+## 52. Offres tarifaires fournisseurs — ✅ **DÉBLOQUÉ ET VÉRIFIÉ**
+
+L'offre s'enregistre et s'affiche dans un **tableau comparatif** : poste « Latérite (m³) (m³) », colonnes FOURNISSEUR · PRIX UNITAIRE · DÉLAI · CONDITIONS / DATE, la ligne « TEST FOURNISSEUR — Carrière de test — **Meilleur prix 38 000** — 19/10/2026 » avec l'action « **Choisir** » (choix motivé). **FOU-03 et FOU-04 sont donc opérationnels.**
+
+## 53. « Mon entreprise » (logo, coordonnées, destinataires) — ✅ partiellement vérifié
+
+L'enregistrement fonctionne (« **Paramètres enregistrés : ils apparaissent en tête des rapports et documents imprimés.** ») et l'identité de l'entreprise apparaît bien sur la **fiche imprimable du chantier** (nom et téléphone) et sur les **rapports**. Les **destinataires** des rapports sont **pré-remplis** depuis « Mon entreprise » (« responsable@test.ci »).
+
+**Envoi du rapport par e-mail (REP-04)** : le bouton « Envoyer par e-mail » apparaît après génération du rapport ; sur mobile il ouvre le partage natif, sur ordinateur il télécharge le rapport et prépare le message. Dans mon environnement (pas de messagerie), l'application affiche le repli prévu : « **Envoi impossible depuis l'application : le rapport a été préparé, envoyez-le manuellement.** » ✓
+
+## 54. Incohérence : l'identité de l'entreprise manque sur trois documents — ⚠️ **À CORRIGER**
+
+Le module `useEntreprise` (logo + coordonnées) n'est utilisé que par la **fiche imprimable du chantier** et les **rapports**. Trois autres documents remis au client **ne portent pas** l'identité de l'entreprise :
+
+| Document | Identité de l'entreprise | Constaté |
+|---|---|---|
+| Fiche imprimable du chantier | ✅ | nom et téléphone présents |
+| Rapports | ✅ | présents |
+| **Procès-verbal journalier** | ❌ | l'en-tête affiche « BTP SUIVI PRO » sans les coordonnées de la société |
+| **Carnet de chantier** | ❌ | idem |
+| **Devis enregistré** | ❌ | idem |
+
+C'est d'autant plus gênant que le PV et le carnet sont précisément les documents **remis et signés** par le client.
+
+## 55. Rappel : l'alerte « chantier en retard » reste non corrigée
+
+La requête en 400 (`chantiers?select=…,avancement_pct,…`) est toujours présente et se répète à chaque rafraîchissement du centre d'alertes → **T-LOG-47 toujours ouverte**.
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
