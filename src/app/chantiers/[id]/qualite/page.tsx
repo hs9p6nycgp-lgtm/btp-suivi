@@ -20,6 +20,8 @@ import {
   validerSuiviNC,
 } from "@/lib/qualite/nonConformites";
 import { compresserImage } from "@/lib/photos/compression";
+import { enregistrerPhotoEnAttente } from "@/lib/photos/attente";
+import { doitMettreEnFile } from "@/lib/photos/regles";
 import { BUCKET_PHOTOS, urlsSignees } from "@/lib/photos/urls";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -164,7 +166,7 @@ export default function QualitePage() {
     setPhotosNC(parNc);
   }
 
-  /** Joint une photo à la fiche de non-conformité traitée. */
+  /** Joint une photo à la fiche de non-conformité traitée (hors connexion gérée). */
   async function ajouterPhotoNC() {
     if (!ncEnTraitement || !photoNCFichier) return;
     setEnvoiPhoto(true);
@@ -172,19 +174,36 @@ export default function QualitePage() {
     const supabase = createClient();
     const fichier = await compresserImage(photoNCFichier);
     const chemin = cheminPhotoNonConformite(ncEnTraitement.id, fichier.name, Date.now());
-    const { error: errUpload } = await supabase.storage
-      .from(BUCKET_PHOTOS)
-      .upload(chemin, fichier, { upsert: false });
-    if (errUpload) {
+
+    const enLigne = typeof navigator === "undefined" || navigator.onLine;
+    if (enLigne) {
+      const { error: errUpload } = await supabase.storage
+        .from(BUCKET_PHOTOS)
+        .upload(chemin, fichier, { upsert: false });
+      if (errUpload) {
+        // Réseau coupé pendant l'envoi : la photo est conservée sur l'appareil.
+        if (!doitMettreEnFile(errUpload, true) || !(await enregistrerPhotoEnAttente(chemin, fichier))) {
+          setEnvoiPhoto(false);
+          setNcMessage(
+            langue === "fr"
+              ? "La photo n'a pas pu être envoyée : réessayez une fois le réseau revenu."
+              : "The photo could not be uploaded: try again when the network is back.",
+          );
+          return;
+        }
+      }
+    } else if (!(await enregistrerPhotoEnAttente(chemin, fichier))) {
       setEnvoiPhoto(false);
       setNcMessage(
         langue === "fr"
-          ? "La photo n'a pas pu être envoyée : réessayez une fois le réseau revenu."
-          : "The photo could not be uploaded: try again when the network is back.",
+          ? "La photo n'a pas pu être conservée sur l'appareil : le stockage local est indisponible."
+          : "The photo could not be kept on the device: local storage is unavailable.",
       );
       return;
     }
-    const { error: errInsert } = await supabase.from("photos_non_conformite").insert({
+
+    const { error: errInsert } = await offlineInsert("photos_non_conformite", {
+      id: creerId(),
       non_conformite_id: ncEnTraitement.id,
       chemin,
       legende: photoNCLegende.trim() || null,

@@ -1,6 +1,8 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { offlineDelete, offlineInsert, offlineUpdate } from "@/lib/offline/mutations";
+import { creerId } from "@/lib/chantiers/identifiant";
 import { useState } from "react";
 import { Check, Layers, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -153,7 +155,10 @@ export default function ChantierSections({
         : `Section ${sections.length + 1}`
       : `Bâtiment ${sections.length + 1}`;
 
-    const { error } = await supabase.from("sections_chantier").insert({
+    // Identifiant généré côté navigateur : la saisie reste possible hors
+    // connexion (la section est mise en file et rejouée au retour du réseau).
+    const { error } = await offlineInsert("sections_chantier", {
+      id: creerId(),
       chantier_id: chantierId,
       nom: nom.trim() || nomAuto,
       pk_debut: route ? debutNum : null,
@@ -186,29 +191,29 @@ export default function ChantierSections({
     setMessage(null);
     setSaving("route-sections");
     const supabase = createClient();
-    const { error } = await supabase.from("sections_chantier").insert(
-      sectionsRouteManquantes.map((section) => {
-        const debut = analyserPK(section.pkDebut);
-        const fin = analyserPK(section.pkFin);
-        return {
-          chantier_id: chantierId,
-          nom: section.nom,
-          pk_debut: debut,
-          pk_fin: fin,
-          niveau: null,
-          lot: null,
-          type_ouvrage: null,
-          longueur: longueurSection(debut, fin),
-          largeur: null,
-          hauteur: null,
-        };
-      }),
-    );
-    setSaving(null);
-    if (error) {
-      setMessage(traduireErreur(error));
-      return;
+    for (const section of sectionsRouteManquantes) {
+      const debut = analyserPK(section.pkDebut);
+      const fin = analyserPK(section.pkFin);
+      const { error: errSection } = await offlineInsert("sections_chantier", {
+        id: creerId(),
+        chantier_id: chantierId,
+        nom: section.nom,
+        pk_debut: debut,
+        pk_fin: fin,
+        niveau: null,
+        lot: null,
+        type_ouvrage: null,
+        longueur: longueurSection(debut, fin),
+        largeur: null,
+        hauteur: null,
+      });
+      if (errSection) {
+        setSaving(null);
+        setMessage(traduireErreur(errSection));
+        return;
+      }
     }
+    setSaving(null);
     toast(
       `${sectionsRouteManquantes.length} section${sectionsRouteManquantes.length > 1 ? "s" : ""} ajoutée${
         sectionsRouteManquantes.length > 1 ? "s" : ""
@@ -221,9 +226,9 @@ export default function ChantierSections({
     if (niveauxManquants.length === 0) return;
     setMessage(null);
     setSaving("niveaux");
-    const supabase = createClient();
-    const { error } = await supabase.from("sections_chantier").insert(
-      niveauxManquants.map((niveau) => ({
+    for (const niveau of niveauxManquants) {
+      const { error: errNiveau } = await offlineInsert("sections_chantier", {
+        id: creerId(),
         chantier_id: chantierId,
         nom: niveau,
         niveau,
@@ -234,13 +239,14 @@ export default function ChantierSections({
         longueur: null,
         largeur: null,
         hauteur: null,
-      })),
-    );
-    setSaving(null);
-    if (error) {
-      setMessage(traduireErreur(error));
-      return;
+      });
+      if (errNiveau) {
+        setSaving(null);
+        setMessage(traduireErreur(errNiveau));
+        return;
+      }
     }
+    setSaving(null);
     toast(
       `${niveauxManquants.length} niveau${niveauxManquants.length > 1 ? "x" : ""} ajouté${
         niveauxManquants.length > 1 ? "s" : ""
@@ -253,11 +259,9 @@ export default function ChantierSections({
     const valeur = avancements[id];
     if (valeur === undefined) return;
     setSaving(id);
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("sections_chantier")
-      .update({ avancement_pct: Math.min(100, Math.max(0, valeur)) })
-      .eq("id", id);
+    const { error } = await offlineUpdate("sections_chantier", id, {
+      avancement_pct: Math.min(100, Math.max(0, valeur)),
+    });
     setSaving(null);
     if (error) {
       setMessage(traduireErreur(error));
@@ -272,8 +276,7 @@ export default function ChantierSections({
   }
 
   async function supprimer(section: SectionChantier) {
-    const supabase = createClient();
-    const { error } = await supabase.from("sections_chantier").delete().eq("id", section.id);
+    const { error } = await offlineDelete("sections_chantier", section.id);
     if (error) {
       setMessage(traduireErreur(error));
       return;
