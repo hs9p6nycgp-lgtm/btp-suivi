@@ -28,7 +28,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 | TODO-UI-022 | Export Excel : feuilles manquantes + valeurs traduites et dates JJ/MM/AAAA (T-UI-20) | 🔜 À FAIRE |
 | TODO-UI-023 | Fiche chantier : un seul affichage du statut (T-UI-21) | 🔜 À FAIRE |
 | TODO-UI-024 | Calculateur de murs : prix du sac de ciment appliqué à des kilos + total avec décimales (T-UI-26) | ✅ FAIT (19/10/2026) — quantités converties dans l'unité du prix, total en FCFA sans décimale, format français |
-| TODO-UI-025 | Base de prix : date de source + postes « à vérifier » (T-UI-27) | 🔜 À FAIRE |
+| TODO-UI-025 | Base de prix : date de source + postes « à vérifier » (T-UI-27) | ✅ FAIT (19/10/2026) — date de source affichée et obligatoire, recherche rétablie, filtre « À vérifier » + liste de travail, synchronisation vers le Référentiel |
 | TODO-UI-026 | Fournisseurs : écran « Conditions tarifaires » (T-UI-28) | 🔜 À FAIRE |
 | TODO-UI-027 | Livraisons : choisir le matériau dans une liste (BPU / DQE) (T-UI-29) | 🔜 À FAIRE |
 
@@ -371,6 +371,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 - **Constaté (test ingénieur du 19/10/2026)** : 289 postes dont **158 « valides » et 131 « à vérifier »** ; **aucune date de source** ni dans la table ni dans le formulaire d'ajout (exigence REF-04). Les doublons restent bien visibles (enrobé 95 000 ×2 + **35 000** ; latérite 40 000 ×2).
 - **À faire** : colonne « Date de source » + champ date obligatoire à l'ajout ; filtre / tri sur les postes « à vérifier » ; lien vers le Référentiel (page aujourd'hui vide) — branchement de **T-LOG-42** (Session 2).
 - **Priorité** : moyenne.
+- **✅ Corrigé (19/10/2026)** : la base de prix affiche la **date de source** (JJ/MM/AAAA), l'ajout exige la source **et** la date (le prix reste « à vérifier » sinon), le champ de recherche est rétabli, un bouton **« À vérifier »** affiche la liste de travail (postes du plus cher au moins cher) et un bouton **« Reprendre dans le référentiel »** alimente le Référentiel (289 prix) en traçant les changements de prix dans l'historique. Le Référentiel (page `/referentiel`) affiche désormais un lien vers la base de prix.
 - **Référence** : `AUDIT_METIER.md` partie 2 §12 ; exigence REF-04.
 
 ---

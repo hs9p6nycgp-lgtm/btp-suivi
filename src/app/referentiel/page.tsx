@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getLangue, traduireErreur } from "@/lib/i18n";
 import { ConfirmDialog, type DemandeConfirmation } from "@/components/ui/ConfirmDialog";
@@ -255,6 +256,28 @@ export default function ReferentielPage() {
           {message}
         </p>
       )}
+
+      <p className="mb-4 rounded-xl border border-border/80 bg-surface-2 p-3 text-sm text-muted">
+        {langue === "fr" ? (
+          <>
+            Ce référentiel centralise les prix (REF-01). La{" "}
+            <Link href="/bpu" className="font-semibold text-primary hover:underline">
+              base de prix (BPU)
+            </Link>{" "}
+            peut y être reprise en un clic (« Reprendre dans le référentiel »), et chaque
+            changement de prix est tracé dans l’historique (REF-03).
+          </>
+        ) : (
+          <>
+            This reference centralises prices (REF-01). The{" "}
+            <Link href="/bpu" className="font-semibold text-primary hover:underline">
+              price base (BPU)
+            </Link>{" "}
+            can be copied in one click, and every price change is traced in the history
+            (REF-03).
+          </>
+        )}
+      </p>
 
       <div className="mb-4 flex flex-wrap gap-3">
         <input type="text" placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" />

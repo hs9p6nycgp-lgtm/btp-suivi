@@ -21,7 +21,7 @@ décrites avec le détail.
 | TODO-LOGIC-009 | Rapport complet : agrégats + export (T-LOG-39)                   |
 | TODO-LOGIC-010 | BPU : dédoublonnage + conditions fournisseurs (T-LOG-40)         |
 | TODO-LOGIC-011 | Calculateur de murs : prix dans la bonne unité + montants sans décimale (T-LOG-41) | ✅ CORRIGÉ (19/10) |
-| TODO-LOGIC-012 | Base de prix : date de source obligatoire + lien avec le Référentiel (T-LOG-42) | 🔜 À FAIRE |
+| TODO-LOGIC-012 | Base de prix : date de source obligatoire + lien avec le Référentiel (T-LOG-42) | ✅ CORRIGÉ (19/10) — date obligatoire à la saisie, référentiel alimenté (289 prix), historique REF-03, liste de travail des 131 postes « à vérifier ». |
 | TODO-LOGIC-013 | Fournisseurs : conditions tarifaires (T-LOG-43)                  | 🔜 À FAIRE |
 | TODO-LOGIC-014 | Livraisons : matériau rattaché au BPU / DQE (T-LOG-44)            | 🔜 À FAIRE |
 
@@ -217,12 +217,30 @@ décrites avec le détail.
 - **État mesuré directement en base (précis, 19/10/2026)** :
   - Les colonnes **`date_source` et `date_validite` existent déjà** dans `bpu_postes` et sont **renseignées sur les 289 lignes** (14/10, 15/10, 16/10/2026). **Aucune migration n'est donc nécessaire** : le correctif porte sur l'**affichage** (colonne « Date de source ») et sur la **saisie** (champ date obligatoire dans le formulaire d'ajout, comme le refus d'un prix sans date dans l'import REF-05).
   - **`referentiel_prix` = 0 ligne** et **`historique_prix` = 0 ligne** : les 289 prix ne vivent que dans `bpu_postes`. Le Référentiel (historique REF-03, import/export REF-05) n'a jamais été alimenté → « Exporter CSV (0) » est normal.
-- **À faire**
-  1. Afficher la date de source dans la base de prix et la rendre **obligatoire à la saisie** (un prix sans date est refusé) — REF-04.
-  2. Alimenter le **Référentiel** à partir des 289 prix (ou faire de la base de prix l'unique source de vérité, avec historique) — pour débloquer REF-03 et REF-05.
-  3. Fournir une liste de travail des **131 postes « à vérifier »** (tri par importance).
-  4. Tests automatiques (refus d'un prix sans date, propagation, historique REF-03).
-- **Suite** : écran **T-UI-27** (Session 1).
+- **État** : CORRIGÉ — module pur testé `src/lib/referentiel/alignement.ts`
+  (12 tests), branché sur la page `/bpu` + script
+  `scripts/synchroniser-referentiel.mjs`.
+  1. ✅ **Date de source obligatoire à la saisie** : champ date dans le
+     formulaire de la base de prix (obligatoire), statut déduit de la source
+     **et** de la date (« valide » seulement si les deux sont présentes —
+     même règle que le refus d'un prix sans date dans l'import REF-05) et
+     colonne « Date de source » affichée en JJ/MM/AAAA.
+  2. ✅ **Référentiel alimenté** : bouton « Reprendre dans le référentiel »
+     (reconnaissance par code puis par désignation + unité, création des prix
+     absents, mise à jour des prix modifiés **avec trace dans l'historique
+     REF-03**) ; les prix sans source ni date ne sont pas repris (REF-04).
+     **Appliqué en base le 19/10** : le référentiel est passé de **0 à 289
+     prix** (script `scripts/synchroniser-referentiel.mjs --appliquer`,
+     idempotent) — l'export CSV et l'import REF-05 sont de nouveau
+     opérationnels.
+  3. ✅ **Liste de travail** des 131 postes « à vérifier » : bouton de filtre
+     « À vérifier » + encart listant les postes du plus cher au moins cher
+     (ceux qui pèsent le plus sur un devis). Le champ de recherche, présent
+     dans le code mais affiché nulle part, est rétabli.
+  4. ✅ Tests automatiques (refus d'un prix sans date, reconnaissance, mise à
+     jour, historique REF-03, tri de la liste de travail).
+- **Suite** : écran **T-UI-27** → fait (recherche, filtres, date de source,
+  synchronisation, liste de travail).
 - **Priorité** : **haute** (traçabilité des prix — exigence M).
 
 ---
