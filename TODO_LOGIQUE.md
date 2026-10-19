@@ -368,6 +368,7 @@ décrites avec le détail.
   2. Détecter le cas « migration non appliquée » et proposer la marche à suivre (le nom du fichier de migration à exécuter dans Supabase > SQL Editor), comme le fait déjà le reste de l'application pour les champs optionnels.
   3. Ne jamais afficher un message technique brut à l'utilisateur ; le détail peut être journalisé en console.
   4. Test automatique : `traduireErreur` renvoie un message en français pour une erreur de type « relation inexistante ».
+  5. **Exemple concret relevé (19/10) — module « Situations de paiement »** : l'écran affiche « Une erreur est survenue. (Could not find the table 'public.situations_paiement' in the schema cache) ». Le module « version du journal », lui, fait déjà bien (« Journal rouvert, mais la version n'a pas pu être tracée : exécutez la migration 0028 dans Supabase ») : **reprendre cette formulation partout**.
 - **Priorité** : moyenne (lisibilité et confiance : un chef de chantier doit comprendre ce qu'il doit faire).
 
 ---

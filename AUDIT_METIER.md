@@ -721,6 +721,35 @@ Contrôle du fichier produit : `rapport_<chantier>_<du>_au.pdf`, **PDF 1.3 de 15
 
 ---
 
+# Partie 30 — Check-list sécurité, situations de paiement, historique des versions
+
+## 60. Check-list sécurité matinale (HSE-02) — ✅ **NOUVEAU, VÉRIFIÉ**
+
+L'écran Sécurité comporte une **check-list du jour** (port d'EPI, échauffement muscular, signalisation, extincteur…) avec un enregistrement en un clic. Vérifié : les 5 points cochés → « **Check-list enregistrée pour aujourd'hui** », « **Conformité : 100 %** » et « **1 jour(s) de check-list complète d'affilée** » (le compteur de jours consécutifs annoncé dans l'aide est bien calculé).
+
+## 61. Situations de paiement — 🟡 nouveau, **calculs exacts, création bloquée par une migration**
+
+Nouveau module `/chantiers/<id>/situations` (« ce que vous demandez à être payé : valorisation des travaux réalisés, retenue de garantie, acomptes et net à payer »).
+
+- **Chiffre d'affaires vérifié** : cumul valorisé 934 000 FCFA (identique au rapport), reste du marché 249 066 000 FCFA (250 000 000 − 934 000, soit 0 % réalisé).
+- **Aperçu de la situation exact** : cumul avant 0 · période 934 000 · montant brut 934 000 · **retenue de garantie 5 % = −46 700** · **net à payer 887 300** ✓.
+- **Création bloquée** : la table `situations_paiement` n'existe pas encore en base (migration `0029_phase4_situations_paiement.sql` à appliquer). L'application affiche « Une erreur est survenue. (**Could not find the table 'public.situations_paiement' in the schema cache**) » : le détail technique **en anglais** est exposé à l'utilisateur, alors que le module « version du journal » fait correctement (« exécutez la migration 0028 dans Supabase »). → **T-LOG-50**.
+
+## 62. Historique des versions d'un journal (RG-02) — 🟡 conçu, **migration à appliquer**
+
+Lors d'une réouverture motivée, l'application archive la version validée dans `journal_versions`. La table n'existe pas encore en base : l'application **le signale clairement** (« Journal rouvert, mais la version n'a pas pu être tracée : exécutez la migration 0028 dans Supabase ») — c'est la bonne conduite, à appliquer partout.
+
+## 63. Migrations à appliquer (état du 19/10 au soir) + numérotation à corriger
+
+| Migration | Ce qu'elle apporte |
+|---|---|
+| `0028_journal_versions.sql` | traçabilité des corrections de journal (RG-02) |
+| `0029_phase4_situations_paiement.sql` | situations de paiement |
+
+Les migrations `0020` à `0027` sont appliquées. **Deux collisions de numérotation** sont à corriger par la Session 3 : `0026_phase4_documents_fournisseurs` vs `0026_planning_avancement_physique`, et `0028_journal_versions` vs `0028_phase4_hse_checklist`. Le suivi par inspection du schéma reste juste, mais un suivi par version fooledrait (l'une des deux serait considérée comme déjà appliquée).
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
