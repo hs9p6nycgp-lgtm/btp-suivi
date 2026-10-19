@@ -10,6 +10,13 @@ import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getLangue, traduireErreur } from "@/lib/i18n";
 import { estTypeDetailValide, groupesTypesDetailles, type TypeChantier } from "@/lib/chantiers/types";
+import BlocDetailsOuvrage from "@/components/chantiers/BlocDetailsOuvrage";
+import {
+  colonnesDetailsOuvrage,
+  detailsOuvrageDepuisChantier,
+  detailsOuvrageVides,
+  type DetailsOuvrage,
+} from "@/lib/chantiers/detailsOuvrage";
 import {
   analyserPK,
   estNomChantierSimilaire,
@@ -105,9 +112,8 @@ export default function NouveauChantierPage() {
   const [dateFin, setDateFin] = useState("");
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
-  const [longueur, setLongueur] = useState("");
-  const [largeur, setLargeur] = useState("");
-  const [hauteur, setHauteur] = useState("");
+  const [details, setDetails] = useState<DetailsOuvrage>(detailsOuvrageVides);
+  const [detailsOk, setDetailsOk] = useState<boolean | null>(null);
   const [seuil, setSeuil] = useState("10");
   const [sections, setSections] = useState<LigneSection[]>([nouvelleSection()]);
   const [intervenants, setIntervenants] = useState<LigneIntervenant[]>([]);
@@ -125,6 +131,8 @@ export default function NouveauChantierPage() {
       const supabase = createClient();
       const { error } = await supabase.from("chantiers").select("ville").limit(1);
       setColonnesOk(!error);
+      const { error: erreurDetails } = await supabase.from("chantiers").select("nb_etages").limit(1);
+      setDetailsOk(!erreurDetails);
     }
     verifier();
   }, []);
@@ -152,9 +160,7 @@ export default function NouveauChantierPage() {
       setNumeroMarche(data.numero_marche ?? "");
       setLatitude(data.latitude !== null && data.latitude !== undefined ? String(data.latitude) : "");
       setLongitude(data.longitude !== null && data.longitude !== undefined ? String(data.longitude) : "");
-      setLongueur(data.longueur !== null && data.longueur !== undefined ? String(data.longueur) : "");
-      setLargeur(data.largeur !== null && data.largeur !== undefined ? String(data.largeur) : "");
-      setHauteur(data.hauteur !== null && data.hauteur !== undefined ? String(data.hauteur) : "");
+      setDetails(detailsOuvrageDepuisChantier((data.type as TypeChantier) ?? "route", data));
       setSeuil(
         data.seuil_ecart_pct !== null && data.seuil_ecart_pct !== undefined
           ? String(data.seuil_ecart_pct)
@@ -284,6 +290,13 @@ export default function NouveauChantierPage() {
       return;
     }
 
+    const {
+      longueur: longueurBase,
+      largeur: largeurBase,
+      hauteur: hauteurBase,
+      ...detailsColonnes
+    } = colonnesDetailsOuvrage(type, details);
+
     const base = {
       nom,
       type,
@@ -294,33 +307,39 @@ export default function NouveauChantierPage() {
       date_fin_prevue: dateFin || null,
       latitude: latitude ? Number(latitude) : null,
       longitude: longitude ? Number(longitude) : null,
-      longueur: longueur ? Number(longueur) : null,
-      largeur: largeur ? Number(largeur) : null,
-      hauteur: hauteur ? Number(hauteur) : null,
+      longueur: longueurBase,
+      largeur: largeurBase,
+      hauteur: hauteurBase,
       seuil_ecart_pct: Number(seuil) || 10,
       statut: "en_preparation",
       proprietaire_id: user.id,
     };
-    const complement = colonnesOk
-      ? {
-          ville: ville || null,
-          maitre_oeuvre: maitreOeuvre || null,
-          entreprise: entreprise || null,
-          numero_marche: numeroMarche || null,
-        }
-      : {};
+    const complement = {
+      ...(colonnesOk
+        ? {
+            ville: ville || null,
+            maitre_oeuvre: maitreOeuvre || null,
+            entreprise: entreprise || null,
+            numero_marche: numeroMarche || null,
+          }
+        : {}),
+      ...(detailsOk === true ? detailsColonnes : {}),
+    };
 
     let { data, error } = await supabase
       .from("chantiers")
       .insert({ ...base, ...complement })
       .select()
       .single();
-    if (error && colonnesOk) {
+    if (error && (colonnesOk || detailsOk === true)) {
       // Colonnes pas encore créées côté base : on enregistre au moins l'essentiel.
       const essai = await supabase.from("chantiers").insert(base).select().single();
       data = essai.data;
       error = essai.error;
-      if (!error) setColonnesOk(false);
+      if (!error) {
+        setColonnesOk(false);
+        setDetailsOk(false);
+      }
     }
     if (error || !data) {
       setLoading(false);
@@ -393,7 +412,7 @@ export default function NouveauChantierPage() {
           title={langue === "fr" ? "Nouveau chantier" : "New Site"}
           description={
             langue === "fr"
-              ? "Identité, marché, découpage (sections ou bâtiments) et intervenants : tout est prêt pour le suivi. Vous pouvez aussi créer d'abord et compléter ensuite."
+              ? "Identité, marché, description de l'ouvrage, découpage (sections ou bâtiments) et intervenants : tout est prêt pour le suivi. Vous pouvez aussi créer d'abord et compléter ensuite."
               : "Identity, contract, breakdown (sections or buildings) and people: everything is ready for tracking."
           }
           icon={<Building2 className="h-5 w-5" />}
@@ -564,17 +583,43 @@ export default function NouveauChantierPage() {
                 </div>
               </section>
 
-              {/* 3. Découpage (CHA-02) */}
+              {/* 3. Description de l'ouvrage (modele 3D) */}
               <section className="space-y-4">
                 <TitreBloc
                   numero={3}
+                  titre="Description de l'ouvrage"
+                  icone={<Layers className="h-4 w-4" />}
+                />
+                <p className="text-sm text-muted">
+                  {type === "route"
+                    ? "Ces informations servent au calcul des quantités et au modèle 3D : chaussée, voies et accotements à l'échelle."
+                    : "Ces informations rendent le modèle 3D réaliste : niveaux réels, trame de poteaux, voiles et toiture."}
+                </p>
+                {detailsOk === false && (
+                  <p className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-foreground">
+                    Ces détails s&apos;enregistreront après la mise à jour de la base (migration{" "}
+                    <code className="font-mono">0019_details_ouvrage_3d.sql</code> à exécuter dans Supabase). Le chantier
+                    et son découpage se créent déjà normalement.
+                  </p>
+                )}
+                <BlocDetailsOuvrage
+                  type={type}
+                  valeur={details}
+                  onChange={(champ, valeur) => setDetails((prev) => ({ ...prev, [champ]: valeur }))}
+                />
+              </section>
+
+              {/* 4. Découpage (CHA-02) */}
+              <section className="space-y-4">
+                <TitreBloc
+                  numero={4}
                   titre={type === "route" ? "Découpage — sections et PK" : "Découpage — bâtiments, niveaux et lots"}
                   icone={<Layers className="h-4 w-4" />}
                 />
                 <p className="text-sm text-muted">
                   {type === "route"
                     ? "Découpez la route en sections (ex. : PK 0+000 → PK 2+500). Le linéaire se calcule tout seul et servira au suivi et à la 3D."
-                    : "Ajoutez chaque bâtiment ou lot avec son niveau (ex. : Bâtiment A — R+1 — Gros œuvre)."}
+                    : "Facultatif : ajoutez les bâtiments ou lots à suivre (gros œuvre, finitions…). Les niveaux saisis dans la description de l'ouvrage suffisent déjà pour la 3D."}
                 </p>
                 <div className="space-y-3">
                   {sections.map((s, i) =>
@@ -664,9 +709,9 @@ export default function NouveauChantierPage() {
                 </datalist>
               </section>
 
-              {/* 4. Intervenants (CHA-01) */}
+              {/* 5. Intervenants (CHA-01) */}
               <section className="space-y-4">
-                <TitreBloc numero={4} titre="Intervenants" icone={<Users className="h-4 w-4" />} />
+                <TitreBloc numero={5} titre="Intervenants" icone={<Users className="h-4 w-4" />} />
                 <p className="text-sm text-muted">
                   Les personnes à joindre pour ce chantier : maître d&apos;ouvrage, maître d&apos;œuvre, équipe terrain.
                 </p>
@@ -726,11 +771,11 @@ export default function NouveauChantierPage() {
                 </datalist>
               </section>
 
-              {/* 5. Options avancées */}
+              {/* 6. Options avancées */}
               <details className="rounded-xl border border-border/80 bg-surface-2/50 p-4">
                 <summary className="cursor-pointer list-none text-sm font-semibold text-foreground">
                   Options avancées (facultatif)
-                  <span className="ml-2 text-xs font-normal text-muted">position GPS, dimensions, seuil d&apos;alerte</span>
+                  <span className="ml-2 text-xs font-normal text-muted">position GPS, seuil d&apos;alerte</span>
                 </summary>
 
                 <div className="mt-4 space-y-6">
@@ -756,26 +801,6 @@ export default function NouveauChantierPage() {
                         <input className={CLASSE_CHAMP} type="number" step="0.000001" value={longitude} onChange={(e) => setLongitude(e.target.value)} />
                       </div>
                     </div>
-                  </div>
-
-                  <div>
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                      <div>
-                        <label className="mb-1 block text-sm font-medium text-foreground">Longueur (m)</label>
-                        <input className={CLASSE_CHAMP} type="number" step="0.01" value={longueur} onChange={(e) => setLongueur(e.target.value)} />
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-sm font-medium text-foreground">Largeur (m)</label>
-                        <input className={CLASSE_CHAMP} type="number" step="0.01" value={largeur} onChange={(e) => setLargeur(e.target.value)} />
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-sm font-medium text-foreground">Hauteur (m)</label>
-                        <input className={CLASSE_CHAMP} type="number" step="0.01" value={hauteur} onChange={(e) => setHauteur(e.target.value)} />
-                      </div>
-                    </div>
-                    <p className="mt-1 text-xs text-muted">
-                      Facultatif : utile pour les estimations rapides et le modèle 3D.
-                    </p>
                   </div>
 
                   <div>

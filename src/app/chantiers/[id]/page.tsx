@@ -51,6 +51,16 @@ type Chantier = {
   longueur: number | null;
   largeur: number | null;
   hauteur: number | null;
+  nb_sous_sols?: number | null;
+  nb_etages?: number | null;
+  hauteur_niveau?: number | null;
+  nb_travees_longueur?: number | null;
+  nb_travees_largeur?: number | null;
+  type_structure?: string | null;
+  type_toiture?: string | null;
+  nb_voies?: number | null;
+  largeur_accotement?: number | null;
+  type_revetement?: string | null;
   seuil_ecart_pct: number;
   statut: string;
   created_at: string;
@@ -379,6 +389,16 @@ export default function ChantierDetailPage() {
               longueur: chantier.longueur,
               largeur: chantier.largeur,
               hauteur: chantier.hauteur,
+              nb_sous_sols: chantier.nb_sous_sols,
+              nb_etages: chantier.nb_etages,
+              hauteur_niveau: chantier.hauteur_niveau,
+              nb_travees_longueur: chantier.nb_travees_longueur,
+              nb_travees_largeur: chantier.nb_travees_largeur,
+              type_structure: chantier.type_structure,
+              type_toiture: chantier.type_toiture,
+              nb_voies: chantier.nb_voies,
+              largeur_accotement: chantier.largeur_accotement,
+              type_revetement: chantier.type_revetement,
             }}
             sections={sections}
           />

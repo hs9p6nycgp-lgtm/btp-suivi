@@ -26,6 +26,16 @@ type Chantier = {
   longueur: number | null;
   largeur: number | null;
   hauteur: number | null;
+  nb_sous_sols?: number | null;
+  nb_etages?: number | null;
+  hauteur_niveau?: number | null;
+  nb_travees_longueur?: number | null;
+  nb_travees_largeur?: number | null;
+  type_structure?: string | null;
+  type_toiture?: string | null;
+  nb_voies?: number | null;
+  largeur_accotement?: number | null;
+  type_revetement?: string | null;
 };
 
 type Section3D = {

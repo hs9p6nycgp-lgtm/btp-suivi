@@ -11,6 +11,13 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { getLangue, traduireErreur } from "@/lib/i18n";
 import { estTypeDetailValide, groupesTypesDetailles, type TypeChantier } from "@/lib/chantiers/types";
+import BlocDetailsOuvrage from "@/components/chantiers/BlocDetailsOuvrage";
+import {
+  colonnesDetailsOuvrage,
+  detailsOuvrageDepuisChantier,
+  detailsOuvrageVides,
+  type DetailsOuvrage,
+} from "@/lib/chantiers/detailsOuvrage";
 
 // Formate un montant FCFA avec des séparateurs de milliers pendant la frappe
 function formaterMontant(valeur: string): string {
@@ -48,9 +55,8 @@ export default function ModifierChantierPage() {
   const [dateFin, setDateFin] = useState("");
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
-  const [longueur, setLongueur] = useState("");
-  const [largeur, setLargeur] = useState("");
-  const [hauteur, setHauteur] = useState("");
+  const [details, setDetails] = useState<DetailsOuvrage>(detailsOuvrageVides);
+  const [detailsOk, setDetailsOk] = useState<boolean | null>(null);
   const [seuil, setSeuil] = useState("10");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -85,15 +91,16 @@ export default function ModifierChantierPage() {
       setDateFin(data.date_fin_prevue ?? "");
       setLatitude(data.latitude !== null ? String(data.latitude) : "");
       setLongitude(data.longitude !== null ? String(data.longitude) : "");
-      setLongueur(data.longueur !== null ? String(data.longueur) : "");
-      setLargeur(data.largeur !== null ? String(data.largeur) : "");
-      setHauteur(data.hauteur !== null ? String(data.hauteur) : "");
+      setDetails(detailsOuvrageDepuisChantier((data.type as TypeChantier) ?? "route", data));
       setSeuil(data.seuil_ecart_pct !== null ? String(data.seuil_ecart_pct) : "10");
       setChargement(false);
 
       // La base sait-elle déjà stocker ville / maître d'œuvre / entreprise / n° marché ?
       const { error: errColonnes } = await supabase.from("chantiers").select("ville").limit(1);
       setColonnesOk(!errColonnes);
+      // Et la description détaillée de l'ouvrage (migration 0019) ?
+      const { error: errDetails } = await supabase.from("chantiers").select("nb_etages").limit(1);
+      setDetailsOk(!errDetails);
     }
     load();
   }, [chantierId, router]);
@@ -146,6 +153,13 @@ export default function ModifierChantierPage() {
       return;
     }
 
+    const {
+      longueur: longueurBase,
+      largeur: largeurBase,
+      hauteur: hauteurBase,
+      ...detailsColonnes
+    } = colonnesDetailsOuvrage(type, details);
+
     const base = {
       nom,
       type,
@@ -156,26 +170,29 @@ export default function ModifierChantierPage() {
       date_fin_prevue: dateFin || null,
       latitude: latitude ? Number(latitude) : null,
       longitude: longitude ? Number(longitude) : null,
-      longueur: longueur ? Number(longueur) : null,
-      largeur: largeur ? Number(largeur) : null,
-      hauteur: hauteur ? Number(hauteur) : null,
+      longueur: longueurBase,
+      largeur: largeurBase,
+      hauteur: hauteurBase,
       seuil_ecart_pct: Number(seuil) || 10,
     };
-    const complement = colonnesOk
-      ? {
-          ville: ville || null,
-          maitre_oeuvre: maitreOeuvre || null,
-          entreprise: entreprise || null,
-          numero_marche: numeroMarche || null,
-        }
-      : {};
+    const complement = {
+      ...(colonnesOk
+        ? {
+            ville: ville || null,
+            maitre_oeuvre: maitreOeuvre || null,
+            entreprise: entreprise || null,
+            numero_marche: numeroMarche || null,
+          }
+        : {}),
+      ...(detailsOk === true ? detailsColonnes : {}),
+    };
 
     let { error } = await supabase
       .from("chantiers")
       .update({ ...base, ...complement })
       .eq("id", chantierId)
       .eq("proprietaire_id", user.id);
-    if (error && colonnesOk) {
+    if (error && (colonnesOk || detailsOk === true)) {
       // Colonnes pas encore créées côté base : on enregistre au moins l'essentiel.
       const essai = await supabase
         .from("chantiers")
@@ -183,7 +200,10 @@ export default function ModifierChantierPage() {
         .eq("id", chantierId)
         .eq("proprietaire_id", user.id);
       error = essai.error;
-      if (!error) setColonnesOk(false);
+      if (!error) {
+        setColonnesOk(false);
+        setDetailsOk(false);
+      }
     }
 
     setLoading(false);
@@ -226,7 +246,7 @@ export default function ModifierChantierPage() {
           title={langue === "fr" ? "Modifier le chantier" : "Edit site"}
           description={
             langue === "fr"
-              ? "Corrigez les informations du chantier à tout moment : nom, montant, dates, seuil d'alerte."
+              ? "Corrigez les informations du chantier à tout moment : nom, montant, dates, description de l'ouvrage et seuil d'alerte."
               : "Fix the site information at any time: name, amount, dates, alert threshold."
           }
           icon={<Pencil className="h-5 w-5" />}
@@ -371,14 +391,36 @@ export default function ModifierChantierPage() {
               </div>
             </div>
 
+            <div>
+              <h3 className="mb-1 text-sm font-semibold text-foreground">
+                {langue === "fr" ? "Description de l'ouvrage" : "Work description"}
+              </h3>
+              <p className="mb-3 text-xs text-muted">
+                {langue === "fr"
+                  ? "Niveaux, trame de poteaux, voirie et toiture : ces détails alimentent le modèle 3D du chantier."
+                  : "Levels, column grid, road layout and roof: these details feed the site's 3D model."}
+              </p>
+              {detailsOk === false && (
+                <p className="mb-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-foreground">
+                  Ces détails s&apos;enregistreront après la mise à jour de la base (migration{" "}
+                  <code className="font-mono">0019_details_ouvrage_3d.sql</code> à exécuter dans Supabase).
+                </p>
+              )}
+              <BlocDetailsOuvrage
+                type={type}
+                valeur={details}
+                onChange={(champ, valeur) => setDetails((prev) => ({ ...prev, [champ]: valeur }))}
+              />
+            </div>
+
             {/* Options avancées : repliées par défaut pour garder une page courte */}
             <details className="rounded-xl border border-border/80 bg-surface-2/50 p-4">
               <summary className="cursor-pointer list-none text-sm font-semibold text-foreground">
                 {langue === "fr" ? "Options avancées (facultatif)" : "Advanced options (optional)"}
                 <span className="ml-2 text-xs font-normal text-muted">
                   {langue === "fr"
-                    ? "position GPS, dimensions, seuil d'alerte"
-                    : "GPS position, dimensions, alert threshold"}
+                    ? "position GPS, seuil d'alerte"
+                    : "GPS position, alert threshold"}
                 </span>
               </summary>
 
@@ -411,34 +453,6 @@ export default function ModifierChantierPage() {
                       <input className={CLASSE_CHAMP} type="number" step="0.000001" value={longitude} onChange={(e) => setLongitude(e.target.value)} />
                     </div>
                   </div>
-                </div>
-
-                <div>
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-1">
-                        {langue === "fr" ? "Longueur (m)" : "Length (m)"}
-                      </label>
-                      <input className={CLASSE_CHAMP} type="number" step="0.01" value={longueur} onChange={(e) => setLongueur(e.target.value)} />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-1">
-                        {langue === "fr" ? "Largeur (m)" : "Width (m)"}
-                      </label>
-                      <input className={CLASSE_CHAMP} type="number" step="0.01" value={largeur} onChange={(e) => setLargeur(e.target.value)} />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-1">
-                        {langue === "fr" ? "Hauteur (m)" : "Height (m)"}
-                      </label>
-                      <input className={CLASSE_CHAMP} type="number" step="0.01" value={hauteur} onChange={(e) => setHauteur(e.target.value)} />
-                    </div>
-                  </div>
-                  <p className="mt-1 text-xs text-muted">
-                    {langue === "fr"
-                      ? "Facultatif : laissez vide si vous ne les connaissez pas — utile seulement pour les estimations rapides."
-                      : "Optional: leave empty if unknown — only used for quick estimates."}
-                  </p>
                 </div>
 
                 <div>

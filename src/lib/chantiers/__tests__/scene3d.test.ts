@@ -263,4 +263,124 @@ describe("construireSceneChantier", () => {
     const bandes = bandesRoute(scene);
     assert.equal(bandes[0].couleur, "#123456");
   });
+
+  it("batiment : utilise les niveaux demandes (sous-sols, RDC, etages)", () => {
+    const scene = construireSceneChantier(
+      {
+        ...chantierBatiment,
+        hauteur: null,
+        nb_sous_sols: 1,
+        nb_etages: 3,
+        hauteur_niveau: 3.5,
+      },
+      [],
+    ) as SceneChantier;
+    assert.equal(scene.resume.nbNiveaux, 5);
+    assert.equal(scene.resume.hauteur, 17.5);
+    const textes = scene.etiquettes.map((e) => e.texte);
+    for (const attendu of ["Sous-sol", "RDC", "R+1", "R+2", "R+3"]) {
+      assert.ok(textes.includes(attendu), `${attendu} attendu`);
+    }
+    // Sous-sol : le terrain forme un anneau (4 morceaux) autour de la fouille.
+    const terrains = scene.elements.filter((e) => e.couleur === "#cbb491");
+    assert.equal(terrains.length, 4);
+  });
+
+  it("batiment : trame de poteaux selon les travees demandees", () => {
+    const scene = construireSceneChantier(
+      {
+        ...chantierBatiment,
+        hauteur: null,
+        nb_sous_sols: 0,
+        nb_etages: 0,
+        hauteur_niveau: 3,
+        nb_travees_longueur: 4,
+        nb_travees_largeur: 2,
+      },
+      [],
+    ) as SceneChantier;
+    assert.equal(scene.resume.nbNiveaux, 1);
+    const poteaux = scene.elements.filter((e) => e.couleur === "#5c5f66");
+    assert.equal(poteaux.length, (4 + 1) * (2 + 1));
+    const poutres = scene.elements.filter((e) => e.couleur === "#6b6f76");
+    assert.equal(poutres.length, 3 + 5);
+  });
+
+  it("batiment : structure en voiles sans poteaux", () => {
+    const scene = construireSceneChantier(
+      {
+        ...chantierBatiment,
+        hauteur: null,
+        nb_etages: 1,
+        hauteur_niveau: 3,
+        type_structure: "voiles",
+      },
+      [],
+    ) as SceneChantier;
+    assert.equal(scene.elements.filter((e) => e.couleur === "#5c5f66").length, 0);
+    // Deux murs porteurs interieurs par niveau, sur deux niveaux.
+    const mursInternes = scene.elements.filter((e) => e.couleur === "#cfc7b8");
+    assert.equal(mursInternes.length, 4);
+  });
+
+  it("batiment : toiture en tole a deux pans", () => {
+    const scene = construireSceneChantier(
+      {
+        ...chantierBatiment,
+        hauteur: null,
+        nb_etages: 0,
+        hauteur_niveau: 3,
+        type_toiture: "tole",
+      },
+      [],
+    ) as SceneChantier;
+    const pans = scene.elements.filter((e) => e.couleur === "#b45309");
+    assert.equal(pans.length, 2);
+    assert.ok(pans.every((e) => e.rotation !== undefined));
+    assert.notEqual(pans[0].rotation![0], pans[1].rotation![0]);
+  });
+
+  it("batiment : conserve un niveau decoupe hors du nombre demande", () => {
+    const scene = construireSceneChantier(
+      { ...chantierBatiment, hauteur: null, nb_sous_sols: 0, nb_etages: 1, hauteur_niveau: 3 },
+      [section({ id: "a", nom: "Sous-sol technique", niveau: "Sous-sol", avancement_pct: 100 })],
+    ) as SceneChantier;
+    assert.equal(scene.resume.nbNiveaux, 3); // Sous-sol + RDC + R+1
+    const textes = scene.etiquettes.map((e) => e.texte);
+    assert.ok(textes.includes("Sous-sol · 100 %"));
+  });
+
+  it("route : nombre de voies, accotement et revetement", () => {
+    const scene = construireSceneChantier(
+      {
+        ...chantierRoute,
+        longueur: 1000,
+        largeur: 14,
+        nb_voies: 4,
+        largeur_accotement: 1.5,
+        type_revetement: "beton",
+      },
+      [],
+    ) as SceneChantier;
+    assert.equal(scene.resume.largeur, 14);
+    const revetement = scene.elements.find((e) => e.position[1] === 0.57);
+    assert.equal(revetement?.couleur, "#b8b2a7");
+    // 4 voies : 3 lignes de separation (z = -3.5, 0, 3.5).
+    const lignes = scene.elements.filter((e) => e.couleur === "#eef0f2");
+    const zLignes = [...new Set(lignes.map((e) => Math.round(e.position[2] * 100) / 100))].sort(
+      (a, b) => a - b,
+    );
+    assert.deepEqual(zLignes, [-3.5, 0, 3.5]);
+    const accotements = scene.elements.filter((e) => e.couleur === "#b9915f");
+    assert.equal(accotements.length, 2);
+    presque(accotements[0].taille[2], 1.5);
+  });
+
+  it("route : deduit la largeur de chaussee du nombre de voies", () => {
+    const scene = construireSceneChantier(
+      { ...chantierRoute, longueur: 1000, largeur: null, nb_voies: 3 },
+      [],
+    ) as SceneChantier;
+    assert.equal(scene.resume.largeur, 10.5);
+  });
 });

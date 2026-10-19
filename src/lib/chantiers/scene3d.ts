@@ -19,6 +19,8 @@ export type ElementScene = {
   couleur: string;
   /** Opacite 0..1 (1 = opaque). */
   opacite?: number;
+  /** Rotation en radians [X, Y, Z] (toiture a deux pans). */
+  rotation?: [number, number, number];
 };
 
 /** Texte flottant au-dessus du modele (section, PK, niveau...). */
@@ -50,6 +52,18 @@ export type ChantierScene = {
   longueur: number | null;
   largeur: number | null;
   hauteur: number | null;
+  /** Batiment : niveaux demandes a la creation (facultatifs). */
+  nb_sous_sols?: number | null;
+  nb_etages?: number | null;
+  hauteur_niveau?: number | null;
+  nb_travees_longueur?: number | null;
+  nb_travees_largeur?: number | null;
+  type_structure?: string | null;
+  type_toiture?: string | null;
+  /** Route : voies, accotements et revetement. */
+  nb_voies?: number | null;
+  largeur_accotement?: number | null;
+  type_revetement?: string | null;
 };
 
 export type ResumeScene = {
@@ -147,6 +161,23 @@ function nombrePositif(valeur: number | null | undefined): number | null {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
+/** Entier >= 0, ou null si la valeur est absente (0 est une valeur valide). */
+function entierZero(valeur: number | null | undefined): number | null {
+  if (valeur === null || valeur === undefined || String(valeur).trim() === "") return null;
+  const n = Number(valeur);
+  return Number.isFinite(n) ? Math.max(0, Math.round(n)) : null;
+}
+
+/** Valeur de texte parmi une liste connue, sinon la valeur par defaut. */
+function texteConnu(
+  valeur: string | null | undefined,
+  possibles: readonly string[],
+  defaut: string,
+): string {
+  const texte = String(valeur ?? "").trim().toLowerCase();
+  return possibles.includes(texte) ? texte : defaut;
+}
+
 function lirePk(valeur: number | null | undefined): number | null {
   if (valeur === null || valeur === undefined) return null;
   const n = Number(valeur);
@@ -239,8 +270,14 @@ function construireRoute(
   const pkFin =
     segments.length > 0 ? Math.max(...segments.map((s) => lirePk(s.pk_fin) as number)) : longueurChantier ?? 100;
   const portee = Math.max(4, pkFin - pkDebut);
-  const largeurChaussee = nombrePositif(chantier.largeur) ?? 7;
-  const accotement = Math.max(0.8, largeurChaussee * 0.2);
+  const nbVoies = Math.min(6, Math.max(1, entierZero(chantier.nb_voies) ?? 2));
+  const largeurSaisie = nombrePositif(chantier.largeur);
+  const largeurChaussee = largeurSaisie ?? nbVoies * 3.5;
+  const accotement =
+    nombrePositif(chantier.largeur_accotement) ?? Math.max(0.8, largeurChaussee * 0.2);
+  const revetement = texteConnu(chantier.type_revetement, ["bitume", "beton", "pave"], "bitume");
+  const couleurRevetement =
+    revetement === "beton" ? "#b8b2a7" : revetement === "pave" ? "#a58a6a" : "#43464a";
   const xDebut = -portee / 2;
   const xDe = (valeur: number) => xDebut + (valeur - pkDebut);
 
@@ -254,7 +291,7 @@ function construireRoute(
   // Corps de chaussee en couches : fondation, base, revetement
   elements.push({ forme: "boite", position: [0, 0.15, 0], taille: [portee, 0.3, largeurChaussee], couleur: "#9a9183" });
   elements.push({ forme: "boite", position: [0, 0.41, 0], taille: [portee, 0.22, largeurChaussee], couleur: "#8a8274" });
-  elements.push({ forme: "boite", position: [0, 0.57, 0], taille: [portee, 0.1, largeurChaussee], couleur: "#43464a" });
+  elements.push({ forme: "boite", position: [0, 0.57, 0], taille: [portee, 0.1, largeurChaussee], couleur: couleurRevetement });
   // Accotements
   const zAccotement = largeurChaussee / 2 + accotement / 2;
   for (const cote of [-1, 1]) {
@@ -265,16 +302,19 @@ function construireRoute(
       couleur: "#b9915f",
     });
   }
-  // Marquage axial (pointilles espaces selon la longueur)
+  // Marquage : une ligne pointillee par separation de voies
   const nbTirets = Math.min(70, Math.max(6, Math.round(portee / 25)));
   const espacementTirets = portee / (nbTirets + 1);
-  for (let i = 1; i <= nbTirets; i++) {
-    elements.push({
-      forme: "boite",
-      position: [xDebut + espacementTirets * i, 0.635, 0],
-      taille: [Math.min(3, espacementTirets * 0.5), 0.02, 0.18],
-      couleur: "#eef0f2",
-    });
+  for (let voie = 1; voie < nbVoies; voie++) {
+    const zLigne = -largeurChaussee / 2 + (voie * largeurChaussee) / nbVoies;
+    for (let i = 1; i <= nbTirets; i++) {
+      elements.push({
+        forme: "boite",
+        position: [xDebut + espacementTirets * i, 0.635, zLigne],
+        taille: [Math.min(3, espacementTirets * 0.5), 0.02, 0.18],
+        couleur: "#eef0f2",
+      });
+    }
   }
   // Sections : bandes colorees selon l'avancement, borne a chaque debut de section
   const avecEtiquette = segments.length <= 12;
@@ -378,19 +418,86 @@ function construireBatiment(
     }
   }
   const indices = [...parNiveau.keys()].sort((a, b) => a - b);
-  const premierIndice = indices.length > 0 ? indices[0] : 0;
-  const nbDepuisSections = indices.length > 0 ? indices[indices.length - 1] - premierIndice + 1 : 0;
-  const nbNiveaux =
-    nbDepuisSections > 0 ? nbDepuisSections : Math.max(1, Math.round((nombrePositif(chantier.hauteur) ?? 6) / 3));
-  const hauteurTotale = nombrePositif(chantier.hauteur) ?? nbNiveaux * 3;
-  const hauteurNiveau = hauteurTotale / nbNiveaux;
 
-  // Terrain (emprise + abords)
-  elements.push({ forme: "boite", position: [0, -0.1, 0], taille: [longueur + 8, 0.2, largeur + 8], couleur: "#cbb491" });
+  // Niveaux demandes a la creation : sous-sols + RDC + etages. Ils priment sur
+  // l'estimation par la hauteur et sur les sections (qui servent au suivi).
+  const sousSolsDemandes = entierZero(chantier.nb_sous_sols);
+  const etagesDemandes = entierZero(chantier.nb_etages);
+  const niveauxExplicites = sousSolsDemandes !== null || etagesDemandes !== null;
+  const sousSols = Math.min(10, sousSolsDemandes ?? 0);
+  const etages = Math.min(50, etagesDemandes ?? 0);
+
+  const hauteurDemandee = nombrePositif(chantier.hauteur);
+  const hauteurNiveauDemandee = nombrePositif(chantier.hauteur_niveau);
+
+  let premierIndice: number;
+  let nbNiveaux: number;
+  if (niveauxExplicites) {
+    // Union des niveaux demandes et des niveaux deja decoupes : une section
+    // « Sous-sol » ou « R+4 » existante ne doit jamais disparaitre du modele.
+    const premierSection = indices.length > 0 ? indices[0] : 0;
+    const dernierSection = indices.length > 0 ? indices[indices.length - 1] : 0;
+    premierIndice = Math.min(-sousSols, premierSection);
+    nbNiveaux = Math.max(etages, dernierSection) - premierIndice + 1;
+  } else if (indices.length > 0) {
+    premierIndice = indices[0];
+    nbNiveaux = indices[indices.length - 1] - premierIndice + 1;
+  } else {
+    premierIndice = 0;
+    nbNiveaux = Math.max(1, Math.round((hauteurDemandee ?? 6) / (hauteurNiveauDemandee ?? 3)));
+  }
+
+  const hauteurNiveau =
+    hauteurNiveauDemandee ??
+    (hauteurDemandee !== null && !niveauxExplicites ? hauteurDemandee / nbNiveaux : 3);
+  const hauteurTotale =
+    hauteurDemandee !== null && !niveauxExplicites ? hauteurDemandee : nbNiveaux * hauteurNiveau;
+
+  const structure = texteConnu(
+    chantier.type_structure,
+    ["poteaux_poutres", "voiles", "mixte"],
+    "poteaux_poutres",
+  );
+  const avecPoteaux = structure !== "voiles";
+  const avecVoiles = structure !== "poteaux_poutres";
+  const toiture = texteConnu(chantier.type_toiture, ["terrasse", "tole"], "terrasse");
+
+  // Terrain : pleine dalle sans sous-sol, anneau autour de la fouille sinon.
+  const aDesSousSols = premierIndice < 0;
+  if (!aDesSousSols) {
+    elements.push({ forme: "boite", position: [0, -0.1, 0], taille: [longueur + 8, 0.2, largeur + 8], couleur: "#cbb491" });
+  } else {
+    const bande = 6;
+    const ySol = -0.1;
+    elements.push({ forme: "boite", position: [0, ySol, largeur / 2 + bande / 2], taille: [longueur + bande * 2, 0.2, bande], couleur: "#cbb491" });
+    elements.push({ forme: "boite", position: [0, ySol, -(largeur / 2 + bande / 2)], taille: [longueur + bande * 2, 0.2, bande], couleur: "#cbb491" });
+    elements.push({ forme: "boite", position: [longueur / 2 + bande / 2, ySol, 0], taille: [bande, 0.2, largeur], couleur: "#cbb491" });
+    elements.push({ forme: "boite", position: [-(longueur / 2 + bande / 2), ySol, 0], taille: [bande, 0.2, largeur], couleur: "#cbb491" });
+  }
+
+  // Trame de poteaux : une file par travee (auto : environ tous les 6 m).
+  const traveesX = Math.max(
+    1,
+    Math.min(30, entierZero(chantier.nb_travees_longueur) ?? Math.round(longueur / 6)),
+  );
+  const traveesZ = Math.max(
+    1,
+    Math.min(30, entierZero(chantier.nb_travees_largeur) ?? Math.round(largeur / 6)),
+  );
+  const xs = Array.from(
+    { length: traveesX + 1 },
+    (_, k) => -longueur / 2 + 0.15 + (k * (longueur - 0.3)) / traveesX,
+  );
+  const zs = Array.from(
+    { length: traveesZ + 1 },
+    (_, k) => -largeur / 2 + 0.15 + (k * (largeur - 0.3)) / traveesZ,
+  );
+
+  const nbSousSolsAffiches = premierIndice < 0 ? -premierIndice : 0;
 
   for (let i = 0; i < nbNiveaux; i++) {
     const indice = premierIndice + i;
-    const yBase = i * hauteurNiveau;
+    const yBase = indice * hauteurNiveau;
     const sectionsNiveau = parNiveau.get(indice) ?? [];
     const avancementNiveau = avancementMoyenSections(sectionsNiveau);
 
@@ -403,21 +510,30 @@ function construireBatiment(
       couleur: couleurAvancement(avancementNiveau),
     });
 
-    // Poteaux repartis regulierement (tous les 6 m environ)
-    const nbPoteauxX = Math.max(2, Math.round(longueur / 6) + 1);
-    for (let k = 0; k < nbPoteauxX; k++) {
-      const x = -(longueur / 2 - 0.15) + (k * (longueur - 0.3)) / (nbPoteauxX - 1);
-      for (const cote of [-1, 1]) {
-        elements.push({
-          forme: "boite",
-          position: [x, yBase + hauteurNiveau / 2 + 0.1, cote * (largeur / 2 - 0.15)],
-          taille: [0.3, hauteurNiveau, 0.3],
-          couleur: "#5c5f66",
-        });
+    // Poteaux et poutres de la trame
+    if (avecPoteaux) {
+      for (const x of xs) {
+        for (const z of zs) {
+          elements.push({
+            forme: "boite",
+            position: [x, yBase + hauteurNiveau / 2 + 0.1, z],
+            taille: [0.3, hauteurNiveau, 0.3],
+            couleur: "#5c5f66",
+          });
+        }
+      }
+      const yPoutre = yBase + hauteurNiveau - 0.05;
+      for (const z of zs) {
+        elements.push({ forme: "boite", position: [0, yPoutre, z], taille: [longueur, 0.35, 0.25], couleur: "#6b6f76" });
+      }
+      for (const x of xs) {
+        elements.push({ forme: "boite", position: [x, yPoutre, 0], taille: [0.25, 0.35, largeur], couleur: "#6b6f76" });
       }
     }
-    // Voiles semi-transparents (lecture "en construction")
-    const epaisseur = 0.12;
+
+    // Voiles : enveloppe semi-transparente + murs porteurs interieurs.
+    const epaisseur = avecVoiles ? 0.2 : 0.12;
+    const opacite = avecVoiles ? 0.3 : 0.16;
     const yVoile = yBase + hauteurNiveau / 2 + 0.1;
     for (const cote of [-1, 1]) {
       elements.push({
@@ -425,23 +541,67 @@ function construireBatiment(
         position: [0, yVoile, cote * (largeur / 2 - epaisseur / 2)],
         taille: [longueur, hauteurNiveau, epaisseur],
         couleur: "#d8d2c6",
-        opacite: 0.16,
+        opacite,
       });
       elements.push({
         forme: "boite",
         position: [cote * (longueur / 2 - epaisseur / 2), yVoile, 0],
         taille: [epaisseur, hauteurNiveau, largeur],
         couleur: "#d8d2c6",
-        opacite: 0.16,
+        opacite,
       });
+    }
+    if (avecVoiles) {
+      for (const cote of [-1, 1]) {
+        elements.push({
+          forme: "boite",
+          position: [0, yVoile, (cote * largeur) / 6],
+          taille: [longueur - 0.4, hauteurNiveau, 0.15],
+          couleur: "#cfc7b8",
+          opacite: 0.28,
+        });
+      }
     }
 
     // Etiquette du niveau : "R+1 · Gros oeuvre · 65 %"
+    const nomNiveau =
+      indice < 0 && nbSousSolsAffiches > 1
+        ? `Sous-sol ${Math.abs(indice)}`
+        : libelleNiveau(indice);
     const lots = [...new Set(sectionsNiveau.map((s) => s.lot).filter((l): l is string => Boolean(l)))].slice(0, 2);
-    const parties = [libelleNiveau(indice)];
+    const parties = [nomNiveau];
     if (lots.length > 0) parties.push(lots.join(" / "));
     if (avancementNiveau !== null) parties.push(`${Math.round(avancementNiveau)} %`);
     etiquettes.push({ texte: parties.join(" · "), position: [-(longueur / 2 + 3), yBase + hauteurNiveau / 2, 0] });
+  }
+
+  // Toiture : dalle terrasse avec acrotere, ou deux pans de tole.
+  const indiceSommet = premierIndice + nbNiveaux - 1;
+  const yToit = indiceSommet * hauteurNiveau + hauteurNiveau;
+  if (toiture === "tole") {
+    const angle = Math.PI / 12;
+    const demiPortee = largeur / 2 + 0.4;
+    const longueurPente = demiPortee / Math.cos(angle);
+    const hauteurPignon = Math.tan(angle) * demiPortee;
+    for (const cote of [1, -1]) {
+      elements.push({
+        forme: "boite",
+        position: [0, yToit + hauteurPignon / 2, (cote * demiPortee) / 2],
+        taille: [longueur + 0.8, 0.08, longueurPente],
+        couleur: "#b45309",
+        rotation: [cote * angle, 0, 0],
+      });
+    }
+    elements.push({ forme: "boite", position: [0, yToit + hauteurPignon, 0], taille: [longueur + 0.8, 0.12, 0.24], couleur: "#7c2d12" });
+  } else {
+    elements.push({ forme: "boite", position: [0, yToit + 0.1, 0], taille: [longueur + 0.4, 0.2, largeur + 0.4], couleur: "#bdb7ab" });
+    const hAcrotere = 0.6;
+    const e = 0.15;
+    const yAcrotere = yToit + 0.2 + hAcrotere / 2;
+    for (const cote of [-1, 1]) {
+      elements.push({ forme: "boite", position: [0, yAcrotere, cote * (largeur / 2 + 0.2 - e / 2)], taille: [longueur + 0.4, hAcrotere, e], couleur: "#c9c3b7" });
+      elements.push({ forme: "boite", position: [cote * (longueur / 2 + 0.2 - e / 2), yAcrotere, 0], taille: [e, hAcrotere, largeur + 0.4], couleur: "#c9c3b7" });
+    }
   }
 
   // Ouvrages annexes (elements sans niveau)

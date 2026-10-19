@@ -137,6 +137,7 @@ export default function Modele3D({
       const mesh = new THREE.Mesh(cylindre ? geometrieCylindre : geometrieBoite, materiauDe(el.couleur, opacite));
       mesh.position.set(el.position[0], el.position[1], el.position[2]);
       mesh.scale.set(cylindre ? el.taille[0] / 2 : el.taille[0], el.taille[1], cylindre ? el.taille[2] / 2 : el.taille[2]);
+      if (el.rotation) mesh.rotation.set(el.rotation[0], el.rotation[1], el.rotation[2]);
       mesh.castShadow = ombresActives && opacite >= 0.6;
       mesh.receiveShadow = ombresActives && opacite >= 1;
       groupe.add(mesh);
