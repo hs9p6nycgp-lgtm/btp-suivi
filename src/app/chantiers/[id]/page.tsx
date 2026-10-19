@@ -1,18 +1,34 @@
 "use client";
 
-import { Box, Calendar, CalendarRange, ClipboardCheck, ClipboardList, Coins, MapPin, Calculator, Pencil } from "lucide-react";
+import {
+  AlertTriangle,
+  Box,
+  CalendarRange,
+  Calculator,
+  ClipboardCheck,
+  Coins,
+  ExternalLink,
+  MapPin,
+  Pencil,
+  ShieldAlert,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import DqeImport from "@/components/DqeImport";
 import ChantierEquipe from "@/components/ChantierEquipe";
 import ChantierAvancement from "@/components/ChantierAvancement";
+import ChantierSections, { type SectionChantier } from "@/components/ChantierSections";
+import ChantierIntervenants from "@/components/ChantierIntervenants";
+import ChantierDocuments from "@/components/ChantierDocuments";
+import ChantierSuiviRapide from "@/components/ChantierSuiviRapide";
 import Modele3D from "@/components/visualisation/Modele3D";
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { getLangue } from "@/lib/i18n";
 import { libelleTypeDetail } from "@/lib/chantiers/types";
+import { etatEcheance, formaterMetres, joursRestants, longueurSection } from "@/lib/chantiers/complet";
 
 type Chantier = {
   id: string;
@@ -20,6 +36,10 @@ type Chantier = {
   type: string;
   type_detail: string | null;
   maitre_ouvrage: string | null;
+  ville?: string | null;
+  maitre_oeuvre?: string | null;
+  entreprise?: string | null;
+  numero_marche?: string | null;
   montant_marche: number;
   date_debut: string | null;
   date_fin_prevue: string | null;
@@ -33,16 +53,6 @@ type Chantier = {
   created_at: string;
 };
 
-type Section3D = {
-  id: string;
-  nom: string;
-  pk_debut: number | null;
-  pk_fin: number | null;
-  niveau: string | null;
-  lot: string | null;
-  type_ouvrage: string | null;
-};
-
 // Couleurs volontairement limitées à la palette de StatCard : une couleur
 // inconnue faisait planter toute la fiche (BUG-016 / T-UI-14, 18/10/2026).
 const STATUT_LABELS: Record<string, { fr: string; en: string; color: "blue" | "emerald" | "amber" | "rose" }> = {
@@ -53,6 +63,13 @@ const STATUT_LABELS: Record<string, { fr: string; en: string; color: "blue" | "e
   cloture: { fr: "Clôturé", en: "Closed", color: "rose" },
 };
 
+function formaterDate(valeur: string | null | undefined): string {
+  if (!valeur) return "—";
+  const d = new Date(valeur.length <= 10 ? `${valeur}T00:00:00` : valeur);
+  if (Number.isNaN(d.getTime())) return valeur;
+  return d.toLocaleDateString("fr-FR");
+}
+
 export default function ChantierDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -62,9 +79,22 @@ export default function ChantierDetailPage() {
   const [chantier, setChantier] = useState<Chantier | null>(null);
   const [postes, setPostes] = useState<any[]>([]);
   const [membres, setMembres] = useState<any[]>([]);
-  const [sections, setSections] = useState<Section3D[]>([]);
+  const [sections, setSections] = useState<SectionChantier[]>([]);
+  const [avancementSectionOk, setAvancementSectionOk] = useState(true);
+  const [compteurs, setCompteurs] = useState({ alertes: 0, nonConformites: 0 });
   const [loading, setLoading] = useState(true);
   const [statut, setStatut] = useState("");
+
+  const chargerSections = useCallback(async () => {
+    if (!chantierId) return;
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("sections_chantier")
+      .select("*")
+      .eq("chantier_id", chantierId)
+      .order("created_at", { ascending: true });
+    if (data) setSections(data as SectionChantier[]);
+  }, [chantierId]);
 
   useEffect(() => {
     async function load() {
@@ -73,25 +103,42 @@ export default function ChantierDetailPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.replace("/login"); return; }
 
-      const [cRes, pRes, mRes, sRes] = await Promise.all([
+      const [cRes, pRes, mRes, sRes, aRes, nRes, avRes] = await Promise.all([
         supabase.from("chantiers").select("*").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle(),
         supabase.from("postes_dqe").select("*").eq("chantier_id", chantierId).order("created_at", { ascending: true }),
         supabase.from("chantier_utilisateurs").select("*, profil:profils(id,nom,email)").eq("chantier_id", chantierId),
-        supabase.from("sections_chantier").select("*").eq("chantier_id", chantierId),
+        supabase
+          .from("sections_chantier")
+          .select("*")
+          .eq("chantier_id", chantierId)
+          .order("created_at", { ascending: true }),
+        supabase
+          .from("alertes")
+          .select("id", { count: "exact", head: true })
+          .eq("chantier_id", chantierId)
+          .eq("statut", "ouverte"),
+        supabase
+          .from("non_conformites")
+          .select("id", { count: "exact", head: true })
+          .eq("chantier_id", chantierId)
+          .in("statut", ["ouverte", "en_cours"]),
+        supabase.from("sections_chantier").select("avancement_pct").limit(1),
       ]);
 
       if (cRes.data) setChantier(cRes.data as Chantier);
       else { router.replace("/chantiers"); return; }
       if (pRes.data) setPostes(pRes.data as any[]);
       if (mRes.data) setMembres(mRes.data as any[]);
-      if (sRes.data) setSections(sRes.data as Section3D[]);
+      if (sRes.data) setSections(sRes.data as SectionChantier[]);
+      setCompteurs({ alertes: aRes.count ?? 0, nonConformites: nRes.count ?? 0 });
+      setAvancementSectionOk(!avRes.error);
       if (cRes.data?.statut) setStatut(cRes.data.statut);
       setLoading(false);
     }
     load();
   }, [chantierId, router]);
 
-  if (!chantier) {
+  if (!chantier || loading) {
     return (
       <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
         <div className="flex h-64 items-center justify-center">
@@ -101,7 +148,12 @@ export default function ChantierDetailPage() {
     );
   }
 
-  const s = STATUT_LABELS[chantier.statut] || STATUT_LABELS.en_preparation;
+  const s = STATUT_LABELS[statut] || STATUT_LABELS.en_preparation;
+  const jours = joursRestants(chantier.date_fin_prevue);
+  const echeance = etatEcheance(chantier.date_fin_prevue, chantier.statut);
+  const couleurEcheance =
+    echeance === "depasse" ? "rose" : echeance === "proche" ? "amber" : echeance === "normal" ? "emerald" : "slate";
+  const lineaire = sections.reduce((total, section) => total + (longueurSection(section.pk_debut, section.pk_fin) ?? 0), 0);
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
@@ -123,8 +175,10 @@ export default function ChantierDetailPage() {
             <div className="min-w-0">
               <h1 className="text-2xl font-bold tracking-tight md:text-3xl">{chantier.nom}</h1>
               <p className="mt-1 text-sm text-white/70">
-                {chantier.type === "route" ? (langue === "fr" ? "🛣️ Route" : "🛣️ Road") : (langue === "fr" ? "🏢 Bâtiment" : "🏢 Building")} -{" "}
-                {chantier.maitre_ouvrage ?? (langue === "fr" ? "sans maître d'ouvrage" : "without project owner")}
+                {chantier.type === "route" ? "🛣️ Route" : "🏢 Bâtiment"}
+                {chantier.ville ? ` — ${chantier.ville}` : ""}
+                {chantier.maitre_ouvrage ? ` — ${chantier.maitre_ouvrage}` : ""}
+                {chantier.entreprise ? ` — ${chantier.entreprise}` : ""}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -155,6 +209,16 @@ export default function ChantierDetailPage() {
             </div>
           </div>
 
+          {/* Repères du marché */}
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-white/75">
+            <span>Début : {formaterDate(chantier.date_debut)}</span>
+            <span>Fin prévue : {formaterDate(chantier.date_fin_prevue)}</span>
+            <span>Seuil d&apos;alerte : {chantier.seuil_ecart_pct} %</span>
+            {chantier.numero_marche && <span>Marché n° {chantier.numero_marche}</span>}
+            {chantier.maitre_oeuvre && <span>Maître d&apos;œuvre : {chantier.maitre_oeuvre}</span>}
+            {lineaire > 0 && <span>Linéaire : {formaterMetres(lineaire)}</span>}
+          </div>
+
           {/* Accès rapides */}
           <div className="mt-5 flex flex-wrap gap-2">
             {[
@@ -177,7 +241,7 @@ export default function ChantierDetailPage() {
         </div>
       </div>
 
-      {/* Chiffres clés */}
+      {/* Chiffres clés du suivi */}
       <div className="anim-fade-up anim-delay-1 mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           className="h-full"
@@ -189,49 +253,99 @@ export default function ChantierDetailPage() {
         />
         <StatCard
           className="h-full"
-          title={langue === "fr" ? "Seuil d'alerte" : "Alert Threshold"}
-          value={`${chantier.seuil_ecart_pct}%`}
-          subtitle={langue === "fr" ? "écart quantité" : "quantity variance"}
-          icon={<MapPin className="h-5 w-5" />}
-          color="orange"
+          title={langue === "fr" ? "Jours restants" : "Days Remaining"}
+          value={jours === null ? "—" : jours < 0 ? `${Math.abs(jours)} j de retard` : `${jours} j`}
+          subtitle={`Fin prévue : ${formaterDate(chantier.date_fin_prevue)}`}
+          icon={<CalendarRange className="h-5 w-5" />}
+          color={couleurEcheance}
         />
         <StatCard
           className="h-full"
-          title={langue === "fr" ? "Statut" : "Status"}
-          value={langue === "fr" ? s.fr : s.en}
-          subtitle={chantier.statut}
-          icon={<ClipboardList className="h-5 w-5" />}
-          color={s.color}
+          title={langue === "fr" ? "Alertes ouvertes" : "Open Alerts"}
+          value={compteurs.alertes}
+          subtitle={langue === "fr" ? "écarts de quantité" : "quantity variances"}
+          icon={<AlertTriangle className="h-5 w-5" />}
+          color={compteurs.alertes > 0 ? "amber" : "emerald"}
         />
         <StatCard
           className="h-full"
-          title={langue === "fr" ? "Date début" : "Start Date"}
-          value={chantier.date_debut ?? (langue === "fr" ? "Non définie" : "Not set")}
-          subtitle={langue === "fr" ? "Début du chantier" : "Start date"}
-          icon={<Calendar className="h-5 w-5" />}
-          color="slate"
+          title={langue === "fr" ? "Non-conformités" : "Non-conformities"}
+          value={compteurs.nonConformites}
+          subtitle={langue === "fr" ? "ouvertes ou en cours" : "open or in progress"}
+          icon={<ShieldAlert className="h-5 w-5" />}
+          color={compteurs.nonConformites > 0 ? "rose" : "emerald"}
         />
       </div>
 
-      {chantier.latitude !== null && chantier.longitude !== null && (
-        <div className="anim-fade-up anim-delay-2 mb-6">
-          <div className="mb-4 flex items-start justify-between">
-            <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
-              <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
-              {langue === "fr" ? "Localisation GPS" : "GPS Location"}
-            </h2>
-          </div>
-          <Card padding="lg">
-            <p className="text-sm font-medium tabular-nums text-foreground">
-              {chantier.latitude}, {chantier.longitude}
-            </p>
-            <div className="mt-4 flex h-48 w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-surface-2 text-sm text-muted">
-              <MapPin className="h-6 w-6 text-primary" />
-              {langue === "fr" ? "Carte interactive (à venir)" : "Interactive map (coming soon)"}
-            </div>
-          </Card>
+      {/* Découpage + localisation */}
+      <div className="anim-fade-up anim-delay-2 mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <ChantierSections
+            chantierId={chantier.id}
+            typeChantier={chantier.type}
+            sections={sections}
+            onReload={chargerSections}
+            avancementDisponible={avancementSectionOk}
+          />
         </div>
-      )}
+
+        <Card padding="lg">
+          <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
+            <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+            Localisation GPS
+          </h2>
+          {chantier.latitude !== null && chantier.longitude !== null ? (
+            <>
+              <p className="mt-1 text-sm tabular-nums text-muted">
+                {chantier.latitude}, {chantier.longitude}
+              </p>
+              <iframe
+                title="Carte du chantier"
+                loading="lazy"
+                className="mt-4 h-64 w-full rounded-2xl border border-border/80"
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${chantier.longitude - 0.01}%2C${chantier.latitude - 0.0075}%2C${chantier.longitude + 0.01}%2C${chantier.latitude + 0.0075}&layer=mapnik&marker=${chantier.latitude}%2C${chantier.longitude}`}
+              />
+              <div className="mt-3 flex flex-wrap gap-3 text-sm">
+                <a
+                  href={`https://www.openstreetmap.org/?mlat=${chantier.latitude}&mlon=${chantier.longitude}#map=15/${chantier.latitude}/${chantier.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                >
+                  OpenStreetMap <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+                <a
+                  href={`https://www.google.com/maps?q=${chantier.latitude},${chantier.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                >
+                  Google Maps <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              </div>
+            </>
+          ) : (
+            <div className="mt-4 flex h-48 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-surface-2 text-sm text-muted">
+              <MapPin className="h-6 w-6 text-primary" />
+              Position non renseignée
+              <Link href={`/chantiers/${chantier.id}/modifier`} className="font-semibold text-primary hover:underline">
+                Ajouter la position
+              </Link>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* Intervenants + documents */}
+      <div className="anim-fade-up anim-delay-3 mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <ChantierIntervenants chantierId={chantier.id} />
+        <ChantierDocuments chantierId={chantier.id} />
+      </div>
+
+      {/* Suivi rapide */}
+      <div className="anim-fade-up anim-delay-3 mb-8">
+        <ChantierSuiviRapide chantierId={chantier.id} />
+      </div>
 
       <section className="anim-fade-up anim-delay-3 mb-8">
         <div className="mb-4 flex items-start justify-between">
@@ -319,8 +433,8 @@ export default function ChantierDetailPage() {
         {postes.length > 0 && (
           <p className="mt-3 text-xs text-muted">
             {langue === "fr"
-              ? "Les sections du modèle 3D reprennent les sections enregistrées (table sections_chantier)."
-              : "The 3D model sections reuse the registered sections (sections_chantier table)."}
+              ? "Les sections du découpage alimentent le suivi (avancement) et le modèle 3D du chantier."
+              : "Breakdown sections feed the tracking (progress) and the site 3D model."}
           </p>
         )}
       </section>

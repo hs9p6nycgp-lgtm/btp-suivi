@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import type { LigneImportReferentiel, LigneReferentiel } from "../prix";
+import type { LigneImportReferentiel, LigneReferentiel } from "../prix.ts";
 import {
   analyserImportReferentiel,
   construireEntreeHistorique,

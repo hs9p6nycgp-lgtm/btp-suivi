@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getLangue, traduireErreur } from "@/lib/i18n";
-import { estTypeDetailValide, typesDetaillesPour, type TypeChantier } from "@/lib/chantiers/types";
+import { estTypeDetailValide, groupesTypesDetailles, type TypeChantier } from "@/lib/chantiers/types";
 
 // Formate un montant FCFA avec des séparateurs de milliers pendant la frappe
 function formaterMontant(valeur: string): string {
@@ -37,6 +37,11 @@ export default function ModifierChantierPage() {
   const [type, setType] = useState<TypeChantier>("route");
   const [typeDetail, setTypeDetail] = useState("");
   const [maitreOuvrage, setMaitreOuvrage] = useState("");
+  const [ville, setVille] = useState("");
+  const [maitreOeuvre, setMaitreOeuvre] = useState("");
+  const [entreprise, setEntreprise] = useState("");
+  const [numeroMarche, setNumeroMarche] = useState("");
+  const [colonnesOk, setColonnesOk] = useState<boolean | null>(null);
   const [montant, setMontant] = useState("");
   const [dateDebut, setDateDebut] = useState("");
   const [dateFin, setDateFin] = useState("");
@@ -70,6 +75,10 @@ export default function ModifierChantierPage() {
       setType((data.type as TypeChantier) ?? "route");
       setTypeDetail(data.type_detail ?? "");
       setMaitreOuvrage(data.maitre_ouvrage ?? "");
+      setVille(data.ville ?? "");
+      setMaitreOeuvre(data.maitre_oeuvre ?? "");
+      setEntreprise(data.entreprise ?? "");
+      setNumeroMarche(data.numero_marche ?? "");
       setMontant(data.montant_marche ? Number(data.montant_marche).toLocaleString("fr-FR") : "");
       setDateDebut(data.date_debut ?? "");
       setDateFin(data.date_fin_prevue ?? "");
@@ -80,6 +89,10 @@ export default function ModifierChantierPage() {
       setHauteur(data.hauteur !== null ? String(data.hauteur) : "");
       setSeuil(data.seuil_ecart_pct !== null ? String(data.seuil_ecart_pct) : "10");
       setChargement(false);
+
+      // La base sait-elle déjà stocker ville / maître d'œuvre / entreprise / n° marché ?
+      const { error: errColonnes } = await supabase.from("chantiers").select("ville").limit(1);
+      setColonnesOk(!errColonnes);
     }
     load();
   }, [chantierId, router]);
@@ -132,25 +145,45 @@ export default function ModifierChantierPage() {
       return;
     }
 
-    const { error } = await supabase
+    const base = {
+      nom,
+      type,
+      type_detail: estTypeDetailValide(type, typeDetail) ? typeDetail || null : null,
+      maitre_ouvrage: maitreOuvrage || null,
+      montant_marche: nombreDepuisSaisie(montant),
+      date_debut: dateDebut || null,
+      date_fin_prevue: dateFin || null,
+      latitude: latitude ? Number(latitude) : null,
+      longitude: longitude ? Number(longitude) : null,
+      longueur: longueur ? Number(longueur) : null,
+      largeur: largeur ? Number(largeur) : null,
+      hauteur: hauteur ? Number(hauteur) : null,
+      seuil_ecart_pct: Number(seuil) || 10,
+    };
+    const complement = colonnesOk
+      ? {
+          ville: ville || null,
+          maitre_oeuvre: maitreOeuvre || null,
+          entreprise: entreprise || null,
+          numero_marche: numeroMarche || null,
+        }
+      : {};
+
+    let { error } = await supabase
       .from("chantiers")
-      .update({
-        nom,
-        type,
-        type_detail: estTypeDetailValide(type, typeDetail) ? typeDetail || null : null,
-        maitre_ouvrage: maitreOuvrage || null,
-        montant_marche: nombreDepuisSaisie(montant),
-        date_debut: dateDebut || null,
-        date_fin_prevue: dateFin || null,
-        latitude: latitude ? Number(latitude) : null,
-        longitude: longitude ? Number(longitude) : null,
-        longueur: longueur ? Number(longueur) : null,
-        largeur: largeur ? Number(largeur) : null,
-        hauteur: hauteur ? Number(hauteur) : null,
-        seuil_ecart_pct: Number(seuil) || 10,
-      })
+      .update({ ...base, ...complement })
       .eq("id", chantierId)
       .eq("proprietaire_id", user.id);
+    if (error && colonnesOk) {
+      // Colonnes pas encore créées côté base : on enregistre au moins l'essentiel.
+      const essai = await supabase
+        .from("chantiers")
+        .update(base)
+        .eq("id", chantierId)
+        .eq("proprietaire_id", user.id);
+      error = essai.error;
+      if (!error) setColonnesOk(false);
+    }
 
     setLoading(false);
     if (error) {
@@ -229,10 +262,14 @@ export default function ModifierChantierPage() {
                   onChange={(e) => setTypeDetail(e.target.value)}
                 >
                   <option value="">{langue === "fr" ? "— Non précisé —" : "— Not specified —"}</option>
-                  {typesDetaillesPour(type).map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
-                    </option>
+                  {groupesTypesDetailles(type).map((groupe) => (
+                    <optgroup key={groupe.categorie} label={groupe.categorie}>
+                      {groupe.types.map((t) => (
+                        <option key={t.value} value={t.value}>
+                          {t.label}
+                        </option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
                 <p className="mt-1 text-xs text-muted">
@@ -249,6 +286,34 @@ export default function ModifierChantierPage() {
               </label>
               <input className={CLASSE_CHAMP} value={maitreOuvrage} onChange={(e) => setMaitreOuvrage(e.target.value)} />
             </div>
+
+            {colonnesOk === false && (
+              <p className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-foreground">
+                Les champs ville, maître d&apos;œuvre, entreprise et n° de marché s&apos;activeront après la mise à jour de
+                la base (migration <code className="font-mono">0017_phase2_chantiers_suivi_complet.sql</code> à exécuter
+                dans Supabase).
+              </p>
+            )}
+            {colonnesOk && (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">Ville / zone</label>
+                  <input className={CLASSE_CHAMP} value={ville} onChange={(e) => setVille(e.target.value)} placeholder="Ex. : Abidjan, Yamoussoukro…" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">Maître d&apos;œuvre</label>
+                  <input className={CLASSE_CHAMP} value={maitreOeuvre} onChange={(e) => setMaitreOeuvre(e.target.value)} placeholder="Ex. : bureau d'études, ingénieur conseil" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">Entreprise / attributaire</label>
+                  <input className={CLASSE_CHAMP} value={entreprise} onChange={(e) => setEntreprise(e.target.value)} placeholder="Ex. : entreprise de travaux" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">N° de marché</label>
+                  <input className={CLASSE_CHAMP} value={numeroMarche} onChange={(e) => setNumeroMarche(e.target.value)} placeholder="Ex. : T-2026-014" />
+                </div>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">
