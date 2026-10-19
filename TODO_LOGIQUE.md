@@ -362,10 +362,10 @@ décrites avec le détail.
 ## TODO-LOGIC-017 — Messages d'erreur : traduire les messages techniques et détecter les migrations non appliquées (T-LOG-50)
 
 - **Zone** : logique (messages d'erreur). Constat de l'audit métier du 19/10/2026.
-- **Constaté (test ingénieur, module HSE)** : la déclaration d'incident échoue tant que la migration `0025_phase4_hse_declarations.sql` n'est pas appliquée (table `hse_incidents` absente → 404). L'application affiche bien une erreur, mais le détail reste **en anglais et technique** : « Une erreur est survenue. (Could not find the table 'public.hse_incidents' in the schema cache) » — un message de base de données brut, non traduit, exposé à un chef de chantier.
+- **Constaté (test ingénieur, module HSE et module Fournisseurs)** : la déclaration d'incident (module HSE) et l'offre tarifaire (module Fournisseurs) échouent tant que les migrations `0025_phase4_hse_declarations.sql` et `0024_phase4_conditions_tarifaires_fournisseurs.sql` ne sont pas appliquées. L'application affiche alors « **Accès refusé par la sécurité de la base de données** » — un message **trompeur** (le vrai problème est une migration manquante) — suivi du détail technique **en anglais** : « Could not find the 'unite' column of 'devis_fournisseurs' in the schema cache ».
 - **À faire**
-  1. Étendre `traduireErreur` (`src/lib/i18n.ts`) pour les cas courants : table absente / migration non appliquée, violation de politique RLS, doublon, limite atteinte.
-  2. Détecter le cas « migration non appliquée » et proposer la marche à suivre (le nom du fichier de migration à exécuter), comme le fait déjà le reste de l'application pour les champs optionnels.
+  1. Étendre `traduireErreur` (`src/lib/i18n.ts`) pour les cas courants : **table ou colonne absente** (migration non appliquée), violation de politique RLS, doublon, limite atteinte.
+  2. Détecter le cas « migration non appliquée » et proposer la marche à suivre (le nom du fichier de migration à exécuter dans Supabase > SQL Editor), comme le fait déjà le reste de l'application pour les champs optionnels.
   3. Ne jamais afficher un message technique brut à l'utilisateur ; le détail peut être journalisé en console.
   4. Test automatique : `traduireErreur` renvoie un message en français pour une erreur de type « relation inexistante ».
 - **Priorité** : moyenne (lisibilité et confiance : un chef de chantier doit comprendre ce qu'il doit faire).

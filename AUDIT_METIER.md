@@ -541,6 +541,31 @@ Le test de la partie 19 refait le 19/10 au soir : la requête `chantiers?select=
 
 ---
 
+# Partie 22 — Fournisseurs : fiche complète, et deux migrations qui bloquent deux modules
+
+## 43. Fournisseurs : création, fiche complète (FOU-05/06/07) — ✅ **NOUVEAU, VÉRIFIÉ**
+
+- Création d'un fournisseur de test : « Fournisseur créé. », la fiche s'affiche dans la liste avec les boutons **Fiche / Modifier / Supprimer**, et les informations (type Matériaux, ville, contact, téléphone, NIF).
+- La **fiche fournisseur** s'ouvre et présente les sections **Évaluation (sur 5)**, **Documents administratifs** et **Livraisons** — c'est la nouvelle livraison de la Session 1.
+- La section **Conditions tarifaires** (FOU-03/FOU-04) est en place : fournisseur, chantier (facultatif), poste, prix unitaire, unité, délai de livraison, conditions de paiement.
+
+## 44. ⚠️ Deux migrations restent à appliquer : 0024 et 0025
+
+| Migration | Ce qu'elle apporte | Conséquence tant qu'elle n'est pas appliquée |
+|---|---|---|
+| `supabase/migrations/0024_phase4_conditions_tarifaires_fournisseurs.sql` | colonne `unite` sur `devis_fournisseurs` + politique d'accès | **Les offres tarifaires ne s'enregistrent pas** : l'insertion échoue (« Could not find the 'unite' column ») et l'écran affiche « Aucune offre enregistrée pour l'instant ». FOU-03/FOU-04 restent utilisables en lecture mais pas en saisie. |
+| `supabase/migrations/0025_phase4_hse_declarations.sql` | table `hse_incidents` + politique | **Les déclarations d'incident ne s'enregistrent pas** : le module HSE s'affiche (indicateurs, formulaire) mais toute déclaration est perdue. |
+
+Les migrations **0020, 0022, 0023 et 0026 sont bien appliquées** (contrôlé colonne par colonne).
+
+**Message d'erreur trompeur** : dans les deux cas, l'application affiche « **Accès refusé par la sécurité de la base de données** » alors que le vrai problème est une **migration non appliquée**. Le message technique anglais s'affiche à côté (« Could not find the 'unite' column… ») : c'est l'objet de la tâche **T-LOG-50** (traduire les erreurs et proposer la marche à suivre quand une migration manque).
+
+## 45. Contrôle de non-régression : l'enregistrement du journal fonctionne
+
+J'ai vérifié que l'enregistrement d'une fiche journal (modification des observations) **se fait correctement** en base, et que la colonne `heures_prevues` est bien testée et écrite dans la même table (`journal_engins`) — aucun blocage sur les migrations 0020/0026 pour le journal. (La migration 0020 cible `journal_engins`, pas `journaux`.)
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
