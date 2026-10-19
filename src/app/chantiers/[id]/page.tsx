@@ -24,12 +24,13 @@ import ChantierSections, { type SectionChantier } from "@/components/ChantierSec
 import ChantierIntervenants from "@/components/ChantierIntervenants";
 import ChantierDocuments from "@/components/ChantierDocuments";
 import ChantierSuiviRapide from "@/components/ChantierSuiviRapide";
+import CourbeAvancement from "@/components/CourbeAvancement";
 import Modele3D from "@/components/visualisation/Modele3D";
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { getLangue } from "@/lib/i18n";
 import { libelleTypeDetail } from "@/lib/chantiers/types";
-import { etatEcheance, formaterMetres, joursRestants, longueurSection } from "@/lib/chantiers/complet";
+import { avancementMoyenSections, etatEcheance, formaterMetres, joursRestants, longueurSection } from "@/lib/chantiers/complet";
 
 type Chantier = {
   id: string;
@@ -155,6 +156,7 @@ export default function ChantierDetailPage() {
   const couleurEcheance =
     echeance === "depasse" ? "rose" : echeance === "proche" ? "amber" : echeance === "normal" ? "emerald" : "slate";
   const lineaire = sections.reduce((total, section) => total + (longueurSection(section.pk_debut, section.pk_fin) ?? 0), 0);
+  const avancementGlobal = avancementMoyenSections(sections);
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
@@ -336,6 +338,11 @@ export default function ChantierDetailPage() {
             </div>
           )}
         </Card>
+      </div>
+
+      {/* Avancement dans le temps (points datés + courbe) */}
+      <div className="anim-fade-up anim-delay-3 mb-6">
+        <CourbeAvancement chantierId={chantier.id} avancementActuel={avancementGlobal} />
       </div>
 
       {/* Intervenants + documents */}

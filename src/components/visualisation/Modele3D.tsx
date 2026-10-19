@@ -57,7 +57,7 @@ export default function Modele3D({
     const threeScene = new THREE.Scene();
     const couleurFond = new THREE.Color(0xeef2f6);
     threeScene.background = couleurFond;
-    threeScene.fog = new THREE.Fog(couleurFond, rayon * 2.6, rayon * 13);
+    threeScene.fog = new THREE.Fog(couleurFond, rayon * 3.2, rayon * 14);
 
     const camera = new THREE.PerspectiveCamera(
       45,
