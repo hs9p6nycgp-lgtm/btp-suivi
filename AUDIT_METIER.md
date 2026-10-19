@@ -302,6 +302,23 @@ Les sessions ont ajouté 67 tests en encryptant les corrections (qualité, plann
 
 ---
 
+# Partie 8 — Vérification de la correction « export Excel complet » et du statut unique
+
+Une cinquième correction a été livrée pendant le test (commit `a864e63`).
+
+## 25. Export Excel complet — ✅ **CORRIGÉ ET VÉRIFIÉ**
+
+- **9 feuilles** désormais présentes : Synthèse · Postes DQE · Quantités réalisées · Dépenses · Planning · **Journaux** · **Essais qualité** · **Non-conformités** · **Livraisons** (les feuilles sans donnée — découpage, points d'avancement, photos — sont omises, comme annoncé).
+- **Valeurs traduites** : la feuille « Journaux » affiche `Date = 19/10/2026` (format JJ/MM/AAAA), `Statut = Validé` (et non `a_faire`), `Météo = Soleil`, plus effectif, heures de marche, incidents, heures d'arrêt, photos et observations. Les catégories et statuts sont en français, les montants en FCFA.
+- La page annonce désormais la promesse : « Exportez toutes les données d'un chantier… Dates au format JJ/MM/AAAA, statuts et catégories en français, montants en FCFA. »
+- *Remarque d'usage* : le bouton « Exporter en Excel » ne fait rien tant qu'aucun chantier n'est sélectionné (le sélecteur est sur « — Sélectionner — ») — un message ou un bouton désactivé éviterait la confusion.
+
+## 26. Fiche chantier : statut affiché une seule fois — ✅ **CORRIGÉ ET VÉRIFIÉ**
+
+La pastille de statut est désormais elle-même le menu de changement (une seule pastille, un seul affichage de « En préparation ») : le doublon badge + menu déroulant signalé en partie 1 a disparu.
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
