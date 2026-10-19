@@ -35,6 +35,8 @@ import { getLangue } from "@/lib/i18n";
 import { libelleTypeDetail } from "@/lib/chantiers/types";
 import { avancementMoyenSections, avancementParNiveau, etatEcheance, formaterMetres, joursRestants, longueurSection } from "@/lib/chantiers/complet";
 import { descriptionOuvrage, niveauxDepuisChantier, surfacesOuvrage } from "@/lib/chantiers/detailsOuvrage";
+import { receptionAutorisee } from "@/lib/chantiers/statuts";
+import { toast } from "@/components/ui/toast";
 
 type Chantier = {
   id: string;
@@ -227,10 +229,21 @@ export default function ChantierDetailPage() {
                 <select
                   value={statut}
                   onChange={(e) => {
-                    setStatut(e.target.value);
+                    const nouvelleStatut = e.target.value;
+                    // RG-05 : pas de réception tant que des non-conformités
+                    // restent ouvertes.
+                    const controle = receptionAutorisee(
+                      nouvelleStatut,
+                      compteurs.nonConformites,
+                    );
+                    if (!controle.ok) {
+                      toast(controle.raison ?? "Changement de statut refusé.", "erreur");
+                      return;
+                    }
+                    setStatut(nouvelleStatut);
                     const supabase = createClient();
                     supabase.auth.getUser().then(({ data: { user } }) => {
-                      supabase.from("chantiers").update({ statut: e.target.value }).eq("id", chantierId).eq("proprietaire_id", user?.id ?? "");
+                      supabase.from("chantiers").update({ statut: nouvelleStatut }).eq("id", chantierId).eq("proprietaire_id", user?.id ?? "");
                     });
                   }}
                   aria-label={langue === "fr" ? "Statut du chantier" : "Site status"}
@@ -252,6 +265,13 @@ export default function ChantierDetailPage() {
             {chantier.numero_marche && <span>Marché n° {chantier.numero_marche}</span>}
             {chantier.maitre_oeuvre && <span>Maître d&apos;œuvre : {chantier.maitre_oeuvre}</span>}
             {lineaire > 0 && <span>Linéaire : {formaterMetres(lineaire)}</span>}
+            {compteurs.nonConformites > 0 && (
+              <span className="text-amber-200">
+                Réception bloquée : {compteurs.nonConformites} non-conformité
+                {compteurs.nonConformites > 1 ? "s" : ""} ouverte
+                {compteurs.nonConformites > 1 ? "s" : ""}
+              </span>
+            )}
           </div>
 
           {/* Accès rapides */}
