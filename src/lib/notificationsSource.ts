@@ -130,7 +130,13 @@ export function detailNotification(notification: Notification, langue: LangueAle
     );
   }
   if (notification.categorie === "non_conformite") {
-    return notification.description ?? "";
+    const base = notification.description ?? "";
+    if (notification.echeanceDepassee && notification.echeance) {
+      return langue === "fr"
+        ? `${base} · échéance dépassée le ${formatDateFR(notification.echeance)}`
+        : `${base} · deadline passed on ${formatDateFR(notification.echeance)}`;
+    }
+    return base;
   }
   if (notification.categorie === "stock") {
     const stock = formaterNombre(notification.valeur ?? 0);

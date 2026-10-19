@@ -76,6 +76,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <NetworkStatus />
           <MiseAJourAppli />
           <Toaster />
+          {/* Lien d'évitement : permet d'aller directement au contenu (clavier, lecteurs d'écran) */}
+          <a
+            href="#contenu-principal"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:border focus:border-border focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:shadow-lg"
+          >
+            Aller au contenu principal
+          </a>
           {/* La coquille masque la navigation sur les pages de connexion (voir AppShell) */}
           <AppShell>{children}</AppShell>
         </ThemeProvider>

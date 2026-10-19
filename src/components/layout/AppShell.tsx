@@ -33,6 +33,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       >
         {!pleinEcran && <TopBar />}
         <main
+          id="contenu-principal"
           className={`flex-1 overflow-y-auto bg-background ${
             pleinEcran ? "" : "p-4 pb-28 md:p-6 md:pb-6"
           }`}

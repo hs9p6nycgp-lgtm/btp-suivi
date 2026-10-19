@@ -17,6 +17,13 @@ type Chantier = {
   nom: string;
 };
 
+type Resultat = {
+  href: string;
+  label: string;
+  detail: string;
+  groupe: "chantier" | "rubrique";
+};
+
 // Écrans à proposer dans la recherche globale (les onglets par chantier ne sont pas listés ici)
 const ROUTES: ItemRoute[] = [
   { href: "/", cle: "home.titre" },
@@ -41,7 +48,9 @@ export default function CommandPalette({
 }) {
   const [requete, setRequete] = useState("");
   const [chantiers, setChantiers] = useState<Chantier[]>([]);
+  const [selection, setSelection] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const listeRef = useRef<HTMLUListElement>(null);
   const router = useRouter();
 
   // Les chantiers sont chargés une fois : on peut ensuite y sauter en tapant leur nom.
@@ -61,6 +70,7 @@ export default function CommandPalette({
   useEffect(() => {
     if (ouvert) {
       setRequete("");
+      setSelection(0);
       // Le focus après l'ouverture du modal
       setTimeout(() => inputRef.current?.focus(), 0);
     }
@@ -73,9 +83,36 @@ export default function CommandPalette({
   const chantiersFiltres = q
     ? chantiers.filter((c) => c.nom.toLowerCase().includes(q)).slice(0, 6)
     : [];
-  const premierHref = chantiersFiltres[0]
-    ? `/chantiers/${chantiersFiltres[0].id}`
-    : pagesFiltrees[0]?.href;
+
+  // Liste plate des résultats affichés : sert à la navigation au clavier.
+  const resultats: Resultat[] = [
+    ...chantiersFiltres.map((chantier) => ({
+      href: `/chantiers/${chantier.id}`,
+      label: chantier.nom,
+      detail: "Chantier",
+      groupe: "chantier" as const,
+    })),
+    ...pagesFiltrees.map((item) => ({
+      href: item.href,
+      label: t(item.cle),
+      detail: item.href,
+      groupe: "rubrique" as const,
+    })),
+  ];
+
+  // La sélection suit toujours un résultat existant.
+  const index = resultats.length === 0 ? 0 : Math.min(selection, resultats.length - 1);
+
+  useEffect(() => {
+    setSelection(0);
+  }, [requete]);
+
+  // Le résultat sélectionné reste visible dans la liste.
+  useEffect(() => {
+    if (!ouvert || resultats.length === 0) return;
+    const element = listeRef.current?.querySelector<HTMLElement>(`[data-index="${index}"]`);
+    element?.scrollIntoView({ block: "nearest" });
+  }, [index, ouvert, resultats.length]);
 
   if (!ouvert) return null;
 
@@ -84,10 +121,20 @@ export default function CommandPalette({
       onFermer();
       return;
     }
-    // Entrée ouvre le premier résultat : un chantier s'il y en a, sinon une rubrique.
-    if (e.key === "Enter" && premierHref) {
+    if (e.key === "ArrowDown" && resultats.length > 0) {
+      e.preventDefault();
+      setSelection((i) => (i + 1) % resultats.length);
+      return;
+    }
+    if (e.key === "ArrowUp" && resultats.length > 0) {
+      e.preventDefault();
+      setSelection((i) => (i - 1 + resultats.length) % resultats.length);
+      return;
+    }
+    // Entrée ouvre le résultat sélectionné.
+    if (e.key === "Enter" && resultats[index]) {
       onFermer();
-      router.push(premierHref);
+      router.push(resultats[index].href);
     }
   }
 
@@ -108,6 +155,10 @@ export default function CommandPalette({
             onChange={(e) => setRequete(e.target.value)}
             onKeyDown={surTouche}
             placeholder={t("topbar.rechercher")}
+            aria-label={t("topbar.rechercher")}
+            role="combobox"
+            aria-expanded="true"
+            aria-controls="palette-resultats"
             className="w-full rounded-xl border border-border/80 bg-surface-2 px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
           />
           <button
@@ -120,25 +171,39 @@ export default function CommandPalette({
           </button>
         </div>
 
-        <ul className="mt-3 max-h-80 overflow-y-auto">
-          {pagesFiltrees.length === 0 && chantiersFiltres.length === 0 && (
+        <ul
+          id="palette-resultats"
+          ref={listeRef}
+          role="listbox"
+          aria-label="Résultats de recherche"
+          className="mt-3 max-h-80 overflow-y-auto"
+        >
+          {resultats.length === 0 && (
             <li className="px-3 py-6 text-center text-sm text-muted">Aucun résultat</li>
           )}
 
           {chantiersFiltres.length > 0 && (
-            <li className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
+            <li
+              role="presentation"
+              className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted"
+            >
               Chantiers
             </li>
           )}
           {chantiersFiltres.map((chantier) => {
-            const href = `/chantiers/${chantier.id}`;
+            const position = resultats.findIndex(
+              (resultat) => resultat.href === `/chantiers/${chantier.id}`,
+            );
             return (
-              <li key={chantier.id}>
+              <li key={chantier.id} role="presentation">
                 <Link
-                  href={href}
+                  href={`/chantiers/${chantier.id}`}
                   onClick={onFermer}
+                  data-index={position}
+                  role="option"
+                  aria-selected={position === index}
                   className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm ${
-                    href === premierHref
+                    position === index
                       ? "bg-primary/10 text-primary"
                       : "text-foreground hover:bg-slate-100 dark:hover:bg-white/10"
                   }`}
@@ -151,27 +216,42 @@ export default function CommandPalette({
           })}
 
           {chantiersFiltres.length > 0 && pagesFiltrees.length > 0 && (
-            <li className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
+            <li
+              role="presentation"
+              className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted"
+            >
               Rubriques
             </li>
           )}
-          {pagesFiltrees.map((item) => (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                onClick={onFermer}
-                className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm ${
-                  item.href === premierHref
-                    ? "bg-primary/10 text-primary"
-                    : "text-foreground hover:bg-slate-100 dark:hover:bg-white/10"
-                }`}
-              >
-                <span>{t(item.cle)}</span>
-                <span className="text-xs text-muted">{item.href}</span>
-              </Link>
-            </li>
-          ))}
+          {pagesFiltrees.map((item) => {
+            const position = resultats.findIndex((resultat) => resultat.href === item.href);
+            return (
+              <li key={item.href} role="presentation">
+                <Link
+                  href={item.href}
+                  onClick={onFermer}
+                  data-index={position}
+                  role="option"
+                  aria-selected={position === index}
+                  className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm ${
+                    position === index
+                      ? "bg-primary/10 text-primary"
+                      : "text-foreground hover:bg-slate-100 dark:hover:bg-white/10"
+                  }`}
+                >
+                  <span>{t(item.cle)}</span>
+                  <span className="text-xs text-muted">{item.href}</span>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
+
+        <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[11px] text-muted">
+          <span>↑ ↓ pour naviguer</span>
+          <span>Entrée pour ouvrir</span>
+          <span>Échap pour fermer</span>
+        </p>
       </div>
     </div>
   );

@@ -68,6 +68,10 @@ export type Notification = {
   description?: string;
   avancementPct?: number;
   dateFinPrevue?: string;
+  /** Date limite de traitement (non-conformité). */
+  echeance?: string | null;
+  /** L'échéance de traitement est dépassée. */
+  echeanceDepassee?: boolean;
 };
 
 const GRAVITE_PAR_TYPE: Record<string, Gravite> = {
@@ -179,16 +183,25 @@ export function construireNotifications(donnees: {
   for (const nonConformite of donnees.nonConformites) {
     // « cloturee » et « rejetee » sont des non-conformités terminées.
     if (nonConformite.statut !== "ouverte" && nonConformite.statut !== "en_cours") continue;
+    // Une échéance de traitement dépassée remonte la gravité : le problème
+    // attend toujours, et c'est au moins une action à mener.
+    const echeanceDepassee = Boolean(
+      nonConformite.echeance &&
+        String(nonConformite.echeance).slice(0, 10) < donnees.aujourdHui,
+    );
+    const graviteBase = graviteNonConformite(nonConformite.gravite);
     liste.push({
       id: `nc-${nonConformite.id}`,
       categorie: "non_conformite",
       type: "qualite",
-      gravite: graviteNonConformite(nonConformite.gravite),
+      gravite: echeanceDepassee && graviteBase !== "critique" ? "attention" : graviteBase,
       chantierId: nonConformite.chantier_id,
       chantierNom: noms.get(nonConformite.chantier_id) ?? "Chantier",
       lien: `/chantiers/${nonConformite.chantier_id}/qualite`,
       date: nonConformite.created_at ?? "",
       description: nonConformite.description,
+      echeance: nonConformite.echeance ?? null,
+      echeanceDepassee,
     });
   }
 

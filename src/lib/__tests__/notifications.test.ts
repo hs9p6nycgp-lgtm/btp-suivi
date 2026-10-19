@@ -152,8 +152,7 @@ describe("construireNotifications", () => {
     assert.equal(liste[0].gravite, "critique");
   });
 
-  it("ajoute les stocks bas au centre d'alertes", () => {
-    const liste = construireNotifications({
+  it("ajoute les stocks bas au centre d'alertes", () => {    const liste = construireNotifications({
       alertes: [],
       nonConformites: [],
       chantiers: [chantier],
@@ -187,6 +186,28 @@ describe("construireNotifications", () => {
       liste.map((notification) => notification.id),
       ["alerte-a2", "alerte-a1"],
     );
+  });
+
+  it("remonte la gravité d'une non-conformité dont l'échéance est dépassée", () => {
+    const liste = construireNotifications({
+      alertes: [],
+      nonConformites: [
+        { ...nonConformite, id: "n1", gravite: "mineure", echeance: "2026-10-01" },
+        { ...nonConformite, id: "n2", gravite: "mineure", echeance: "2026-12-01" },
+        { ...nonConformite, id: "n3", gravite: "majeure", echeance: null },
+      ],
+      chantiers: [],
+      aujourdHui: "2026-10-19",
+    });
+    const depassee = liste.find((notification) => notification.id === "nc-n1");
+    const aVenir = liste.find((notification) => notification.id === "nc-n2");
+    const majeure = liste.find((notification) => notification.id === "nc-n3");
+
+    assert.equal(depassee?.echeanceDepassee, true);
+    assert.equal(depassee?.gravite, "attention");
+    assert.equal(aVenir?.echeanceDepassee, false);
+    assert.equal(aVenir?.gravite, "info");
+    assert.equal(majeure?.gravite, "attention");
   });
 
   it("compte les problèmes par gravité", () => {    const compte = compteParGravite([
