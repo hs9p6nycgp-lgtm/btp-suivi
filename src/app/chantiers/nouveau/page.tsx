@@ -15,7 +15,9 @@ import { estTypeDetailValide, typesDetaillesPour, type TypeChantier } from "@/li
 // (« 25000000 » devient « 25 000 000 »), pour ne plus compter les zéros.
 function formaterMontant(valeur: string): string {
   const chiffres = valeur.replace(/\D/g, "");
-  return chiffres ? Number(chiffres).toLocaleString("fr-FR") : "";
+  // On ne garde que la partie entiere pour respect de la regle FCFA sans decimale
+  const montant = chiffres ? Math.round(Number(chiffres)) : 0;
+  return montant.toLocaleString("fr-FR");
 }
 
 // Les nombres utilisés dans l'insertion restent des nombres simples

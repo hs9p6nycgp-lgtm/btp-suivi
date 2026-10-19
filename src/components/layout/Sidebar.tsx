@@ -114,9 +114,11 @@ export default function Sidebar() {
             collapsed ? "justify-center px-2" : "px-4"
           }`}
         >
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-action to-action-strong text-[10px] font-black tracking-tight text-white shadow-lg shadow-action/40">
-            BTP
-          </span>
+          <img
+            src="/logo.svg"
+            alt="BTP Suivi Pro"
+            className="h-9 w-9 shrink-0 rounded-xl shadow-lg shadow-black/30"
+          />
           {!collapsed && (
             <div className="min-w-0 leading-tight">
               <p className="truncate text-sm font-bold">Suivi Pro</p>

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Construction, Eye, EyeOff, WifiOff } from "lucide-react";
+import { Eye, EyeOff, WifiOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
@@ -209,7 +209,18 @@ export default function LoginPage() {
       <div className="relative hidden flex-1 flex-col items-center justify-center overflow-hidden bg-primary md:flex">
         <div className="absolute inset-0 bg-gradient-to-br from-primary-light/40 via-primary/60 to-primary" />
         <div className="bg-grid absolute inset-0 opacity-30" aria-hidden />
+        {/* Halos décoratifs animés */}
+        <div className="anim-float pointer-events-none absolute -left-24 top-12 h-72 w-72 rounded-full bg-primary-light/40 blur-3xl" aria-hidden />
+        <div className="anim-float anim-delay-3 pointer-events-none absolute -right-16 bottom-20 h-80 w-80 rounded-full bg-action/25 blur-3xl" aria-hidden />
         <IllustrationChantier />
+        {/* Marque en haut à gauche */}
+        <div className="anim-fade-in absolute left-8 top-8 flex items-center gap-3 text-white">
+          <img src="/logo.svg" alt="" className="h-11 w-11 rounded-2xl shadow-lg shadow-black/30" />
+          <div className="leading-tight">
+            <p className="text-sm font-bold">BTP Suivi Pro</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/50">Suivi Chantiers CI</p>
+          </div>
+        </div>
         <div className="absolute bottom-8 left-8 right-8 max-w-sm text-white">
           <h2 className="text-2xl font-bold md:text-3xl">
             {langue === "fr" ? "Le chantier, suivi en temps réel" : "Site management in real time"}
@@ -235,19 +246,17 @@ export default function LoginPage() {
       {/* Formulaire */}
       <div className="flex w-full items-center justify-center px-4 py-10 md:w-1/2">
         <div className="w-full max-w-md">
-          <div className="mb-8 text-center">
+          <div className="mb-8 text-center md:hidden">
             <div className="mb-4 flex items-center justify-center gap-3">
-              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-primary to-primary-deep text-white shadow-lg shadow-primary/25">
-                <Construction className="h-6 w-6" />
-              </span>
-              <span className="text-2xl font-bold tracking-tight text-foreground">BTP Suivi Pro</span>
+              <img src="/logo.svg" alt="" className="h-14 w-14 rounded-2xl shadow-lg shadow-primary/25" />
+              <span className="text-gradient text-2xl font-bold tracking-tight">BTP Suivi Pro</span>
             </div>
             <p className="text-sm text-muted">
               {langue === "fr" ? "Gestion et suivi de chantiers" : "Site management and tracking"}
             </p>
           </div>
 
-          <Card variant="elevated" padding="lg">
+          <Card variant="elevated" padding="lg" className="anim-fade-up">
             <div className="mb-6 space-y-4">
               <div>
                 <h2 className="text-xl font-bold text-foreground md:text-2xl">
@@ -266,7 +275,7 @@ export default function LoginPage() {
                     onClick={() => choisirMode("email")}
                     className={`whitespace-nowrap rounded-lg px-3 py-2.5 text-sm font-semibold transition ${
                       mode === "email"
-                        ? "bg-primary text-white shadow-sm"
+                        ? "bg-gradient-to-br from-primary to-primary-deep text-white shadow-md shadow-primary/25"
                         : "text-muted hover:bg-surface hover:text-foreground"
                     }`}
                   >
@@ -277,7 +286,7 @@ export default function LoginPage() {
                     onClick={() => choisirMode("telephone")}
                     className={`whitespace-nowrap rounded-lg px-3 py-2.5 text-sm font-semibold transition ${
                       mode === "telephone"
-                        ? "bg-primary text-white shadow-sm"
+                        ? "bg-gradient-to-br from-primary to-primary-deep text-white shadow-md shadow-primary/25"
                         : "text-muted hover:bg-surface hover:text-foreground"
                     }`}
                   >

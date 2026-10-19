@@ -62,7 +62,8 @@ export default function TopBar() {
   return (
     <header className="glass sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border/70 px-4 md:px-6">
       {/* Titre de la page courante */}
-      <div className="flex min-w-0 items-center gap-2">
+      <div className="flex min-w-0 items-center gap-2.5">
+        <img src="/logo.svg" alt="" className="h-8 w-8 shrink-0 rounded-lg md:hidden" />
         <h1 className="truncate text-lg font-bold tracking-tight text-foreground md:text-xl">
           {titre}
         </h1>

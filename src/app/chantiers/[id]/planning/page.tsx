@@ -385,7 +385,7 @@ export default function PlanningPage() {
           title={langue === "fr" ? "Chemin critique" : "Critical path"}
           value={tachesCritiques}
           icon={<Flag className="h-5 w-5" />}
-          color="rose"
+          color="amber"
         />
         <StatCard
           title={langue === "fr" ? "Terminées" : "Completed"}

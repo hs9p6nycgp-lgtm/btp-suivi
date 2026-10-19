@@ -338,9 +338,30 @@ body {
 .anim-delay-7 { animation-delay: 0.42s; }
 .anim-delay-8 { animation-delay: 0.48s; }
 
+/* ---------- Effets premium (logo, pages de connexion) ---------- */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-16px) scale(1.04); }
+}
+
+.anim-float { animation: float-slow 7s ease-in-out infinite; }
+
+/* Titre en dégradé bleu nuit → orange chantier */
+.text-gradient {
+  background-image: linear-gradient(120deg, var(--primary) 0%, var(--primary-light) 55%, var(--action) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+:root.dark .text-gradient {
+  background-image: linear-gradient(120deg, #e6edf7 0%, var(--primary-light) 55%, var(--action) 100%);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .anim-fade-up,
-  .anim-fade-in {
+  .anim-fade-in,
+  .anim-float {
     animation: none;
   }
   * {
@@ -396,6 +417,24 @@ select {
 input:focus, select:focus, textarea:focus, button:focus {
   outline: 2px solid var(--action);
   outline-offset: 2px;
+}
+
+/* Mode "plein soleil" / haute contraste pour mobile */
+@media (width <= 640px) {
+  .high-contrast * {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  
+  /* Renforcer le contraste des textes sur fond clair */
+  .high-contrast .text-muted {
+    color: #334155 !important; /* gris slate au lieu de bleu ciel */
+  }
+  
+   /* Augmenter la taille minimum des textes interactifs */
+  .high-contrast button, .high-contrast input, .high-contrast select {
+    font-size: 16px !important;
+  }
 }
 
 /* Décalage du contenu quand la barre latérale est réduite (mode icônes).

@@ -61,7 +61,8 @@ export const DICTIONNAIRE: Record<string, Record<Langue, string>> = {
   "err.rls": { fr: "Accès refusé par la sécurité de la base de données.", en: "Access denied by the database security policy." },
   "err.fk": { fr: "Référence invalide : une donnée liée n'existe pas.", en: "Invalid reference: a linked record does not exist." },
   "err.duplicate": { fr: "Cet enregistrement existe déjà.", en: "This record already exists." },
-  "err.check": { fr: "Valeur non autorisée pour ce champ.", en: "Value not allowed for this field." },
+  "inscription_erreur": { fr: "Erreur lors de la création du compte.", en: "Failed to create account." },
+  "connexion_erreur": { fr: "Identifiants incorrects ou réseau indisponible.", en: "Invalid credentials or network unavailable." },
   "err.not_null": { fr: "Un champ obligatoire est vide.", en: "A required field is empty." },
 
   // Accueil
@@ -126,6 +127,7 @@ export const DICTIONNAIRE: Record<string, Record<Langue, string>> = {
   "langue.anglais": { fr: "Anglais", en: "English" },
 
   // Authentification
+  "connexion": { fr: "Connexion", en: "Sign In" },
   "auth.connexion": { fr: "Connexion", en: "Sign In" },
   "auth.creer_compte": { fr: "Créer un compte", en: "Create Account" },
   "auth.deja_compte": { fr: "J'ai déjà un compte", en: "I already have an account" },
@@ -137,6 +139,12 @@ export const DICTIONNAIRE: Record<string, Record<Langue, string>> = {
   "auth.se_connecter": { fr: "Se connecter", en: "Sign In" },
   "auth.creer": { fr: "Créer le compte", en: "Create Account" },
   "auth.deconnecter": { fr: "Se déconnecter", en: "Sign Out" },
+
+  // Messages de création de compte
+  "account_created": {
+    fr: "Compte créé. Vérifiez votre boîte mail si une confirmation est demandée.",
+    en: "Account created. Check your inbox if confirmation is required.",
+  },
 };
 
 export function getLangue(): Langue {

@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="BTP Suivi Pro">
+  <defs>
+    <linearGradient id="fond" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#16406e"/>
+      <stop offset="0.55" stop-color="#0f2a4a"/>
+      <stop offset="1" stop-color="#081a30"/>
+    </linearGradient>
+    <radialGradient id="lueur" cx="0.5" cy="0.22" r="0.85">
+      <stop offset="0" stop-color="#3b6ea5" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#3b6ea5" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="route" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fb923c"/>
+      <stop offset="1" stop-color="#ea580c"/>
+    </linearGradient>
+    <clipPath id="cadre">
+      <rect width="128" height="128" rx="30"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#cadre)">
+    <!-- Fond bleu nuit avec halo -->
+    <rect width="128" height="128" fill="url(#fond)"/>
+    <rect width="128" height="128" fill="url(#lueur)"/>
+
+    <!-- Trame technique discrète -->
+    <g stroke="#ffffff" stroke-opacity="0.06">
+      <path d="M0 44h128M0 76h128M0 108h128"/>
+      <path d="M44 0v128M76 0v128"/>
+    </g>
+
+    <!-- Bouclier : la fiabilité du suivi -->
+    <path d="M64 20 L100 33 V64 C100 88 84.5 102.5 64 110 C43.5 102.5 28 88 28 64 V33 Z"
+          fill="#ffffff" fill-opacity="0.06"
+          stroke="#ffffff" stroke-opacity="0.30" stroke-width="2.5" stroke-linejoin="round"/>
+
+    <!-- Trois barres croissantes : avancement, coûts, qualité -->
+    <rect x="42" y="58" width="10" height="26" rx="3" fill="#e9f1fa" fill-opacity="0.92"/>
+    <rect x="59" y="44" width="10" height="40" rx="3" fill="url(#route)"/>
+    <rect x="76" y="52" width="10" height="32" rx="3" fill="#e9f1fa" fill-opacity="0.92"/>
+
+    <!-- Route : l'orange chantier -->
+    <path d="M42 92 H86" stroke="url(#route)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M48 100 H80" stroke="#ffffff" stroke-opacity="0.5" stroke-width="2"
+          stroke-linecap="round" stroke-dasharray="7 5"/>
+  </g>
+
+  <!-- Liseré intérieur pour les fonds sombres -->
+  <rect x="0.75" y="0.75" width="126.5" height="126.5" rx="29.25" fill="none"
+        stroke="#ffffff" stroke-opacity="0.10" stroke-width="1.5"/>
+</svg>
