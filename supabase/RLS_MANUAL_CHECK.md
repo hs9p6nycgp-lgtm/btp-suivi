@@ -7,6 +7,11 @@ Toutefois, les politiques RLS définies dans
 était visible de tous les comptes). Exécutez les commandes suivantes dans
 l'éditeur SQL de Supabase pour vérifier et corriger.
 
+> **Version opératoire (19/10/2026)** : le script unique et relançable
+> `supabase/APPLIQUER_ISOLATION.sql` applique tout d'un coup (et crée la
+> table manquante `seuils_stock_chantier`). Ce document sert à vérifier,
+> puis à tester avec deux comptes (§4).
+
 ## 1. Vérifier que la table a bien le RLS activé
 
 ```sql
