@@ -55,4 +55,23 @@ describe("calcul PERT et chemin critique (PLA-02)", () => {
     assert.strictEqual(datePrevueFin("2026-10-01", 5), "2026-10-06");
     assert.strictEqual(datePrevueFin(null, 5), null);
   });
+
+  it("deduit la duree du projet quand elle n'est pas fournie", () => {
+    const res = calculPert(taches);
+    const map = new Map(res.map((r) => [r.id, r]));
+    // Memes resultats qu'avec la duree 9 fournie explicitement.
+    assert.strictEqual(map.get("D")!.dateAuPlusTot, 7);
+    assert.strictEqual(map.get("A")!.dateAuPlusTard, 0);
+    assert.strictEqual(map.get("B")!.margeTotale, 2);
+  });
+
+  it("ignore une dependance vers une tache inexistante", () => {
+    const res = calculPert([
+      { id: "A", duree: 3, predecesseurs: [] },
+      { id: "B", duree: 2, predecesseurs: ["A", "ZZ"] },
+    ]);
+    const map = new Map(res.map((r) => [r.id, r]));
+    assert.strictEqual(map.get("B")!.dateAuPlusTot, 3);
+    assert.strictEqual(map.get("B")!.margeTotale, 0);
+  });
 });

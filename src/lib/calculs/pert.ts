@@ -27,9 +27,9 @@ function triTopologique(taches: TachePert[]): string[] {
     if (visite.has(id)) return;
     visite.add(id);
     const t = parId.get(id);
-    if (t) {
-      for (const pred of t.predecesseurs) visiter(pred);
-    }
+    // Dependance vers une tache supprimee : elle est ignoree proprement.
+    if (!t) return;
+    for (const pred of t.predecesseurs) visiter(pred);
     ordre.push(id);
   }
 
@@ -37,10 +37,11 @@ function triTopologique(taches: TachePert[]): string[] {
   return ordre;
 }
 
-/** Calcule le planning PERT : dates au plus tot, au plus tard, marges. */
+/** Calcule le planning PERT : dates au plus tot, au plus tard, marges.
+ *  La duree du projet est deduite des taches si elle n'est pas fournie. */
 export function calculPert(
   taches: TachePert[],
-  dureeProjet: number,
+  dureeProjet?: number,
 ): ResultatPert[] {
   const parId = new Map(taches.map((t) => [t.id, t]));
   const ordre = triTopologique(taches);
@@ -51,11 +52,20 @@ export function calculPert(
     const t = parId.get(id)!;
     let debut = 0;
     for (const pred of t.predecesseurs) {
-      const finPred = (auPlusTot.get(pred) ?? 0) + (parId.get(pred)!.duree ?? 0);
+      // Une dependance vers une tache supprimee est ignoree (robustesse).
+      const tachePred = parId.get(pred);
+      if (!tachePred) continue;
+      const finPred = (auPlusTot.get(pred) ?? 0) + (tachePred.duree ?? 0);
       if (finPred > debut) debut = finPred;
     }
     auPlusTot.set(id, debut);
   }
+
+  // Duree du projet : fournie, ou deduite du plus tardif des dates de fin.
+  const duree =
+    dureeProjet !== undefined && Number.isFinite(dureeProjet)
+      ? dureeProjet
+      : taches.reduce((max, t) => Math.max(max, (auPlusTot.get(t.id) ?? 0) + (t.duree ?? 0)), 0);
 
   // ---------- Passe arriere : dates au plus tard (LS) ----------
   // LF (date de fin au plus tard) = min(LS des successeurs) ou dureeProjet.
@@ -64,7 +74,7 @@ export function calculPert(
   for (let i = ordre.length - 1; i >= 0; i--) {
     const id = ordre[i];
     const t = parId.get(id)!;
-    let latestFinish = dureeProjet;
+    let latestFinish = duree;
     for (const other of taches) {
       if (other.predecesseurs.includes(id)) {
         const succLatestStart = auPlusTard.get(other.id);

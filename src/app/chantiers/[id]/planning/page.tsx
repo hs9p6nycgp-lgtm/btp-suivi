@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getLangue, traduireErreur } from "@/lib/i18n";
 import { joursEcartDelai, serieCumulative, partRealisee } from "@/lib/calculs/metre";
+import { calculPert } from "@/lib/calculs/pert";
 
 type Tache = {
   id: string;
@@ -92,118 +93,36 @@ export default function PlanningPage() {
     setLoading(false);
   }
 
-  // Aucun calcul n'a été modifié : ES/EF/LS/LF/marge et le chemin critique sont d'origine.
+  // PERT : une seule implementation, la logique pure testee de src/lib/calculs/pert.ts
+  // (PLA-02). La page ne fait que presenter les resultats.
   const calculerPert = useCallback((): CalculPert[] => {
     if (taches.length === 0) return [];
 
-    const tacheMap = new Map<string, Tache & { index: number }>();
-    taches.forEach((t, i) => tacheMap.set(t.id, { ...t, index: i }));
-
-    const n = taches.length;
-    const es = new Array(n).fill(0);
-    const ef = new Array(n).fill(0);
-    const ls = new Array(n).fill(0);
-    const lf = new Array(n).fill(0);
-    const marge = new Array(n).fill(0);
-    const estCritique = new Array(n).fill(false);
-
-    const successeurs = new Map<string, string[]>();
-    const predecesseurs = new Map<string, string[]>();
-    taches.forEach((t) => { successeurs.set(t.id, []); predecesseurs.set(t.id, []); });
-    dependances.forEach((d) => {
-      const preds = predecesseurs.get(d.tache_successeur_id) ?? [];
-      preds.push(d.tache_predecesseur_id);
-      predecesseurs.set(d.tache_successeur_id, preds);
-      const sucs = successeurs.get(d.tache_predecesseur_id) ?? [];
-      sucs.push(d.tache_successeur_id);
-      successeurs.set(d.tache_predecesseur_id, sucs);
-    });
-
-    const racines = taches.filter((t) => (predecesseurs.get(t.id)?.length ?? 0) === 0);
-    const visite = new Set<string>();
-    const ordreTopo: string[] = [];
-
-    function dfs(nodeId: string) {
-      if (visite.has(nodeId)) return;
-      visite.add(nodeId);
-      const preds = predecesseurs.get(nodeId) ?? [];
-      for (const p of preds) dfs(p);
-      ordreTopo.push(nodeId);
-    }
-    for (const r of racines) dfs(r.id);
-
-    for (const t of racines) {
-      const idx = tacheMap.get(t.id)!.index;
-      es[idx] = 0;
-      ef[idx] = es[idx] + t.duree_jours;
-    }
-
-    for (const nodeId of ordreTopo) {
-      const t = tacheMap.get(nodeId)!;
-      const idx = t.index;
-      const preds = predecesseurs.get(nodeId) ?? [];
-      if (preds.length > 0) {
-        let maxEf = 0;
-        for (const p of preds) {
-          const pIdx = tacheMap.get(p)!.index;
-          maxEf = Math.max(maxEf, ef[pIdx]);
-        }
-        es[idx] = maxEf;
-        ef[idx] = es[idx] + t.duree_jours;
-      }
-    }
-
-    const dureeProjet = Math.max(...ef);
-    const visite2 = new Set<string>();
-    const ordreTopoInv: string[] = [];
-
-    function dfsInv(nodeId: string) {
-      if (visite2.has(nodeId)) return;
-      visite2.add(nodeId);
-      const sucs = successeurs.get(nodeId) ?? [];
-      for (const s of sucs) dfsInv(s);
-      ordreTopoInv.push(nodeId);
-    }
-
-    const feuilles = taches.filter((t) => (successeurs.get(t.id)?.length ?? 0) === 0);
-    for (const f of feuilles) {
-      const idx = tacheMap.get(f.id)!.index;
-      lf[idx] = dureeProjet;
-      ls[idx] = lf[idx] - f.duree_jours;
-    }
-
-    for (const nodeId of ordreTopoInv) {
-      const t = tacheMap.get(nodeId)!;
-      const idx = t.index;
-      const sucs = successeurs.get(nodeId) ?? [];
-      if (sucs.length > 0) {
-        let minLs = dureeProjet;
-        for (const s of sucs) {
-          const sIdx = tacheMap.get(s)!.index;
-          minLs = Math.min(minLs, ls[sIdx]);
-        }
-        lf[idx] = minLs;
-        ls[idx] = lf[idx] - t.duree_jours;
-      }
-    }
-
-    for (let i = 0; i < n; i++) {
-      marge[i] = ls[i] - es[i];
-      estCritique[i] = marge[i] === 0;
-    }
+    const resultat = calculPert(
+      taches.map((t) => ({
+        id: t.id,
+        duree: t.duree_jours,
+        predecesseurs: dependances
+          .filter((d) => d.tache_successeur_id === t.id)
+          .map((d) => d.tache_predecesseur_id),
+      })),
+    );
+    const parId = new Map(resultat.map((r) => [r.id, r]));
 
     return taches.map((t) => {
-      const idx = tacheMap.get(t.id)!.index;
+      const r = parId.get(t.id);
+      const es = r?.dateAuPlusTot ?? 0;
+      const ls = r?.dateAuPlusTard ?? es;
       return {
         tache_id: t.id,
         nom: t.nom,
         duree_jours: t.duree_jours,
-        es: es[idx],
-        ef: ef[idx],
-        ls: ls[idx],
-        lf: lf[idx],
-        marge: marge[idx],
-        est_critique: estCritique[idx],
+        es,
+        ef: es + t.duree_jours,
+        ls,
+        lf: ls + t.duree_jours,
+        marge: r?.margeTotale ?? ls - es,
+        est_critique: r?.estCritique ?? ls - es === 0,
         est_jalon: t.est_jalon,
       };
     });
