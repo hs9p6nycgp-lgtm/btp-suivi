@@ -133,3 +133,21 @@
 - **Tableau de bord** : « Mes chantiers », « Saisie du jour », galerie photos affichée (plus de carrés cassés).
 - **Tests unitaires** : 179/183 verts (4 échecs referentiel dus aux modifications parallèles des sessions, pas au code de test).
 - **Observations UI** : badge « En préparation » déborde de 86 px ; barre latérale affiche `detail.quality` au lieu de « Qualité » ; « 1 chantiers » au lieu de « 1 chantier », dates rognées sur les mini‑graphiques.
+
+---
+
+### Après l'audit « ingénieur » du 19/10/2026 — ce qui a changé depuis
+
+Un test complet a été fait dans le rôle d'un **ingénieur génie civil** (création d'un chantier, devis, DQE, planning, journal, coûts, qualité, rapports, export). Rapport détaillé : **`AUDIT_METIER.md`**. Ce qui a été corrigé et **vérifié dans l'application** depuis le dernier test PC :
+
+- **La fiche chantier ne plante plus** et le statut n'apparaît plus deux fois.
+- **Les plans de contrôle qualité se créent** (8 paramètres prêts pour une route) : on peut enfin saisir un essai, et un essai hors tolérance crée **automatiquement la fiche de non-conformité** (exigence RG-04).
+- **Le planning se chaîne** : on relie les tâches dans l'ordre réel des travaux et le **chemin critique est juste** (57 j au lieu de 20 j sur le chantier de test).
+- **Le devis se запиote, s'imprime et s'exporte** (client, numéro, date, tableau, signatures, Excel).
+- **Le rapport est complet** : journaux, dépenses par catégorie, non-conformités, valorisation poste par poste — et il distingue la **valorisation des travaux** (934 000 FCFA) des **dépenses réelles** (170 000 FCFA).
+- **L'export Excel contient tout** (journaux, livraisons, non-conformités) avec les dates en JJ/MM/AAAA et les statuts en français.
+- **Un « centre d'alertes »** regroupe ce qui demande une action, sur tous les chantiers.
+- **Calculateur de murs corrigé** : le prix du sac de ciment est bien appliqué aux sacs (plus 50 fois trop élevé) et les montants sont en FCFA sans décimale.
+- **Suite de tests automatique** : 355 tests, 355 verts.
+
+Restent à corriger (déjà assignés aux équipes) : la base de prix n'affiche pas la **date de source** des prix, quelques **doublons de prix** subsistent (enrobé à 35 000 FCFA/t à vérifier), les **conditions tarifaires fournisseurs** n'ont pas d'écran, le **matériau des livraisons** se saisit en texte libre, et le rapport affiche l'avancement avec un point au lieu d'une virgule.
