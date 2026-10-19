@@ -19,6 +19,7 @@ import {
   type LigneBpu,
   type LigneReferentiel,
 } from "@/lib/referentiel/alignement";
+import { detecterDoublons, detecterEcarts } from "@/lib/bpu/qualite";
 
 type Row = {
   id: string;
@@ -233,6 +234,11 @@ export default function BpuPage() {
   const totalPrix = filtrees.reduce((s, p) => s + p.prix_unitaire, 0);
   const countValide = filtrees.filter((p) => p.statut === "valide").length;
   const sansDate = items.filter((p) => !prixComplet(p)).length;
+  // Qualité des prix : doublons exacts et familles de produits dont les prix
+  // divergent (aucune modification : l'arbitrage revient a l'utilisateur).
+  const lignesQualite = items as unknown as LigneBpu[];
+  const doublonsBpu = detecterDoublons(lignesQualite);
+  const famillesBpu = detecterEcarts(lignesQualite, 25);
   const fr = langue === "fr" ? "fr-FR" : "en-US";
   const dateLisible = (d: string | null) => {
     if (!d) return "-";
@@ -384,6 +390,69 @@ export default function BpuPage() {
           </Button>
         </div>
       </div>
+
+      {/* Prix a controler : doublons et familles a verifier */}
+      {(doublonsBpu.length > 0 || famillesBpu.length > 0) && (
+        <section className="mb-6 rounded-2xl border border-border/80 bg-surface p-4 shadow-soft">
+          <h2 className="mb-1 text-sm font-bold text-foreground">
+            {langue === "fr" ? "Prix à contrôler" : "Prices to check"}
+          </h2>
+          <p className="mb-3 text-xs text-muted">
+            {langue === "fr"
+              ? "Ces lignes demandent une vérification auprès du fournisseur. Aucune n'est modifiée automatiquement : l'arbitrage (et la suppression éventuelle d'un doublon) vous revient."
+              : "These lines need a check with the supplier. Nothing is changed automatically: the decision is yours."}
+          </p>
+
+          {doublonsBpu.length > 0 && (
+            <div className="mb-4">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">
+                {langue === "fr" ? "Doublons (même produit, même unité)" : "Duplicates (same item, same unit)"}
+              </p>
+              <ul className="space-y-2">
+                {doublonsBpu.slice(0, 6).map((groupe) => (
+                  <li key={groupe.lignes[0].id} className="text-xs text-muted">
+                    <span className="font-medium text-foreground">{groupe.lignes[0].designation}</span> —{" "}
+                    {groupe.lignes
+                      .map((l) => `${l.designation} (${l.prix_unitaire.toLocaleString(fr)} FCFA / ${l.unite})`)
+                      .join(" · ")}
+                    {groupe.ligneRetenue && (
+                      <span className="ml-1 text-primary">
+                        {langue === "fr" ? "→ à conserver : " : "→ keep: "}
+                        {groupe.ligneRetenue.designation}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {famillesBpu.length > 0 && (
+            <div>
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">
+                {langue === "fr"
+                  ? "Produits ressemblants avec des prix différents"
+                  : "Similar items with different prices"}
+              </p>
+              <ul className="space-y-2">
+                {famillesBpu.slice(0, 6).map((famille) => (
+                  <li key={famille.lignes[0].id} className="text-xs text-muted">
+                    <span className="font-medium text-foreground">{famille.designation}</span> —{" "}
+                    {famille.lignes
+                      .map((l) => `${l.designation} (${l.prix_unitaire.toLocaleString(fr)} FCFA / ${l.unite})`)
+                      .join(" · ")}
+                    <span className="ml-1 text-warning">
+                      {langue === "fr"
+                        ? `— écart ${famille.ecartPct.toLocaleString(fr, { maximumFractionDigits: 0 })} %`
+                        : `— ${famille.ecartPct.toLocaleString(fr, { maximumFractionDigits: 0 })} % gap`}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Liste de travail : les prix a verifier, du plus cher au moins cher */}
       {aVerifier.length > 0 && filterStatut === "a_verifier" && (

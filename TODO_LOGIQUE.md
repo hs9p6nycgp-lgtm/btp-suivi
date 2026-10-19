@@ -19,7 +19,7 @@ décrites avec le détail.
 | TODO-LOGIC-007 | Enregistrer un devis : table + logique (T-LOG-37)                |
 | TODO-LOGIC-008 | Planning : liens entre les tâches (T-LOG-38)                     |
 | TODO-LOGIC-009 | Rapport complet : agrégats + export (T-LOG-39)                   |
-| TODO-LOGIC-010 | BPU : dédoublonnage + conditions fournisseurs (T-LOG-40)         |
+| TODO-LOGIC-010 | BPU : dédoublonnage + conditions fournisseurs (T-LOG-40) | 🔶 PARTIEL (19/10) — unités normalisées, doublons et familles à vérifier détectés (écran + rapport) ; arbitrage des prix et suppression des doublons restent à la main de l'utilisateur |
 | TODO-LOGIC-011 | Calculateur de murs : prix dans la bonne unité + montants sans décimale (T-LOG-41) | ✅ CORRIGÉ (19/10) |
 | TODO-LOGIC-012 | Base de prix : date de source obligatoire + lien avec le Référentiel (T-LOG-42) | ✅ CORRIGÉ (19/10) — date obligatoire à la saisie, référentiel alimenté (289 prix), historique REF-03, liste de travail des 131 postes « à vérifier ». |
 | TODO-LOGIC-013 | Fournisseurs : conditions tarifaires (T-LOG-43) | ✅ CORRIGÉ (19/10) — module `src/lib/fournisseurs/conditions.ts` (11 tests) + écran « Conditions tarifaires » (migration `0024` à appliquer). |
@@ -177,15 +177,31 @@ décrites avec le détail.
   3. **Quasi-doublons à prix identiques** : latérite `LTR-01` 40 000 et `MB-06` 40 000 ; enrobé `BIT-02` 95 000 et `ENR-01` 95 000 (« Enrobé » / « Enrobe »).
   4. **Unités non normalisées** pour un même produit : « tonne » vs « t », « m3 » (95 postes) vs « m³ », « m2 » vs « m² », « sac » vs « sac 50 kg » → le devis prend « le premier poste correspondant » : une unité mal écrite fait manquer le bon prix ou choisir le mauvais.
   5. **131 postes « à vérifier »** sur 289, avec une source générique « Marché ivoirien 2026 (estimation) – à vérifier ».
-- **À faire**
-  1. Fusionner les doublons en conservant la ligne la plus complète (source + date + statut), l'autre passant en « inactif » ou supprimée **après sauvegarde JSON** (outil existant : `scripts/nettoyer-doublons-bpu.mjs`, lecture seule par défaut).
-  2. Arbitrer le prix de l'enrobé (35 000 contre 95 000) : obtenir une source datée ou repasser le poste en « à vérifier » — **ne pas trancher seul**.
-  3. Normaliser les unités (`t`, `m3`, `m2`, `sac 50 kg`) avec une table de correspondance si besoin.
-  4. Fournir une liste de travail des 131 postes « à vérifier ».
-  5. Étendre `scripts/verifier-devis-bpu.mjs` : plus aucun devis ne doit trouver deux prix concurrents pour un même poste.
-- **Attention** : aucune suppression sans sauvegarde et sans accord de l'utilisateur.
-- **Suite** : écran **T-UI-27** (colonne « Date de source »).
-- **Priorité** : **haute** (un devis d'enrobé sous-précé de 63 % n'est pas défendable).
+- **État** : **PARTIELLEMENT CORRIGÉ** — outillage livré (19/10/2026) ; les
+  suppressions et l'arbitrage des prix restent à la main de l'utilisateur.
+  1. ✅ **Unités normalisées** (`src/lib/unites.ts`, source unique partagée
+     avec le calculateur de murs) : « t » et « tonne », « m3 » et « m³ »,
+     « m2 » et « m² », « sac » et « sac 50 kg » sont reconnus comme la même
+     unité → un devis ne choisit plus le mauvais poste à cause d'une unité
+     mal écrite.
+  2. ✅ **Détection** (`src/lib/bpu/qualite.ts`, 14 tests) : doublons exacts
+     (même produit, même unité), même produit avec unités écrites
+     différemment, et **familles de produits à vérifier** (même premier mot
+     significatif, même unité, écart de prix > 25 % — l'enrobé 35 000 contre
+     95 000 FCFA/t est détecté).
+  3. ✅ **Écran** : encart « Prix à contrôler » dans la base de prix
+     (doublons + familles), sans aucune modification automatique.
+  4. ✅ **Rapport** `scripts/rapport-qualite-bpu.mjs` (lecture seule) :
+     doublons, familles à vérifier et **ambiguïtés de devis** (68 lignes de
+     devis trouvent plusieurs prix concurrents dans le BPU).
+  5. ⏳ **Arbitrage des prix** : obtenir une source datée pour l'enrobé (35 000
+     contre 95 000) et pour les sables — **à décider par l'utilisateur** ;
+     le poste « à vérifier » est le mécanisme prévu.
+  6. ⏳ **Fusion / suppression des doublons** : à faire après sauvegarde JSON
+     et **accord explicite de l'utilisateur** (outil existant :
+     `scripts/nettoyer-doublons-bpu.mjs`, lecture seule par défaut).
+- **Priorité** : **haute** (un devis d'enrobé sous-précé de 63 % n'est pas
+  défendable).
 
 ---
 
