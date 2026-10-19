@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Python (scripts de génération des vidéos)
+__pycache__/
+*.pyc
