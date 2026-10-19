@@ -3,13 +3,18 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Download, Printer, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, ClipboardList, Download, Printer, Save, Trash2 } from "lucide-react";
 import * as XLSX from "xlsx";
 
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { formaterMontantFcfa } from "@/lib/devis/enregistrement";
+import {
+  preparerPostesDqe,
+  type PosteDqeExistant,
+  type ResultatPreparationDqe,
+} from "@/lib/devis/dqe";
 import { toast } from "@/components/ui/toast";
 import { traduireErreur } from "@/lib/i18n";
 
@@ -68,6 +73,11 @@ export default function DevisImprimablePage() {
   const [objet, setObjet] = useState("");
   const [notes, setNotes] = useState("");
   const [chantierId, setChantierId] = useState("");
+
+  // Alimentation du DQE du chantier depuis le devis
+  const [preparationDqe, setPreparationDqe] = useState<ResultatPreparationDqe | null>(null);
+  const [messageDqe, setMessageDqe] = useState<string | null>(null);
+  const [ecritureDqe, setEcritureDqe] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -185,6 +195,50 @@ export default function DevisImprimablePage() {
     }
     toast("Devis supprimé.");
     router.replace("/calculateurs/devis");
+  }
+
+  async function preparerDqe() {
+    if (!devis?.chantier_id) return;
+    setMessageDqe(null);
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("postes_dqe")
+      .select("id,code,designation,unite,quantite_marche,prix_unitaire")
+      .eq("chantier_id", devis.chantier_id);
+    const preparation = preparerPostesDqe(
+      lignes.map((l) => ({
+        designation: l.designation,
+        unite: l.unite,
+        quantite: Number(l.quantite) || 0,
+        prix_unitaire: Number(l.prix_unitaire) || 0,
+      })),
+      (data ?? []) as PosteDqeExistant[],
+    );
+    setPreparationDqe(preparation);
+  }
+
+  async function ecrireDqe() {
+    if (!devis?.chantier_id || !preparationDqe || preparationDqe.aEcrire.length === 0) return;
+    setEcritureDqe(true);
+    setMessageDqe(null);
+    const supabase = createClient();
+    const { error } = await supabase.from("postes_dqe").insert(
+      preparationDqe.aEcrire.map((p) => ({
+        chantier_id: devis.chantier_id,
+        code: p.code,
+        designation: p.designation,
+        unite: p.unite,
+        quantite_marche: p.quantite_marche,
+        prix_unitaire: p.prix_unitaire,
+      })),
+    );
+    setEcritureDqe(false);
+    if (error) {
+      setMessageDqe(traduireErreur(error));
+      return;
+    }
+    toast(`${preparationDqe.aEcrire.length} poste(s) ajouté(s) au DQE du chantier.`);
+    setPreparationDqe(null);
   }
 
   function exporterExcel() {
@@ -330,6 +384,93 @@ export default function DevisImprimablePage() {
               <p className="mt-3 rounded-xl border border-danger/40 bg-danger/10 p-3 text-sm text-foreground">
                 {message}
               </p>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {/* Alimentation du DQE du chantier — masqué à l'impression */}
+      {devis && (
+        <div className="mx-auto mb-4 w-full max-w-[210mm] px-4 print:hidden">
+          <Card padding="lg">
+            <h2 className="mb-1 text-lg font-bold text-foreground">
+              Alimenter le DQE du chantier
+            </h2>
+            <p className="text-sm text-muted">
+              Les lignes chiffrées du devis deviennent les postes du DQE du chantier : plus de
+              ressaisie, et l&apos;avancement, les coûts et le rapport se calculent automatiquement.
+            </p>
+
+            {!devis.chantier_id ? (
+              <p className="mt-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-foreground">
+                Rattachez d&apos;abord ce devis à un chantier (ci-dessus) pour alimenter son DQE.
+              </p>
+            ) : (
+              <>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Button type="button" variant="outline" onClick={preparerDqe}>
+                    <ClipboardList className="h-4 w-4" />
+                    Préparer les postes
+                  </Button>
+                  {preparationDqe && preparationDqe.aEcrire.length > 0 && (
+                    <Button type="button" onClick={ecrireDqe} disabled={ecritureDqe}>
+                      <Save className="h-4 w-4" />
+                      {ecritureDqe
+                        ? "Création..."
+                        : `Créer ${preparationDqe.aEcrire.length} poste(s) au DQE`}
+                    </Button>
+                  )}
+                  <Link
+                    href={`/chantiers/${devis.chantier_id}/couts`}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-border/80 bg-surface px-3.5 py-2 text-sm font-semibold text-muted transition hover:border-primary-light/50 hover:text-foreground"
+                  >
+                    Voir le DQE du chantier
+                  </Link>
+                </div>
+
+                {preparationDqe && (
+                  <div className="mt-3">
+                    {preparationDqe.aEcrire.length > 0 ? (
+                      <ul className="divide-y divide-border/60 rounded-xl border border-border/70">
+                        {preparationDqe.aEcrire.map((p) => (
+                          <li
+                            key={p.code}
+                            className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm"
+                          >
+                            <span className="text-foreground">{p.designation}</span>
+                            <span className="text-xs text-muted">
+                              {p.code} · {p.quantite_marche} {p.unite} ×{" "}
+                              {formaterMontantFcfa(p.prix_unitaire)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="rounded-xl border border-border/70 bg-surface-2/60 p-3 text-sm text-muted">
+                        Toutes les lignes chiffrées du devis sont déjà présentes au DQE.
+                      </p>
+                    )}
+                    {(preparationDqe.dejaPresents.length > 0 ||
+                      preparationDqe.sansPrix.length > 0 ||
+                      preparationDqe.sansQuantite.length > 0) && (
+                      <p className="mt-2 text-xs text-muted">
+                        {preparationDqe.dejaPresents.length > 0 &&
+                          `${preparationDqe.dejaPresents.length} ligne(s) déjà présente(s) au DQE. `}
+                        {preparationDqe.sansPrix.length > 0 &&
+                          `${preparationDqe.sansPrix.length} ligne(s) sans prix unitaire (non reprises). `}
+                        {preparationDqe.sansQuantite.length > 0 &&
+                          `${preparationDqe.sansQuantite.length} ligne(s) sans quantité (non reprises).`}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {messageDqe && (
+                  <p className="mt-3 rounded-xl border border-danger/40 bg-danger/10 p-3 text-sm text-foreground">
+                    {messageDqe}
+                  </p>
+                )}
+              </>
             )}
           </Card>
         </div>
