@@ -12,6 +12,15 @@ import { getLangue, traduireErreur } from "@/lib/i18n";
 import { ConfirmDialog, type DemandeConfirmation } from "@/components/ui/ConfirmDialog";
 import { toast } from "@/components/ui/toast";
 import { lignesAffecteesParMiseAJour, exporterReferentielCSV, type LigneReferentiel } from "@/lib/referentiel/prix";
+import {
+  ageMiseAJour,
+  alertesPeremption,
+  filtrerPrix,
+  prixParZone,
+  valeursDistinctes,
+  zonesParDefaut,
+  type LigneFiltrable,
+} from "@/lib/referentiel/filtres";
 import { BookOpen } from "lucide-react";
 import ReferentielImport from "@/components/ReferentielImport";
 
@@ -42,6 +51,9 @@ export default function ReferentielPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filtreCategorie, setFiltreCategorie] = useState("");
+  const [filtreFournisseur, setFiltreFournisseur] = useState("");
+  const [filtreVille, setFiltreVille] = useState("");
+  const [seulementPerimes, setSeulementPerimes] = useState(false);
   const [confirmation, setConfirmation] = useState<DemandeConfirmation | null>(null);
 
   // Propagation REF-06 : confirmation avant de mettre à jour les DQE/BPU affectés
@@ -202,11 +214,22 @@ export default function ReferentielPage() {
   }
 
   const categories = [...new Set(items.map((i) => i.categorie).filter(Boolean))] as string[];
-  const filtres = items.filter((p) => {
-    const q = search.trim().toLowerCase();
-    if (q && !p.designation.toLowerCase().includes(q) && !(p.code ?? "").toLowerCase().includes(q)) return false;
-    if (filtreCategorie && p.categorie !== filtreCategorie) return false;
-    return true;
+  // REF-07 : filtres par categorie, fournisseur, ville et date de mise a jour.
+  // REF-09 : les prix qui n'ont pas ete mis a jour depuis plus de 6 mois.
+  const fournisseurs = valeursDistinctes(items as LigneFiltrable[], "source");
+  const villes = valeursDistinctes(items as LigneFiltrable[], "zone");
+  const perimes = alertesPeremption(items as LigneFiltrable[], 6);
+  const zones = zonesParDefaut();
+  /** Une zone a-t-elle un coefficient de transport (> 1) ? */
+  function zoneAffichee(zone: string): boolean {
+    return zones.some((z) => z.zone.toLowerCase() === zone.toLowerCase() && z.coefficientTransport > 1);
+  }
+  const filtres = filtrerPrix(items as LigneFiltrable[], {
+    recherche: search,
+    categorie: filtreCategorie || null,
+    fournisseur: filtreFournisseur || null,
+    ville: filtreVille || null,
+    perimes: seulementPerimes,
   });
 
   // REF-05 : export des lignes affichées dans un vrai fichier CSV (téléchargé).
@@ -279,12 +302,63 @@ export default function ReferentielPage() {
         )}
       </p>
 
+      {/* REF-09 : prix à reverifier (pas mis a jour depuis plus de 6 mois) */}
+      {perimes.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-amber-400/40 bg-amber-500/10 p-3 text-sm text-foreground">
+          <span className="font-medium">
+            {langue === "fr"
+              ? `${perimes.length} prix n'ont pas été mis à jour depuis plus de 6 mois.`
+              : `${perimes.length} prices not updated for more than 6 months.`}
+          </span>
+          <button
+            type="button"
+            onClick={() => setSeulementPerimes((v) => !v)}
+            className="rounded-lg border border-amber-500/40 px-3 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-500/10"
+          >
+            {seulementPerimes
+              ? langue === "fr" ? "Voir tous les prix" : "Show all prices"
+              : langue === "fr" ? "Voir ces prix" : "Show these prices"}
+          </button>
+          <span className="text-xs text-muted">
+            {perimes
+              .slice(0, 3)
+              .map((a) => a.designation)
+              .join(" · ")}
+            {perimes.length > 3 ? ` … (+${perimes.length - 3})` : ""}
+          </span>
+        </div>
+      )}
+
+      {/* REF-07 : recherche et filtres */}
       <div className="mb-4 flex flex-wrap gap-3">
-        <input type="text" placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" />
+        <input type="text" placeholder={langue === "fr" ? "Rechercher (désignation, code, fournisseur)…" : "Search (designation, code, supplier)…"} value={search} onChange={(e) => setSearch(e.target.value)} className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" />
         <select value={filtreCategorie} onChange={(e) => setFiltreCategorie(e.target.value)} className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10">
-          <option value="">Toutes catégories</option>
+          <option value="">{langue === "fr" ? "Toutes catégories" : "All categories"}</option>
           {categories.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
+        <select value={filtreFournisseur} onChange={(e) => setFiltreFournisseur(e.target.value)} className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10">
+          <option value="">{langue === "fr" ? "Tous les fournisseurs" : "All suppliers"}</option>
+          {fournisseurs.map((f) => <option key={f} value={f}>{f}</option>)}
+        </select>
+        <select value={filtreVille} onChange={(e) => setFiltreVille(e.target.value)} className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10">
+          <option value="">{langue === "fr" ? "Toutes les villes" : "All cities"}</option>
+          {villes.map((v) => <option key={v} value={v}>{v}</option>)}
+        </select>
+        {(filtreCategorie || filtreFournisseur || filtreVille || seulementPerimes || search) && (
+          <button
+            type="button"
+            onClick={() => {
+              setSearch("");
+              setFiltreCategorie("");
+              setFiltreFournisseur("");
+              setFiltreVille("");
+              setSeulementPerimes(false);
+            }}
+            className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm font-medium text-muted hover:text-foreground"
+          >
+            {langue === "fr" ? "Réinitialiser" : "Reset"}
+          </button>
+        )}
       </div>
 
       <Button
@@ -360,9 +434,25 @@ export default function ReferentielPage() {
                 <td className="px-4 py-3 text-muted">{p.unite}</td>
                 <td className="px-4 py-3 text-right font-mono tabular-nums text-foreground">
                   {p.prix_unitaire.toLocaleString("fr-FR")}
+                  {/* REF-08 : prix ajuste au coefficient de transport de la zone */}
+                  {p.zone && zoneAffichee(p.zone) && (
+                    <span className="block text-xs text-muted">
+                      {prixParZone(p as unknown as LigneFiltrable, p.zone).toLocaleString("fr-FR")} ({p.zone})
+                    </span>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-xs text-muted">
                   {p.source ?? "-"} {p.date_source ? `(${afficherDate(p.date_source)})` : ""}
+                  {/* REF-09 : anciennete de la mise a jour */}
+                  {(() => {
+                    const age = ageMiseAJour(p.date_source);
+                    if (age === null || age < 180) return null;
+                    return (
+                      <span className="block font-medium text-amber-600">
+                        {langue === "fr" ? `${age} jours sans mise à jour` : `${age} days without update`}
+                      </span>
+                    );
+                  })()}
                 </td>
                 <td className="px-4 py-3">
                   <Badge variant={p.statut === "valide" ? "success" : "warning"}>
@@ -393,7 +483,7 @@ export default function ReferentielPage() {
             {!loading && filtres.length === 0 && (
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-center text-muted">
-                  {search.trim() || filtreCategorie ? (
+                  {search.trim() || filtreCategorie || filtreFournisseur || filtreVille || seulementPerimes ? (
                     <>
                       <p>
                         Aucun prix ne correspond à{" "}
@@ -404,6 +494,9 @@ export default function ReferentielPage() {
                         onClick={() => {
                           setSearch("");
                           setFiltreCategorie("");
+                          setFiltreFournisseur("");
+                          setFiltreVille("");
+                          setSeulementPerimes(false);
                         }}
                         className="mt-2 cursor-pointer text-xs font-semibold text-primary hover:underline"
                       >
