@@ -65,6 +65,7 @@ const MODULES = [
   { href: "/chantiers", icon: <Scale className="h-5 w-5" />, nom: "Métré", desc: "Calculs de quantités d'ouvrages" },
   { href: "/chantiers", icon: <Truck className="h-5 w-5" />, nom: "Livraisons", desc: "Stocks matériaux et seuils d'alerte" },
   { href: "/chantiers", icon: <ShieldCheck className="h-5 w-5" />, nom: "Sécurité (HSE)", desc: "Incidents, accidents, indicateurs" },
+  { href: "/parametres", icon: <Building2 className="h-5 w-5" />, nom: "Mon entreprise", desc: "Logo, coordonnées, destinataires" },
   { href: "/chantiers", icon: <Box className="h-5 w-5" />, nom: "Modélisation 3D", desc: "L'ouvrage en trois dimensions" },
   { href: "/bpu", icon: <BookOpen className="h-5 w-5" />, nom: "Base de prix (BPU)", desc: "Prix unitaires de votre entreprise" },
   { href: "/referentiel", icon: <FileText className="h-5 w-5" />, nom: "Référentiel de prix", desc: "Base de prix de la Côte d'Ivoire" },
@@ -206,6 +207,30 @@ export default function AidePage() {
             <li>
               Renseignez vos coordonnées dans <strong className="text-foreground">Mon compte</strong> (en bas du
               menu) : elles apparaissent dans les équipes de chantier et sur les procès-verbaux.
+            </li>
+            <li>
+              <strong className="text-foreground">Mon entreprise</strong> (menu latéral) enregistre votre logo et vos
+              coordonnées : ils s&apos;impriment en tête des rapports et des fiches de chantier. C&apos;est aussi là
+              que se règlent les <strong className="text-foreground">destinataires par défaut</strong> des rapports.
+            </li>
+            <li>
+              Depuis <strong className="text-foreground">Rapports</strong>, le bouton « Envoyer par e-mail » prépare le
+              rapport en un fichier unique (logo compris) et ouvre votre messagerie ; les chiffres clés sont repris
+              dans le message, pour les lire sans ouvrir la pièce jointe.
+            </li>
+            <li>
+              La <strong className="text-foreground">check-list sécurité</strong> se remplit chaque matin dans
+              l&apos;écran Sécurité (EPI, échauffement, signalisation, extincteur) : elle donne le taux de conformité et
+              le nombre de jours consécutifs de check-list complète.
+            </li>
+            <li>
+              Le bouton <strong className="text-foreground">micro</strong> à côté des observations du journal dicte
+              votre texte (il s&apos;ajoute à ce qui est déjà écrit).
+            </li>
+            <li>
+              Dans <strong className="text-foreground">Fournisseurs</strong>, « Demander un devis » prépare le
+              message pour le fournisseur ; sa réponse se saisit ensuite dans « Conditions tarifaires », où les offres
+              se comparent poste par poste et le choix retenu est motivé.
             </li>
           </ul>
         </div>
