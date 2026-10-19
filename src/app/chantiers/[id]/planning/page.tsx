@@ -15,6 +15,7 @@ import { ConfirmDialog, type DemandeConfirmation } from "@/components/ui/Confirm
 import { getLangue, traduireErreur } from "@/lib/i18n";
 import { joursEcartDelai, serieCumulative, partRealisee } from "@/lib/calculs/metre";
 import { calculPert } from "@/lib/calculs/pert";
+import { avancementPoste } from "@/lib/calculs/metre";
 import {
   ajouterJours,
   chaineCritique,
@@ -26,6 +27,7 @@ import {
   joursSansEquipe,
   repartitionCharge,
 } from "@/lib/planning/ressources";
+import { delaiTache, syntheseRetards } from "@/lib/planning/delais";
 
 type Tache = {
   id: string;
@@ -41,6 +43,7 @@ type Tache = {
   est_jalon: boolean;
   equipe?: string | null;
   engins?: string | null;
+  poste_dqe_id?: string | null;
   statut: "a_faire" | "en_cours" | "termine" | "retarde" | "annule";
 };
 
@@ -97,6 +100,11 @@ export default function PlanningPage() {
   const [estJalon, setEstJalon] = useState(false);
   const [equipeTache, setEquipeTache] = useState("");
   const [enginsTache, setEnginsTache] = useState("");
+  // Poste du DQE suivi par la tâche (avancement physique, PLA-03)
+  const [posteDqeTache, setPosteDqeTache] = useState("");
+  const [postesDqe, setPostesDqe] = useState<{ id: string; designation: string; unite: string; quantite_marche: number }[]>([]);
+  const [qteRealiseeParPoste, setQteRealiseeParPoste] = useState<Record<string, number>>({});
+  const [posteDqeDisponible, setPosteDqeDisponible] = useState<boolean | null>(null);
   const [predecesseurTache, setPredecesseurTache] = useState("");
   const [tacheEnEdition, setTacheEnEdition] = useState<Tache | null>(null);
   const [lienPredecesseur, setLienPredecesseur] = useState("");
@@ -112,10 +120,14 @@ export default function PlanningPage() {
     if (!user) { router.replace("/login"); return; }
     const { data: chantier } = await supabase.from("chantiers").select("id").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle();
     if (!chantier) { router.replace("/chantiers"); return; }
-    const [tRes, dRes, cRes] = await Promise.all([
+    const [tRes, dRes, cRes, pRes, qRes, testColonne] = await Promise.all([
       supabase.from("taches_planning").select("*").eq("chantier_id", chantierId).order("created_at", { ascending: true }),
       supabase.from("dependances_planning").select("*").eq("chantier_id", chantierId),
       supabase.from("chantiers").select("date_fin_prevue, date_debut").eq("id", chantierId).maybeSingle(),
+      // Postes du DQE et quantites saisies : avancement physique des taches (PLA-03)
+      supabase.from("postes_dqe").select("id,designation,unite,quantite_marche").eq("chantier_id", chantierId).order("created_at"),
+      supabase.from("quantites_realisees").select("poste_dqe_id,quantite").eq("chantier_id", chantierId),
+      supabase.from("taches_planning").select("id,poste_dqe_id").limit(1),
     ]);
     if (tRes.error) { setMessage(traduireErreur(tRes.error)); return; }
     if (dRes.error) { setMessage(traduireErreur(dRes.error)); return; }
@@ -124,6 +136,14 @@ export default function PlanningPage() {
     setDependances((dRes.data ?? []) as Dependance[]);
     setDateFinPrevue(cRes.data?.date_fin_prevue ?? null);
     setDateDebutChantier(cRes.data?.date_debut ?? null);
+    setPostesDqe((pRes.data ?? []) as { id: string; designation: string; unite: string; quantite_marche: number }[]);
+    if (qRes.data) {
+      const cumul: Record<string, number> = {};
+      for (const q of qRes.data as Array<{ poste_dqe_id: string; quantite: number }>) {
+        cumul[q.poste_dqe_id] = (cumul[q.poste_dqe_id] ?? 0) + (Number(q.quantite) || 0);
+      }
+      setQteRealiseeParPoste(cumul);
+    }
     // Colonnes d'affectation des ressources (migration 0023) : si elles
     // manquent, l'écran fonctionne quand même, sans les ressources.
     const { error: errRessources } = await supabase
@@ -131,6 +151,8 @@ export default function PlanningPage() {
       .select("id,equipe,engins")
       .limit(1);
     setRessourcesDisponibles(!errRessources);
+    // Colonne « poste DQE suivi » (migration 0025, avancement physique PLA-03)
+    setPosteDqeDisponible(!testColonne.error);
     setLoading(false);
   }
 
@@ -186,6 +208,16 @@ export default function PlanningPage() {
   );
   const charges = repartitionCharge(taches);
   const joursNonAffectes = joursSansEquipe(taches);
+  const retards = syntheseRetards(taches);
+
+  // Avancement physique d'une tâche : calculé sur les quantités saisies du
+  // poste du DQE rattaché (PLA-03), sinon avancement saisi manuellement.
+  const avancementTache = (t: Tache | undefined): number | null => {
+    if (!t?.poste_dqe_id) return null;
+    const poste = postesDqe.find((p) => p.id === t.poste_dqe_id);
+    if (!poste) return null;
+    return avancementPoste(qteRealiseeParPoste[t.poste_dqe_id] ?? 0, poste.quantite_marche);
+  };
 
   // 5.4 - Écart de délai : fin prévue du planning (PERT) vs date contractuelle du chantier
   const dateFinProjet = dateDebutChantier ? ajouterJours(dateDebutChantier, dureeProjet) : null;
@@ -284,6 +316,7 @@ export default function PlanningPage() {
     setEstJalon(false);
     setEquipeTache("");
     setEnginsTache("");
+    setPosteDqeTache("");
     setPredecesseurTache("");
     setTacheEnEdition(null);
   }
@@ -296,6 +329,7 @@ export default function PlanningPage() {
     setEstJalon(Boolean(t.est_jalon));
     setEquipeTache(t.equipe ?? "");
     setEnginsTache(t.engins ?? "");
+    setPosteDqeTache(t.poste_dqe_id ?? "");
     setMessage(
       langue === "fr"
         ? `Modification de « ${t.nom} » : corrigez les champs puis enregistrez.`
@@ -328,6 +362,9 @@ export default function PlanningPage() {
         champs.equipe = equipeTache.trim() || null;
         champs.engins = enginsTache.trim() || null;
       }
+      if (posteDqeDisponible) {
+        champs.poste_dqe_id = posteDqeTache || null;
+      }
       const { error } = await supabase
         .from("taches_planning")
         .update(champs)
@@ -352,6 +389,9 @@ export default function PlanningPage() {
     if (ressourcesDisponibles) {
       champs.equipe = equipeTache.trim() || null;
       champs.engins = enginsTache.trim() || null;
+    }
+    if (posteDqeDisponible) {
+      champs.poste_dqe_id = posteDqeTache || null;
     }
     const { data, error } = await supabase.from("taches_planning").insert(champs).select().single();
     setLoading(false);
@@ -474,7 +514,7 @@ export default function PlanningPage() {
       )}
 
       {/* Statistiques rapides */}
-      <div className="anim-fade-up anim-delay-1 mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="anim-fade-up anim-delay-1 mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
         <StatCard
           title={langue === "fr" ? "Tâches" : "Tasks"}
           value={taches.length}
@@ -505,6 +545,13 @@ export default function PlanningPage() {
           subtitle="jours"
           icon={<TimerReset className="h-5 w-5" />}
           color={ecartDelaiJours > 0 ? "rose" : "blue"}
+        />
+        <StatCard
+          title={langue === "fr" ? "Tâches en retard" : "Late tasks"}
+          value={retards.enRetard}
+          subtitle={retards.maxRetard > 0 ? `max ${retards.maxRetard} j` : undefined}
+          icon={<TimerReset className="h-5 w-5" />}
+          color={retards.enRetard > 0 ? "rose" : "emerald"}
         />
       </div>
 
@@ -572,6 +619,29 @@ export default function PlanningPage() {
                     onChange={(e) => setEnginsTache(e.target.value)}
                   />
                 </label>
+              </div>
+            )}
+            {posteDqeDisponible !== false && postesDqe.length > 0 && (
+              <div className="md:col-span-4">
+                <label className="mb-1 block text-xs font-medium text-muted">
+                  {langue === "fr"
+                    ? "Poste du DQE suivi : l'avancement de la tâche se calcule sur les quantités saisies"
+                    : "Tracked DQE item: the task progress is computed from the entered quantities"}
+                </label>
+                <select
+                  className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  value={posteDqeTache}
+                  onChange={(e) => setPosteDqeTache(e.target.value)}
+                >
+                  <option value="">
+                    {langue === "fr" ? "Aucun poste suivi" : "No tracked item"}
+                  </option>
+                  {postesDqe.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.designation} ({p.quantite_marche} {p.unite})
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
             {!tacheEnEdition && (
@@ -741,6 +811,10 @@ export default function PlanningPage() {
                   <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">LF</th>
                   <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">Marge</th>
                   <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">Critique</th>
+                  <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">Retard</th>
+                  {posteDqeDisponible !== false && (
+                    <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">Avancement</th>
+                  )}
                   <th className="w-24 px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">Actions</th>
                 </tr>
               </thead>
@@ -783,6 +857,45 @@ export default function PlanningPage() {
                           <Badge variant="default">—</Badge>
                         )}
                       </td>
+                      <td className="px-3 py-2.5 text-center">
+                        {(() => {
+                          const delai = delaiTache(tache ?? {});
+                          if (delai.etat === "en_retard" || delai.etat === "termine_en_retard") {
+                            return <Badge variant="danger">{delai.libelle}</Badge>;
+                          }
+                          if (delai.etat === "termine_a_lheure" || delai.etat === "a_lheure") {
+                            return <span className="text-xs text-muted">{delai.libelle}</span>;
+                          }
+                          return <span className="text-xs text-muted">—</span>;
+                        })()}
+                      </td>
+                      {posteDqeDisponible !== false && (
+                        <td className="px-3 py-2.5 text-center">
+                          {(() => {
+                            const avancement = avancementTache(tache);
+                            if (avancement === null) {
+                              return (
+                                <span className="text-xs text-muted">
+                                  {Math.round(Number(tache?.avancement_pct ?? 0))} %
+                                </span>
+                              );
+                            }
+                            return (
+                              <div className="flex items-center justify-center gap-2">
+                                <div className="h-1.5 w-12 overflow-hidden rounded-full bg-surface-2">
+                                  <div
+                                    className="h-full rounded-full bg-gradient-to-r from-action to-action-strong"
+                                    style={{ width: `${Math.min(100, Math.max(0, avancement))}%` }}
+                                  />
+                                </div>
+                                <span className="text-xs font-semibold tabular-nums">
+                                  {Math.round(avancement * 10) / 10} %
+                                </span>
+                              </div>
+                            );
+                          })()}
+                        </td>
+                      )}
                       <td className="px-3 py-2.5">
                         <div className="flex items-center justify-center gap-1">
                           <button
@@ -846,7 +959,7 @@ export default function PlanningPage() {
                 })}
                 {pert.length === 0 && (
                   <tr>
-                    <td colSpan={ressourcesDisponibles !== false ? 11 : 10} className="p-4 text-center text-muted">Aucune tâche. Ajoutez une tâche ci-dessus.</td>
+                    <td colSpan={ressourcesDisponibles !== false ? 13 : 12} className="p-4 text-center text-muted">Aucune tâche. Ajoutez une tâche ci-dessus.</td>
                   </tr>
                 )}
               </tbody>
@@ -943,6 +1056,11 @@ export default function PlanningPage() {
                       ressourcesDisponibles !== false
                         ? formaterRessources({ equipe: tache?.equipe, engins: tache?.engins })
                         : "";
+                    const avancement = avancementTache(tache);
+                    const avance =
+                      avancement === null
+                        ? ""
+                        : ` — ${Math.round(avancement * 10) / 10} % d'avancement`;
                     return (
                       <div key={p.tache_id} className="relative h-10 border-b border-border">
                         <div
@@ -952,7 +1070,7 @@ export default function PlanningPage() {
                               : "bg-gradient-to-r from-primary to-primary-deep"
                           }`}
                           style={{ left: `${debut}px`, width: `${largeur}px` }}
-                          title={`${p.nom} — J${p.es} → J${p.ef}${ressources && ressources !== "—" ? ` · ${ressources}` : ""}`}
+                          title={`${p.nom} — J${p.es} → J${p.ef}${ressources && ressources !== "—" ? ` · ${ressources}` : ""}${avance}`}
                         />
                         <span
                           className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[10px] text-muted"
