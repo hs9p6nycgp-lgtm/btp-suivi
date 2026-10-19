@@ -319,6 +319,26 @@ La pastille de statut est désormais elle-même le menu de changement (une seule
 
 ---
 
+# Partie 9 — Vérification de la correction du calculateur de murs
+
+## 27. Calculateur de murs : unités de prix et montants — ✅ **CORRIGÉ (vérifié sur la version en cours de livraison)**
+
+Contrôle refait sur l'application après la reprise du module (`src/lib/calculs/mur.ts` + tests) :
+
+| | Avant | Après |
+|---|---|---|
+| Ciment | 107 kg × 4 800 (prix du sac appliqué aux kilos) = **513 516** | « 107,0 kg (**2,14 sac de 50 kg**) » → 2,14 × 4 800 = **10 270** |
+| Mur de 400 m² (ciment) | **3 472 896** | **69 458** |
+| Total matériaux | 9 662 799,**56** FCFA | **22 684 638 FCFA** (sans décimale, RG-06) |
+| Écritures décimales | « 60.00 m² », « 11.400 m³ » | « 60,00 m² », « 11,400 m³ » (virgule française) |
+| Planning suggéré | 48 j de montage, **517 j** de mortier | 8 j de montage, 1 j de mortier, 17 j au total (réalistes) |
+
+Une phrase explicative est affichée sous le tableau : « Les quantités sont converties dans l'unité du prix du BPU avant le calcul… ». Le total de 22 684 638 FCFA se retrouve exactement (22 455 000 + 10 270 + 19 868 + 199 500).
+
+→ **T-LOG-41 et T-UI-26 sont fonctionnels** (version encore en cours de livraison par la Session 2 au moment du contrôle).
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
