@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { avancementMoyenSections, etatEcheance, formaterMetres, formaterPK, joursRestants, libelleTypeDocument, longueurSection } from "@/lib/chantiers/complet";
 import { resumerProgression, type PointAvancement } from "@/lib/chantiers/avancement";
 import { descriptionOuvrage, surfacesOuvrage } from "@/lib/chantiers/detailsOuvrage";
+import { libelleGraviteNC, libelleStatutNC, formaterDateNC } from "@/lib/qualite/nonConformites";
 
 // Feuille A4 imprimable : fiche de suivi complete d'un chantier.
 // La coquille de l'application est masquee sur cette page (voir AppShell).
@@ -71,6 +72,27 @@ type Document = {
   created_at: string | null;
 };
 
+type NonConformite = {
+  id: string;
+  description: string;
+  gravite: string;
+  statut: string;
+  responsable: string | null;
+  action_corrective: string | null;
+  echeance: string | null;
+  date_cloture: string | null;
+};
+
+type Essai = {
+  id: string;
+  type_controle: string;
+  valeur_mesuree: number;
+  valeur_exigee: number;
+  unite: string;
+  conforme: boolean;
+  date_controle: string;
+};
+
 const STATUTS: Record<string, string> = {
   en_preparation: "En préparation",
   en_cours: "En cours",
@@ -110,6 +132,8 @@ export default function FicheImprimablePage() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [points, setPoints] = useState<PointAvancement[]>([]);
   const [pointsDisponibles, setPointsDisponibles] = useState(false);
+  const [nonConformites, setNonConformites] = useState<NonConformite[]>([]);
+  const [essais, setEssais] = useState<Essai[]>([]);
   const [compteurs, setCompteurs] = useState({ alertes: 0, nonConformites: 0 });
   const [loading, setLoading] = useState(true);
 
@@ -120,7 +144,7 @@ export default function FicheImprimablePage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.replace("/login"); return; }
 
-      const [cRes, sRes, iRes, dRes, aRes, nRes, pRes] = await Promise.all([
+      const [cRes, sRes, iRes, dRes, aRes, nRes, pRes, ncDetailRes, eRes] = await Promise.all([
         supabase.from("chantiers").select("*").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle(),
         supabase.from("sections_chantier").select("*").eq("chantier_id", chantierId).order("created_at", { ascending: true }),
         supabase.from("intervenants_chantier").select("*").eq("chantier_id", chantierId).order("created_at", { ascending: true }),
@@ -128,6 +152,8 @@ export default function FicheImprimablePage() {
         supabase.from("alertes").select("id", { count: "exact", head: true }).eq("chantier_id", chantierId).eq("statut", "ouverte"),
         supabase.from("non_conformites").select("id", { count: "exact", head: true }).eq("chantier_id", chantierId).in("statut", ["ouverte", "en_cours"]),
         supabase.from("avancements_chantier").select("id, date_point, avancement_pct, commentaire, created_at").eq("chantier_id", chantierId).order("date_point", { ascending: true }),
+        supabase.from("non_conformites").select("id, description, gravite, statut, responsable, action_corrective, echeance, date_cloture").eq("chantier_id", chantierId).order("created_at", { ascending: false }),
+        supabase.from("essais_qualite").select("id, type_controle, valeur_mesuree, valeur_exigee, unite, conforme, date_controle").eq("chantier_id", chantierId).order("date_controle", { ascending: false }),
       ]);
 
       if (!cRes.data) { router.replace("/chantiers"); return; }
@@ -138,6 +164,8 @@ export default function FicheImprimablePage() {
       setCompteurs({ alertes: aRes.count ?? 0, nonConformites: nRes.count ?? 0 });
       setPointsDisponibles(!pRes.error);
       setPoints((pRes.data ?? []) as PointAvancement[]);
+      setNonConformites((ncDetailRes.data ?? []) as NonConformite[]);
+      setEssais((eRes.data ?? []) as Essai[]);
       setLoading(false);
     }
     load();
@@ -157,6 +185,9 @@ export default function FicheImprimablePage() {
   const lineaire = sections.reduce((total, s) => total + (longueurSection(s.pk_debut, s.pk_fin) ?? 0), 0);
   const progression = resumerProgression(points);
   const typeDetail = chantier.type === "route" ? "Route" : "Bâtiment";
+  const nbEssais = essais.length;
+  const nbConformes = essais.filter((e) => e.conforme).length;
+  const tauxConformite = nbEssais > 0 ? Math.round((nbConformes / nbEssais) * 100) : null;
   const description = [...descriptionOuvrage(chantier), ...surfacesOuvrage(chantier)];
 
   return (
@@ -319,6 +350,50 @@ export default function FicheImprimablePage() {
             )}
           </tbody>
         </table>
+
+        {/* Qualité et non-conformités */}
+        {(essais.length > 0 || nonConformites.length > 0) && (
+          <div className="mt-6">
+            <h2 className="mb-2 text-[12px] font-bold uppercase tracking-wider text-slate-700">
+              Qualité et non-conformités
+            </h2>
+            {essais.length > 0 && (
+              <p className="mb-2 text-[11px] text-slate-600">
+                Essais de contrôle : {nbEssais} — {nbConformes} conforme(s)
+                {tauxConformite !== null ? ` (${tauxConformite} %)` : ""}.
+                {nbEssais - nbConformes > 0
+                  ? ` ${nbEssais - nbConformes} non conforme(s).`
+                  : ""}
+              </p>
+            )}
+            {nonConformites.length > 0 && (
+              <table className="w-full border-collapse text-[12px]">
+                <thead>
+                  <tr className="border-b-2 border-slate-400 text-left text-slate-500">
+                    <th className="py-1.5 pr-2 font-semibold">Non-conformité</th>
+                    <th className="py-1.5 pr-2 font-semibold">Gravité</th>
+                    <th className="py-1.5 pr-2 font-semibold">Statut</th>
+                    <th className="py-1.5 pr-2 font-semibold">Responsable</th>
+                    <th className="py-1.5 pr-2 font-semibold">Action corrective</th>
+                    <th className="py-1.5 font-semibold">Échéance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {nonConformites.map((nc) => (
+                    <tr key={nc.id} className="border-b border-slate-200">
+                      <td className="py-1.5 pr-2">{nc.description}</td>
+                      <td className="py-1.5 pr-2">{libelleGraviteNC(nc.gravite)}</td>
+                      <td className="py-1.5 pr-2">{libelleStatutNC(nc.statut)}</td>
+                      <td className="py-1.5 pr-2 text-slate-600">{nc.responsable ?? "—"}</td>
+                      <td className="py-1.5 pr-2 text-slate-600">{nc.action_corrective ?? "—"}</td>
+                      <td className="py-1.5 text-slate-600">{formaterDateNC(nc.echeance) || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
 
         {/* Points d'avancement */}
         {pointsDisponibles && progression.nbPoints > 0 && (

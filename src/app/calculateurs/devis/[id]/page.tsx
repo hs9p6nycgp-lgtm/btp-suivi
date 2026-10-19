@@ -508,17 +508,22 @@ export default function DevisImprimablePage() {
             </tr>
           </thead>
           <tbody>
-            {lignes.map((l) => (
-              <tr key={l.id} className="border-b border-slate-200">
-                <td className="py-1.5 pr-2">{l.designation}</td>
-                <td className="py-1.5 pr-2 text-center text-slate-600">{l.unite}</td>
-                <td className="py-1.5 pr-2 text-right tabular-nums">{formaterNombre(l.quantite)}</td>
-                <td className="py-1.5 pr-2 text-right tabular-nums">{formaterNombre(l.prix_unitaire)}</td>
-                <td className="py-1.5 text-right tabular-nums font-medium">
-                  {formaterNombre(l.total)}
-                </td>
-              </tr>
-            ))}
+            {lignes.map((l) => {
+              const nonChiffre = Number(l.prix_unitaire) <= 0;
+              return (
+                <tr key={l.id} className="border-b border-slate-200">
+                  <td className="py-1.5 pr-2">{l.designation}</td>
+                  <td className="py-1.5 pr-2 text-center text-slate-600">{l.unite}</td>
+                  <td className="py-1.5 pr-2 text-right tabular-nums">{formaterNombre(l.quantite)}</td>
+                  <td className="py-1.5 pr-2 text-right tabular-nums">
+                    {nonChiffre ? "Non chiffré" : formaterNombre(l.prix_unitaire)}
+                  </td>
+                  <td className="py-1.5 text-right tabular-nums font-medium">
+                    {nonChiffre ? "—" : formaterNombre(l.total)}
+                  </td>
+                </tr>
+              );
+            })}
             {lignes.length === 0 && (
               <tr>
                 <td colSpan={5} className="py-3 text-center text-slate-500">
@@ -538,6 +543,13 @@ export default function DevisImprimablePage() {
             </tr>
           </tfoot>
         </table>
+
+        {lignes.some((l) => Number(l.prix_unitaire) <= 0) && (
+          <p className="mt-2 text-[10px] text-slate-500">
+            Les lignes marquées « non chiffré » (quantités calculées sans prix
+            unitaire retenu) ne sont pas reprises dans le total du devis.
+          </p>
+        )}
 
         {devis.notes && (
           <div className="mt-6">
