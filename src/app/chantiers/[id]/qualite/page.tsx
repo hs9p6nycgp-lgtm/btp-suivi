@@ -3,6 +3,12 @@
 import { BadgeCheck, ClipboardCheck, FlaskConical, ShieldAlert } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { estConforme } from "@/lib/calculs/qualite";
+import PlansControleQualite from "@/components/qualite/PlansControleQualite";
+import {
+  nomParametre,
+  parametresEquivalents,
+  type PlanControle,
+} from "@/lib/qualite/plansControle";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -13,17 +19,6 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatCard } from "@/components/ui/StatCard";
 import { getLangue, traduireErreur } from "@/lib/i18n";
-
-type PlanControle = {
-  id: string;
-  chantier_id: string;
-  type_ouvrage: string;
-  parametre: string;
-  valeur_exigee: number;
-  tolerance_pos: number;
-  tolerance_neg: number;
-  unite: string;
-};
 
 type Essai = {
   id: string;
@@ -73,6 +68,7 @@ export default function QualitePage() {
   const langue = getLangue();
 
   const [plans, setPlans] = useState<PlanControle[]>([]);
+  const [typeChantier, setTypeChantier] = useState<string>("route");
   const [essais, setEssais] = useState<Essai[]>([]);
   const [nonConformites, setNonConformites] = useState<NonConformite[]>([]);
   const [epreuves, setEpreuves] = useState<EpreuveBeton[]>([]);
@@ -100,8 +96,9 @@ export default function QualitePage() {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.replace("/login"); return; }
-    const { data: chantier } = await supabase.from("chantiers").select("id").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle();
+    const { data: chantier } = await supabase.from("chantiers").select("id, type").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle();
     if (!chantier) { router.replace("/chantiers"); return; }
+    setTypeChantier((chantier as { type?: string }).type ?? "route");
     const [pRes, eRes, ncRes, epRes] = await Promise.all([
       supabase.from("plans_controle").select("*").eq("chantier_id", chantierId),
       supabase.from("essais_qualite").select("*").eq("chantier_id", chantierId).order("date_controle", { ascending: false }),
@@ -121,7 +118,7 @@ export default function QualitePage() {
     setMessage(null);
     const supabase = createClient();
     const valeur = Number(nouvelleValeur) || 0;
-    const plan = plans.find((p) => p.parametre === nouvelEssaiType);
+    const plan = plans.find((p) => parametresEquivalents(nomParametre(p), nouvelEssaiType));
     const valeurExigee = plan ? plan.valeur_exigee : 0;
     const tolPos = plan ? plan.tolerance_pos : 0;
     const tolNeg = plan ? plan.tolerance_neg : 0;
@@ -275,6 +272,16 @@ export default function QualitePage() {
         </Card>
       </section>
 
+      {/* Plan de contrôle (QUA-01) */}
+      <section className="anim-fade-up anim-delay-2 mb-6">
+        <PlansControleQualite
+          chantierId={chantierId}
+          typeOuvrage={typeChantier}
+          plans={plans}
+          onReload={load}
+        />
+      </section>
+
       {/* Formulaire d'un nouvel essai */}
       <section className="anim-fade-up anim-delay-3 mb-6">
         <Card padding="lg">
@@ -290,11 +297,18 @@ export default function QualitePage() {
             >
               <option value="">{langue === "fr" ? "Sélectionner un paramètre" : "Select a parameter"}</option>
               {plans.map((p) => (
-                <option key={p.id} value={p.parametre}>
-                  {p.parametre} ({p.unite})
+                <option key={p.id} value={nomParametre(p)}>
+                  {nomParametre(p)} ({p.unite})
                 </option>
               ))}
             </select>
+            {plans.length === 0 && (
+              <p className="text-xs text-muted md:col-span-4">
+                {langue === "fr"
+                  ? "Aucun paramètre de contrôle : créez d'abord un plan de contrôle (ci-dessus), sinon l'essai ne pourra pas être vérifié."
+                  : "No control parameter: create a control plan first (above), otherwise the test cannot be checked."}
+              </p>
+            )}
             <input
               className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               type="number"
