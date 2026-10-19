@@ -15,6 +15,7 @@ export const DICTIONNAIRE: Record<string, Record<Langue, string>> = {
   "nav.aide": { fr: "Aide", en: "Help" },
   "nav.parametres": { fr: "Mon entreprise", en: "My company" },
   "nav.alertes": { fr: "Alertes", en: "Alerts" },
+  "nav.compte": { fr: "Mon compte", en: "My account" },
   "nav.devis": { fr: "Calcul de devis", en: "Estimates" },
   "nav.mur": { fr: "Calcul de murs", en: "Wall calculator" },
 

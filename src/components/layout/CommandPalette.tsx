@@ -29,6 +29,7 @@ const ROUTES: ItemRoute[] = [
   { href: "/", cle: "home.titre" },
   { href: "/chantiers", cle: "chantiers.titre" },
   { href: "/alertes", cle: "nav.alertes" },
+  { href: "/compte", cle: "nav.compte" },
   { href: "/bpu", cle: "nav.bpu" },
   { href: "/fournisseurs", cle: "nav.fournisseurs" },
   { href: "/referentiel", cle: "nav.referentiel" },

@@ -36,6 +36,7 @@ type Journal = {
   meteo: string | null;
   observations: string | null;
   statut: string;
+  created_by?: string | null;
 };
 
 export default function JournalImprimablePage() {
@@ -44,6 +45,7 @@ export default function JournalImprimablePage() {
   const journalId = String(params?.journalId ?? "");
 
   const [pv, setPv] = useState<JournalPv | null>(null);
+  const [auteur, setAuteur] = useState<string | null>(null);
   const [chargement, setChargement] = useState(true);
 
   useEffect(() => {
@@ -78,6 +80,19 @@ export default function JournalImprimablePage() {
         if (actif) setChargement(false);
         return;
       }
+
+      // Auteur du journal : celui qui l'a saisi (nom du profil).
+      let nomAuteur: string | null = null;
+      if (journal.created_by) {
+        const { data: profil } = await supabase
+          .from("profils")
+          .select("nom")
+          .eq("id", journal.created_by)
+          .maybeSingle();
+        nomAuteur = (profil as { nom?: string | null } | null)?.nom ?? null;
+      }
+      if (!actif) return;
+      setAuteur(nomAuteur);
 
       // Désignations des postes du DQE pour nommer les quantités.
       const posteIds = (quantitesRes.data ?? []).map(
@@ -194,6 +209,7 @@ export default function JournalImprimablePage() {
             <div className="text-right text-xs text-slate-600">
               <p className="font-semibold text-slate-900">BTP Suivi Pro</p>
               <p>Édité le {formaterDatePj(new Date().toISOString())}</p>
+              {auteur && <p>Établi par {auteur}</p>}
             </div>
           </div>
         </header>

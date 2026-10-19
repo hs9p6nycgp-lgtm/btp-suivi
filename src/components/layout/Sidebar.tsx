@@ -21,6 +21,7 @@ import {
   Ruler,
   Box,
   ShieldCheck,
+  User,
   Users,
   Download,
   Printer,
@@ -212,6 +213,13 @@ export default function Sidebar() {
 
         {/* Langue et déconnexion */}
         <div className="border-t border-white/10 p-2">
+          <Link
+            href="/compte"
+            className="mb-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
+          >
+            <User className="h-4 w-4 shrink-0" />
+            {!collapsed && <span className="truncate">{t("nav.compte")}</span>}
+          </Link>
           {!collapsed && (
             <button
               onClick={() => {
