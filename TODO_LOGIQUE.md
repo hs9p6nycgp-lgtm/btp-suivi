@@ -68,11 +68,12 @@ décrites avec le détail.
 ## TODO-LOGIC-003 — estConforme jamais appelée dans la page qualité (BUG-007)
 
 - **Zone** : logique (validation qualité).
-- **À corriger**
-  1. Faire appeler `estConforme` (`src/lib/calculs/qualite.ts`, ligne 9)
-     depuis la page qualité
-     (`src/app/chantiers/[id]/qualite/page.tsx`), afin d’utiliser le point
-     de repère central de l’exigence QUA-02.
+- **État** : CORRIGÉ — `estConforme` est appelé par la page qualité.
+  1. ✅ `src/app/chantiers/[id]/qualite/page.tsx` appelle `estConforme`
+     (`src/lib/calculs/qualite.ts`) pour chaque essai saisi (valeur mesurée,
+     valeur exigée, tolérances +/−).
+  2. ✅ Le résultat pilote l’affichage « Conforme / NON CONFORME » et la
+     création automatique de la fiche de non-conformité (RG-04).
 - **Priorité** : faible (le calcul de tolérance est déjà correct en interne).
 
 ---

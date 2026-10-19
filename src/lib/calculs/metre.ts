@@ -151,16 +151,17 @@ export function calculValeurAcquise(
 ): ValeurAcquise {
   const ecartCout = valeurAcquise - coutReel;
   const ecartDelai = valeurAcquise - valeurPlanifiee;
-  const indicePerformanceCout = coutReel > 0 ? valeurAcquise / coutReel : 0;
-  const indicePerformanceDelai = valeurPlanifiee > 0 ? valeurAcquise / valeurPlanifiee : 0;
+  // Indices 5.10 et 5.11 : on appelle les formules de reference de la section 5.
+  const indiceCout = indicePerformanceCoût(valeurAcquise, coutReel);
+  const indiceDelai = indicePerformanceDelai(valeurAcquise, valeurPlanifiee);
   return {
     budgetPrevu,
     valeurAcquise,
     coutReel,
     ecartCout,
     ecartDelai,
-    indicePerformanceCout,
-    indicePerformanceDelai,
+    indicePerformanceCout: indiceCout,
+    indicePerformanceDelai: indiceDelai,
   };
 }
 

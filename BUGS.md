@@ -16,9 +16,9 @@ listés dans `TODO_LOGIQUE.md`.
 | BUG-002   | UI          | Drapeau « English » incorrect dans la Sidebar            |
 | BUG-003   | UI          | Libellé « Total items » identique en FR/EN              |
 | BUG-004   | UI          | Boutons « Supprimer » sans effet sur le journal           |
-| BUG-005   | logique     | Indicateurs de la section 5 jamais appelés par les écrans |
-| BUG-006   | logique     | validerBasePrix jamais appelée lors de l’import         |
-| BUG-007   | logique     | estConforme jamais appelée dans la page qualité          |
+| BUG-005   | logique     | Indicateurs de la section 5 jamais appelés par les écrans | ✅ CORRIGÉ (19/10) — 5.1 à 5.11 utilisés par les écrans (5.6/5.7 au journal, 5.10/5.11 en coûts). |
+| BUG-006   | logique     | validerBasePrix jamais appelée lors de l’import         | ✅ CORRIGÉ (19/10) — `validerBasePrix` est le point de repère unique de la règle REF-04, appelé par l'import du référentiel. |
+| BUG-007   | logique     | estConforme jamais appelée dans la page qualité          | ✅ CORRIGÉ — `estConforme` est appelé par la page qualité (essais et éprouvettes). |
 | BUG-008   | logique     | Date de fin prévue du planning copiée de la date de début |
 | BUG-009   | logique     | Isolation multitenant non fonctionnelle                 | ✅ CORRIGÉ (Session 3, 19/10) — filtre `proprietaire_id` côté code + script d'isolation appliqué en base ; reste le test à 2 comptes. |
 | BUG-010   | logique+UI  | Journal : observations perdues + « Créer le journal » sans réponse sur réseau faible |
@@ -32,6 +32,7 @@ listés dans `TODO_LOGIQUE.md`.
 | BUG-018   | logique     | Navigation : clé de traduction brute « detail.quality » au lieu de « Qualité » | ✅ CORRIGÉ (Session 2, 18/10) — clé ajoutée au dictionnaire + test de cohérence. |
 | BUG-019   | UI          | Accueil : « 1 chantiers » (pluriel) et dates des mini-courbes coupées | ✅ CORRIGÉ (Session 2, 18/10) — accord `${chantiers.length === 1 ? "chantier" : "chantiers"}`, dates format `18/10`, marge droite résolue. |
 | BUG-020   | UI          | Connexion : la coquille (menus) s'affiche avant connexion | ✅ CORRIGÉ (Session 1, commit `45ee2b8`, AppShell + routeAuth) |
+| BUG-021   | logique     | Création d'un chantier refusée par la politique RLS       | ✅ CORRIGÉ côté application (19/10) — identifiant généré côté navigateur, insertion sans `returning` ; migration `0019` à appliquer en base pour rétablir `returning`. |
 
 ---
 
@@ -159,8 +160,13 @@ listés dans `TODO_LOGIQUE.md`.
   - **5.5** : `ecartBudgetaire` utilisé dans la page coûts pour l'écart par poste.
   - **5.9** : `margeTotaleTache` disponible dans `metre.ts` ; la marge PERT est calculée
     dans la page planning (LS − ES).
-  - Les indicateurs 5.6, 5.7, 5.10, 5.11 restent disponibles dans `metre.ts` pour intégration
-    ultérieure (priorité S).
+  - **5.6 / 5.7** (complété le 19/10/2026) : `rendementEngin` et
+    `tauxDisponiteEngin` sont affichés dans la liste des engins du journal ;
+    les heures de marche, la quantité produite et les **heures prévues** sont
+    saisissables (migration `0020`, colonne `journal_engins.heures_prevues`).
+  - **5.10 / 5.11** (complété le 19/10/2026) : `indicePerformanceCoût` (CPI)
+    et `indicePerformanceDelai` (SPI) sont affichés par la page coûts, et
+    `calculValeurAcquise` appelle désormais ces deux formules de référence.
   - `tsc --noEmit` et `next build` passent (18 routes).
 - **Référence de code** : `src/lib/calculs/metre.ts` (lignes 45–129),
   composant `src/components/ChantierAvancement.tsx`,
@@ -191,8 +197,17 @@ listés dans `TODO_LOGIQUE.md`.
   `BasePrixImport.tsx`. L’import construit le champ `source` à partir de
   la colonne du classeur sans vérifier qu’il est présent, et insère
   donc les lignes incomplètes.
-- **Référence de code** : `src/components/BasePrixImport.tsx` (appel à
-  validerBasePrix absent), définition dans `src/lib/import/basePrix.ts` ligne 163.
+- **Correctif (19/10/2026)** : la règle REF-04 a un point de repère unique,
+  `validerBasePrix`, désormais dans `src/lib/import/regles.ts` (réexporté par
+  `src/lib/import/basePrix.ts` pour ne pas casser l’existant). L’import
+  Excel / CSV du référentiel (`analyserImportReferentiel`,
+  `src/lib/referentiel/prix.ts`) l’appelle : une ligne sans source ou sans
+  date de source est rejetée, avec le message exact de la règle. Test
+  automatique ajouté dans `src/lib/referentiel/__tests__/prix.test.ts`.
+  (L’ancien composant `BasePrixImport.tsx` a été remplacé par
+  `src/components/ReferentielImport.tsx`, qui alimente le référentiel de prix.)
+- **Référence de code** : `src/lib/import/regles.ts` (règle),
+  `src/lib/referentiel/prix.ts` (appel), `src/components/ReferentielImport.tsx`.
 
 ---
 
@@ -216,6 +231,10 @@ listés dans `TODO_LOGIQUE.md`.
   appeler la fonction partagée ; aucune différence de comportement n’est
   observable, mais le point de repère central de l’exigence n’est pas
   utilisé.
+- **Correctif** : la page qualité appelle désormais `estConforme` pour chaque
+  essai saisi et pour chaque éprouvette ; le résultat affiché
+  (« Conforme / NON CONFORME ») et la création automatique de la fiche de
+  non-conformité (RG-04) reposent sur cette fonction.
 - **Référence de code** : `src/lib/calculs/qualite.ts` ligne 9,
   page qualité `src/app/chantiers/[id]/qualite/page.tsx`.
 
@@ -408,6 +427,44 @@ listés dans `TODO_LOGIQUE.md`.
 - **Résultat obtenu** : les barres latérale et du haut (et la navigation mobile) sont visibles autour de l'écran de connexion.
 - **Résultat attendu** : **non, ce n'est pas voulu** — l'écran de connexion doit être plein écran, sans menus.
 - **Correctif** : **CORRIGÉ (Session 1, 18/10/2026, commit `45ee2b8`)** — coquille `AppShell` : barres latérale/haut, navigation mobile et bouton « Saisie du jour » masqués sur les pages de connexion. Détail : TODO-UI-016.
+
+---
+
+## BUG-021 — Création d'un chantier refusée par la politique RLS (bloquant)
+
+- **Écran** : Création de chantier (`/chantiers/nouveau`).
+- **Zone** : logique (base de données) — consequence de l'isolation des données
+  appliquée le 19/10/2026 (`supabase/APPLIQUER_ISOLATION.sql`).
+- **Contexte** : la politique « chantier - acces » s'appuyait uniquement sur la
+  fonction `user_can_access_chantier(id)` pour la lecture.
+- **Étapes pour reproduire**
+  1. Se connecter avec un compte et créer un chantier depuis l'application.
+  2. (ou) insérer une ligne dans `chantiers` en demandant la ligne insérée.
+- **Résultat attendu** : le chantier est créé et l'utilisateur est redirigé
+  vers sa fiche.
+- **Résultat obtenu** : erreur « new row violates row-level security policy
+  for table "chantiers" » (HTTP 403) — la ligne est pourtant bien écrite en
+  base. Cause : lors d'un « insert ... returning », la fonction
+  `user_can_access_chantier` interroge la table `chantiers` **avant** que la
+  ligne nouvelle soit visible dans son instantané ; la ligne est donc refusée
+  à la lecture et l'insertion est signalée en erreur.
+- **Vérification faite le 19/10/2026** (script `scripts/verifier-isolation.mjs`) :
+  - insertion **avec** `returning` → 403 ; insertion **sans** `returning` → 201 ;
+  - l'isolation reste correcte : le compte B ne voit pas le chantier du compte A ;
+  - les tables enfants (sections, postes, essais…) ne sont pas concernées.
+- **Correctif (19/10/2026)**
+  1. **Application** (immédiat, sans attendre la base) : l'identifiant du
+     chantier est généré côté navigateur (`creerId`,
+     `src/lib/chantiers/identifiant.ts`) et l'insertion se fait **sans**
+     demander la ligne renvoyée. Si une erreur survient, l'application vérifie
+     si la ligne a bien été créée avant d'afficher un message.
+  2. **Base** (migration `0021_phase3_politique_rls_chantiers.sql`, à
+     exécuter dans Supabase) : la politique de lecture devient
+     `proprietaire_id = auth.uid() or user_can_access_chantier(id)` — le
+     propriétaire voit sa propre ligne sans passer par la fonction ; l'accès
+     des membres reste inchangé.
+- **Priorité** : **haute — bloquant** (création de chantier impossible depuis
+  l'interface).
 
 ---
 

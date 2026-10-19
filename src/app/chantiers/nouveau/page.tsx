@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getLangue, traduireErreur } from "@/lib/i18n";
 import { estTypeDetailValide, groupesTypesDetailles, type TypeChantier } from "@/lib/chantiers/types";
+import { creerId } from "@/lib/chantiers/identifiant";
 import BlocDetailsOuvrage from "@/components/chantiers/BlocDetailsOuvrage";
 import {
   colonnesDetailsOuvrage,
@@ -435,31 +436,38 @@ export default function NouveauChantierPage() {
       ...(detailsOk === true ? detailsColonnes : {}),
     };
 
-    let { data, error } = await supabase
+    // L'identifiant du chantier est genere ici, cote navigateur : la base ne
+    // renvoie pas la ligne inseree (politique d'isolation : l'insertion avec
+    // "returning" est refusee), on garde donc l'id pour la redirection et pour
+    // le controle "la ligne a-t-elle vraiment ete creee ?".
+    const chantierId = creerId();
+    let erreur: unknown = null;
+
+    const premier = await supabase
       .from("chantiers")
-      .insert({ ...base, ...complement })
-      .select()
-      .single();
-    if (error && (colonnesOk || detailsOk === true)) {
+      .insert({ ...base, ...complement, id: chantierId });
+    erreur = premier.error;
+    if (erreur && (colonnesOk || detailsOk === true)) {
       // Colonnes pas encore créées côté base : on enregistre au moins l'essentiel.
-      const essai = await supabase.from("chantiers").insert(base).select().single();
-      data = essai.data;
-      error = essai.error;
-      if (!error) {
+      const essai = await supabase.from("chantiers").insert({ ...base, id: chantierId });
+      erreur = essai.error;
+      if (!erreur) {
         setColonnesOk(false);
         setDetailsOk(false);
       }
     }
-    if (error || !data) {
-      setLoading(false);
-      setMessage(
-        error
-          ? traduireErreur(error)
-          : langue === "fr"
-            ? "Réponse vide de la base : vérifiez la liste des chantiers."
-            : "Empty response: check the sites list.",
-      );
-      return;
+    if (erreur) {
+      // La ligne a pu être créée malgré l'erreur : on vérifie avant d'alerter.
+      const { data: existant } = await supabase
+        .from("chantiers")
+        .select("id")
+        .eq("id", chantierId)
+        .maybeSingle();
+      if (!existant) {
+        setLoading(false);
+        setMessage(traduireErreur(erreur));
+        return;
+      }
     }
 
     const sectionsAInserer = sections
@@ -474,7 +482,7 @@ export default function NouveauChantierPage() {
               : `Section ${i + 1}`
             : `Bâtiment ${i + 1}`;
         return {
-          chantier_id: data.id,
+          chantier_id: chantierId,
           nom: s.nom.trim() || nomAuto,
           pk_debut: d,
           pk_fin: f,
@@ -487,7 +495,7 @@ export default function NouveauChantierPage() {
     const intervenantsAInserer = intervenants
       .filter((iv) => iv.nom.trim())
       .map((iv) => ({
-        chantier_id: data.id,
+        chantier_id: chantierId,
         nom: iv.nom.trim(),
         fonction: iv.fonction.trim() || null,
         telephone: iv.telephone.trim() || null,
@@ -506,11 +514,11 @@ export default function NouveauChantierPage() {
 
     setLoading(false);
     if (avertissement) {
-      setChantierCree(data.id);
+      setChantierCree(chantierId);
       setMessage(`${avertissement} Le chantier a bien été créé : ouvrez-le pour compléter depuis sa fiche.`);
       return;
     }
-    router.push(`/chantiers/${data.id}`);
+    router.push(`/chantiers/${chantierId}`);
   }
 
   return (

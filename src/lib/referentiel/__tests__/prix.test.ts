@@ -214,7 +214,11 @@ describe("referentiel de prix (REF-03, REF-06, REF-09)", () => {
       assert.strictEqual(valides.length, 0);
       assert.strictEqual(rejets.length, 2);
       assert.strictEqual(rejets[0].ligne, 2);
-      assert.match(rejets[0].raison, /source ou date/i);
+      assert.strictEqual(rejets[1].ligne, 3);
+      // Le message vient bien du point de repere unique `validerBasePrix` (BUG-006).
+      assert.match(rejets[0].raison, /sans source/i);
+      assert.match(rejets[1].raison, /sans date de source/i);
+      assert.match(rejets[0].raison, /source et une date/i);
     });
 
     it("refuse un fichier sans colonnes obligatoires", () => {

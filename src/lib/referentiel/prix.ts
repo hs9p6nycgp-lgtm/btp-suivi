@@ -1,5 +1,7 @@
 // Regles metier du referentiel de prix (section 4.12, exigences REF-01 a REF-09).
 
+import { validerBasePrix } from "../import/regles.ts";
+
 export type LigneReferentiel = {
   id: string;
   code: string | null;
@@ -266,8 +268,14 @@ export function analyserImportReferentiel(lignes: Record<string, unknown>[]): Re
 
     const source = colSource ? String(brute[colSource] ?? "").trim() : "";
     const dateSource = colDateSource ? normaliserDate(brute[colDateSource]) : null;
-    if (!source || !dateSource) {
-      rejets.push({ ligne: numero, raison: "Source ou date manquante (un prix importé doit avoir une source et une date)." });
+    // REF-04 : la validation des prix passe par le point de repere unique
+    // `validerBasePrix` (module import/basePrix), utilise par tous les importers.
+    const probleme = validerBasePrix({ source: source || null, date_source: dateSource });
+    if (probleme || !source || !dateSource) {
+      rejets.push({
+        ligne: numero,
+        raison: `${probleme ?? "la ligne est sans source"} : un prix importé doit avoir une source et une date (exigence REF-04).`,
+      });
       return;
     }
 

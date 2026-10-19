@@ -15,6 +15,7 @@ import { toast } from "@/components/ui/toast";
 import { getLangue, traduireErreur } from "@/lib/i18n";
 import { compresserImage } from "@/lib/photos/compression";
 import { BUCKET_PHOTOS, urlSignee, urlsSignees } from "@/lib/photos/urls";
+import { rendementEngin, tauxDisponiteEngin } from "@/lib/calculs/metre";
 
 // JJ/MM/AAAA sans risque de décalage de fuseau (chaîne « AAAA-MM-JJ »)
 function formaterDate(dateIso: string | null | undefined): string {
@@ -48,6 +49,10 @@ export default function JournalDetailPage() {
   const [engImmat, setEngImmat] = useState("");
   const [engHeures, setEngHeures] = useState("");
   const [engQte, setEngQte] = useState("");
+  const [engHeuresPrevues, setEngHeuresPrevues] = useState("");
+  // La colonne « heures_prevues » (indicateur 5.7) est ajoutée par la migration
+  // 0020. Tant qu'elle n'est pas en base, la saisie d'un engin doit rester possible.
+  const [colonneHeuresPrevues, setColonneHeuresPrevues] = useState<boolean | null>(null);
 
   const [incType, setIncType] = useState("autre");
   const [incDesc, setIncDesc] = useState("");
@@ -131,6 +136,9 @@ export default function JournalDetailPage() {
     if (en.data) setEngins(en.data);
     if (inc.data) setIncidents(inc.data);
     if (qt.data) setQuantites(qt.data);
+    // Colonne « heures_prevues » disponible en base ? (migration 0020)
+    const testColonne = await supabase.from("journal_engins").select("heures_prevues").limit(1);
+    setColonneHeuresPrevues(!testColonne.error);
     if (ph.data) {
       const listePhotos = ph.data as Array<{ id: string; chemin: string; legende: string | null; latitude: number | null; longitude: number | null }>;
       setPhotos(listePhotos);
@@ -170,13 +178,22 @@ export default function JournalDetailPage() {
   async function addEngin(e: React.FormEvent) {
     e.preventDefault();
     if (!editable) return;
-    const { error } = await offlineInsert("journal_engins", {
+    const heuresPrevues = engHeuresPrevues ? Number(engHeuresPrevues) : null;
+    const donnees: Record<string, unknown> = {
       journal_id: journalId, type_engin: engType, immatriculation: engImmat || null,
       heures_marche: Number(engHeures) || 0, quantite_produite: engQte ? Number(engQte) : null,
-    });
+    };
+    if (colonneHeuresPrevues) donnees.heures_prevues = heuresPrevues;
+    const { error } = await offlineInsert("journal_engins", donnees);
     if (error) { setMessage(traduireErreur(error)); return; }
-    setEngins((l) => [...l, { id: `local-${Date.now()}`, type_engin: engType, heures_marche: Number(engHeures) || 0 }]);
-    setEngType(""); setEngImmat(""); setEngHeures(""); setEngQte("");
+    setEngins((l) => [...l, {
+      id: `local-${Date.now()}`,
+      type_engin: engType,
+      heures_marche: Number(engHeures) || 0,
+      quantite_produite: engQte ? Number(engQte) : null,
+      heures_prevues: colonneHeuresPrevues ? heuresPrevues : null,
+    }]);
+    setEngType(""); setEngImmat(""); setEngHeures(""); setEngQte(""); setEngHeuresPrevues("");
   }
 
   async function addIncident(e: React.FormEvent) {
@@ -441,17 +458,33 @@ export default function JournalDetailPage() {
         <CardVariant padding="lg" className="mt-6 lg:mt-0">
           <h2 className="mb-3 text-lg font-bold text-foreground">Engins</h2>
           {editable && (
-            <form onSubmit={addEngin} className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-4">
+            <form onSubmit={addEngin} className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
               <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="Type d'engin" value={engType} onChange={(e) => setEngType(e.target.value)} required />
               <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="Immatriculation" value={engImmat} onChange={(e) => setEngImmat(e.target.value)} />
-              <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" type="number" step="0.01" placeholder="Heures" value={engHeures} onChange={(e) => setEngHeures(e.target.value)} />
+              <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" type="number" step="0.01" placeholder="Heures de marche" value={engHeures} onChange={(e) => setEngHeures(e.target.value)} />
+              <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" type="number" step="0.01" placeholder="Quantité produite" value={engQte} onChange={(e) => setEngQte(e.target.value)} />
+              <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" type="number" step="0.01" placeholder="Heures prévues" value={engHeuresPrevues} onChange={(e) => setEngHeuresPrevues(e.target.value)} />
               <button type="submit" className="rounded-lg bg-gradient-to-br from-action to-action-strong px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:brightness-105 active:scale-[0.98]">Ajouter</button>
             </form>
           )}
           <ul className="space-y-2">
             {engins.map((en) => (
-              <li key={en.id} className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-surface-2/60 p-2.5 text-sm">
-                <span>{en.type_engin} - {en.heures_marche} h</span>
+              <li key={en.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/70 bg-surface-2/60 p-2.5 text-sm">
+                <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span className="font-medium text-foreground">{en.type_engin} — {en.heures_marche} h</span>
+                  {/* Indicateur 5.6 — rendement de l'engin (quantité produite / heures de marche) */}
+                  {en.quantite_produite !== null && en.quantite_produite !== undefined && Number(en.heures_marche) > 0 && (
+                    <span className="text-xs text-muted">
+                      Rendement : {rendementEngin(Number(en.quantite_produite), Number(en.heures_marche)).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} unité/h
+                    </span>
+                  )}
+                  {/* Indicateur 5.7 — taux de disponibilité (heures marchées / heures prévues) */}
+                  {en.heures_prevues !== null && en.heures_prevues !== undefined && Number(en.heures_prevues) > 0 && (
+                    <span className="text-xs text-muted">
+                      Disponibilité : {tauxDisponiteEngin(Number(en.heures_marche), Number(en.heures_prevues)).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %
+                    </span>
+                  )}
+                </span>
                 {editable && <button onClick={() => removeItem("journal_engins", en.id)} className="text-danger text-xs font-medium hover:underline">Supprimer</button>}
               </li>
             ))}

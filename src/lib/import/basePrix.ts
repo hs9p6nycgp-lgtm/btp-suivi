@@ -153,19 +153,9 @@ export function parseBasePrixWorkbook(workbook: WorkbookLike): BasePrixRow[] {
 // ---------------------------------------------------------------------------
 // Règles de validation des prix (exigences REF-04 et section 16).
 // Chaque prix doit porter une source et une date.
+// La règle elle-même vit dans « regles.ts » (sans dépendance) pour que tous
+// les chemins d'import l'utilisent ; elle est réexportée ici pour rester le
+// point d'entrée historique du module.
 // ---------------------------------------------------------------------------
 
-/**
- * Exigence REF-04 - Chaque prix doit porter une source et une date.
- * Renvoie null lorsque la ligne est valide, sinon le message du premier
- * problème rencontré.
- */
-export function validerBasePrix(row: BasePrixRow): string | null {
-  if (!row.source) {
-    return "la ligne est sans source";
-  }
-  if (!row.date_source) {
-    return "la ligne est sans date de source";
-  }
-  return null;
-}
+export { validerBasePrix, type LignePrixAValider } from "./regles.ts";
