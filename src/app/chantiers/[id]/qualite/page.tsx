@@ -10,12 +10,15 @@ import {
   type PlanControle,
 } from "@/lib/qualite/plansControle";
 import {
+  cheminPhotoNonConformite,
   etatEcheanceNC,
   formaterDateNC,
   libelleGraviteNC,
   libelleStatutNC,
   validerSuiviNC,
 } from "@/lib/qualite/nonConformites";
+import { compresserImage } from "@/lib/photos/compression";
+import { BUCKET_PHOTOS, urlsSignees } from "@/lib/photos/urls";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -89,6 +92,13 @@ export default function QualitePage() {
   const [ncEcheance, setNcEcheance] = useState("");
   const [ncMessage, setNcMessage] = useState<string | null>(null);
 
+  // Photos jointes aux fiches de non-conformité
+  const [photosNC, setPhotosNC] = useState<Record<string, { chemin: string; legende: string | null; url: string | null }[]>>({});
+  const [photoNCFichier, setPhotoNCFichier] = useState<File | null>(null);
+  const [photoNCLegende, setPhotoNCLegende] = useState("");
+  const [apercuNC, setApercuNC] = useState<string | null>(null);
+  const [envoiPhoto, setEnvoiPhoto] = useState(false);
+
   // QUA-04 : formulaire nouvel éprouvette béton
   const [nouvelleDateCoulage, setNouvelleDateCoulage] = useState<Date | null>(null);
   const [nouvelAgeJours, setNouvelAgeJours] = useState<number | null>(null);
@@ -123,7 +133,66 @@ export default function QualitePage() {
     if (eRes.data) setEssais(eRes.data as Essai[]);
     if (ncRes.data) setNonConformites(ncRes.data as NonConformite[]);
     if (epRes.data) setEpreuves(epRes.data as EpreuveBeton[]);
+    await chargerPhotosNC(ncRes.data ?? []);
     setLoading(false);
+  }
+
+  /** Charge les photos des fiches de non-conformité et signe leurs URL. */
+  async function chargerPhotosNC(nonConformites: { id: string }[]) {
+    const ids = nonConformites.map((n) => n.id);
+    if (ids.length === 0) {
+      setPhotosNC({});
+      return;
+    }
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("photos_non_conformite")
+      .select("id,non_conformite_id,chemin,legende")
+      .in("non_conformite_id", ids);
+    const urls = await urlsSignees((data ?? []).map((p: any) => p.chemin));
+    const parNc: Record<string, { chemin: string; legende: string | null; url: string | null }[]> = {};
+    for (const p of (data ?? []) as any[]) {
+      const liste = parNc[p.non_conformite_id] ?? [];
+      liste.push({ chemin: p.chemin, legende: p.legende ?? null, url: urls.get(p.chemin) ?? null });
+      parNc[p.non_conformite_id] = liste;
+    }
+    setPhotosNC(parNc);
+  }
+
+  /** Joint une photo à la fiche de non-conformité traitée. */
+  async function ajouterPhotoNC() {
+    if (!ncEnTraitement || !photoNCFichier) return;
+    setEnvoiPhoto(true);
+    setNcMessage(null);
+    const supabase = createClient();
+    const fichier = await compresserImage(photoNCFichier);
+    const chemin = cheminPhotoNonConformite(ncEnTraitement.id, fichier.name, Date.now());
+    const { error: errUpload } = await supabase.storage
+      .from(BUCKET_PHOTOS)
+      .upload(chemin, fichier, { upsert: false });
+    if (errUpload) {
+      setEnvoiPhoto(false);
+      setNcMessage(
+        langue === "fr"
+          ? "La photo n'a pas pu être envoyée : réessayez une fois le réseau revenu."
+          : "The photo could not be uploaded: try again when the network is back.",
+      );
+      return;
+    }
+    const { error: errInsert } = await supabase.from("photos_non_conformite").insert({
+      non_conformite_id: ncEnTraitement.id,
+      chemin,
+      legende: photoNCLegende.trim() || null,
+    });
+    setEnvoiPhoto(false);
+    if (errInsert) {
+      setNcMessage(traduireErreur(errInsert));
+      return;
+    }
+    setPhotoNCFichier(null);
+    setPhotoNCLegende("");
+    setApercuNC(null);
+    await chargerPhotosNC(nonConformites);
   }
 
   async function ajouterEssai(e: React.FormEvent) {
@@ -467,6 +536,7 @@ export default function QualitePage() {
                   <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Statut</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Responsable</th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Action corrective</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Photos</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Échéance</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Action</th>
                 </tr>
@@ -490,6 +560,35 @@ export default function QualitePage() {
                       <td className="px-4 py-3 text-center text-muted">{nc.responsable ?? "—"}</td>
                       <td className="px-4 py-3 text-xs text-muted">
                         {nc.action_corrective ?? "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        {(photosNC[nc.id] ?? []).length === 0 ? (
+                          <span className="text-xs text-muted">—</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-1.5">
+                            {(photosNC[nc.id] ?? []).map((photo) => (
+                              <a
+                                key={photo.chemin}
+                                href={photo.url ?? "#"}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title={photo.legende ?? "Photo de la non-conformité"}
+                              >
+                                {photo.url ? (
+                                  <img
+                                    src={photo.url}
+                                    alt={photo.legende ?? "Non-conformité"}
+                                    className="h-10 w-10 rounded-lg border border-border object-cover"
+                                  />
+                                ) : (
+                                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border text-[10px] text-muted">
+                                    NC
+                                  </span>
+                                )}
+                              </a>
+                            ))}
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <p className="text-muted">{formaterDateNC(nc.echeance) || "—"}</p>
@@ -515,7 +614,7 @@ export default function QualitePage() {
                 })}
                 {ncEnTraitement && (
                   <tr className="border-b border-border/60 bg-surface-2/60">
-                    <td colSpan={7} className="px-4 py-4">
+                    <td colSpan={8} className="px-4 py-4">
                       <p className="mb-3 text-sm font-semibold text-foreground">
                         {langue === "fr" ? "Traitement de la non-conformité" : "Non-conformity follow-up"}
                       </p>
@@ -555,12 +654,56 @@ export default function QualitePage() {
                           {langue === "fr" ? "Annuler" : "Cancel"}
                         </Button>
                       </div>
+
+                      {/* Photo du défaut (QUA-03) */}
+                      <div className="mt-4 rounded-xl border border-border/70 bg-surface/60 p-3">
+                        <p className="text-xs font-semibold text-foreground">
+                          {langue === "fr" ? "Photo du défaut" : "Photo of the defect"}
+                        </p>
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            className="text-xs"
+                            onChange={(e) => {
+                              const fichier = e.target.files?.[0] ?? null;
+                              setPhotoNCFichier(fichier);
+                              if (apercuNC) URL.revokeObjectURL(apercuNC);
+                              setApercuNC(fichier ? URL.createObjectURL(fichier) : null);
+                            }}
+                          />
+                          <input
+                            className="min-w-40 flex-1 rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                            placeholder={langue === "fr" ? "Légende (facultatif)" : "Caption (optional)"}
+                            value={photoNCLegende}
+                            onChange={(e) => setPhotoNCLegende(e.target.value)}
+                          />
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={ajouterPhotoNC}
+                            disabled={!photoNCFichier || envoiPhoto}
+                          >
+                            {envoiPhoto
+                              ? (langue === "fr" ? "Envoi..." : "Sending...")
+                              : (langue === "fr" ? "Joindre" : "Attach")}
+                          </Button>
+                        </div>
+                        {apercuNC && (
+                          <img
+                            src={apercuNC}
+                            alt={langue === "fr" ? "Aperçu de la photo" : "Photo preview"}
+                            className="mt-2 h-20 w-20 rounded-lg border border-border object-cover"
+                          />
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )}
                 {nonConformites.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="p-4 text-center text-muted">Aucune non-conformité.</td>
+                    <td colSpan={8} className="p-4 text-center text-muted">Aucune non-conformité.</td>
                   </tr>
                 )}
               </tbody>

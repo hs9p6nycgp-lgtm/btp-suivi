@@ -53,6 +53,22 @@ export function formaterDateNC(valeur: string | null | undefined): string {
   return `${jour}/${mois}/${annee}`;
 }
 
+/**
+ * Chemin de stockage d'une photo de non-conformite
+ * (dossier « non-conformites » du bucket chantier).
+ */
+export function cheminPhotoNonConformite(
+  nonConformiteId: string,
+  nomFichier: string,
+  horodatage: number,
+): string {
+  const nom = nomFichier
+    .replace(/[^\w.\-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^[-.]+|-+$/g, "");
+  return `non-conformites/${nonConformiteId}/${horodatage}-${nom || "photo.jpg"}`;
+}
+
 export type EtatEcheanceNC = {
   clos: boolean;
   enRetard: boolean;

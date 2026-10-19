@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  cheminPhotoNonConformite,
   etatEcheanceNC,
   formaterDateNC,
   libelleGraviteNC,
@@ -79,5 +80,17 @@ describe("fiches de non-conformité (QUA-03, RG-04)", () => {
     );
     assert.equal(resultat.ok, false);
     assert.ok(resultat.erreurs.some((e) => e.includes("clôturer")));
+  });
+
+  it("range la photo d'une non-conformité dans son propre dossier", () => {
+    // Le nom est nettoyé (accents et espaces remplacés) pour un stockage sûr.
+    assert.equal(
+      cheminPhotoNonConformite("nc-1", "Défaut enrobé.jpg", 1729400000000),
+      "non-conformites/nc-1/1729400000000-D-faut-enrob-.jpg",
+    );
+    assert.equal(
+      cheminPhotoNonConformite("nc-1", "photo.JPG", 1),
+      "non-conformites/nc-1/1-photo.JPG",
+    );
   });
 });
