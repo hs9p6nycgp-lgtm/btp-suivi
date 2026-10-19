@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  Bell,
   BookOpen,
   Box,
   Building2,
@@ -16,6 +17,7 @@ import {
   Scale,
   ShieldCheck,
   Truck,
+  User,
   Users,
 } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -70,6 +72,8 @@ const MODULES = [
   { href: "/fournisseurs", icon: <Users className="h-5 w-5" />, nom: "Fournisseurs", desc: "Contacts, NIF, RCCM" },
   { href: "/rapports", icon: <Printer className="h-5 w-5" />, nom: "Rapports", desc: "Documents pour les réunions" },
   { href: "/export", icon: <Download className="h-5 w-5" />, nom: "Export Excel", desc: "Fichiers CSV pour le bureau" },
+  { href: "/alertes", icon: <Bell className="h-5 w-5" />, nom: "Centre d'alertes", desc: "Tout ce qui demande votre attention" },
+  { href: "/compte", icon: <User className="h-5 w-5" />, nom: "Mon compte", desc: "Vos coordonnées et votre profil" },
 ];
 
 export default function AidePage() {
@@ -142,6 +146,16 @@ export default function AidePage() {
               part automatiquement dès le retour de la connexion.
             </li>
             <li>
+              Les <strong className="text-foreground">photos</strong> du journal et des bons de livraison sont
+              conservées sur l&apos;appareil : elles partent elles aussi automatiquement.
+            </li>
+            <li>
+              Les écrans déjà consultés (accueil, alertes, livraisons) restent <strong className="text-foreground">
+                lisibles sans réseau
+              </strong>
+              , avec un bandeau orange qui indique l&apos;heure de la copie.
+            </li>
+            <li>
               La <strong className="text-foreground">pastille orange</strong> en bas à droite indique le nombre
               d&apos;actions encore en attente.
             </li>
@@ -160,7 +174,24 @@ export default function AidePage() {
           <ul className="mt-3 space-y-2 text-sm text-muted">
             <li>
               <strong className="text-foreground">Ctrl+K</strong> (ou ⌘K sur Mac) ouvre la recherche globale :
-              tapez le nom d&apos;un chantier pour y sauter directement.
+              tapez le nom d&apos;un chantier pour y sauter directement ; les flèches haut/bas parcourent les
+              résultats, Entrée ouvre, Échap ferme.
+            </li>
+            <li>
+              La <strong className="text-foreground">cloche</strong> en haut de l&apos;écran regroupe tout ce qui
+              demande votre attention sur tous vos chantiers (alertes, non-conformités, retards, stocks bas) ;
+              l&apos;onglet <strong className="text-foreground">Traités</strong> garde l&apos;historique de ce qui
+              a été traité, et un bouton exporte la liste en CSV.
+            </li>
+            <li>
+              Dans un journal, <strong className="text-foreground">Imprimer le PV</strong> sort un procès-verbal
+              A4 prêt à signer ; <strong className="text-foreground">Copier le texte</strong> met le journal au
+              format message pour l&apos;envoyer par WhatsApp.
+            </li>
+            <li>
+              L&apos;icône <strong className="text-foreground">contraste</strong> (en haut, à côté du thème)
+              active le <strong className="text-foreground">mode terrain</strong> : textes plus grands et
+              contrastes renforcés, pour lire l&apos;écran en plein soleil.
             </li>
             <li>
               Le journal a trois états : <strong className="text-foreground">brouillon</strong> (modifiable),{" "}
@@ -170,6 +201,10 @@ export default function AidePage() {
             <li>Un essai hors tolérance crée automatiquement une fiche de non-conformité.</li>
             <li>Montants en FCFA sans décimale ; dates au format JJ/MM/AAAA.</li>
             <li>Les seuils d&apos;alerte de stock se règlent chantier par chantier.</li>
+            <li>
+              Renseignez vos coordonnées dans <strong className="text-foreground">Mon compte</strong> (en bas du
+              menu) : elles apparaissent dans les équipes de chantier et sur les procès-verbaux.
+            </li>
           </ul>
         </div>
       </div>

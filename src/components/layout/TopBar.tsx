@@ -7,6 +7,7 @@ import { getLangue, t } from "@/lib/i18n";
 import AlertsBadge from "@/components/layout/AlertsBadge";
 import CommandPalette from "@/components/layout/CommandPalette";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { ModeTerrainToggle } from "@/components/layout/ModeTerrainToggle";
 import SignOutButton from "@/components/SignOutButton";
 
 // Titre affiché selon la page courante : du plus précis au plus général.
@@ -87,6 +88,8 @@ export default function TopBar() {
         </button>
 
         <AlertsBadge />
+
+        <ModeTerrainToggle />
 
         <ThemeToggle />
 

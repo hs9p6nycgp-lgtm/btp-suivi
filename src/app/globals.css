@@ -45,6 +45,34 @@
   --border: #26334d;
 }
 
+/*
+ * Mode terrain : lisibilité en plein soleil.
+ * L'application est construite en « rem » : agrandir la taille de police de
+ * la racine agrandit toute l'interface, et les contrastes sont renforcés
+ * (texte secondaire plus foncé, bordures plus nettes, bleu plus franc).
+ */
+.mode-terrain {
+  font-size: 18.5px;
+  --muted: #334155;
+  --border: #cbd5e1;
+  --primary-light: #1d4ed8;
+  --action: #ea580c;
+}
+
+.mode-terrain.dark {
+  --muted: #cbd5e1;
+  --border: #52627d;
+  --primary-light: #60a5fa;
+}
+
+/* Les documents imprimés (procès-verbal, fiche de suivi) gardent leur mise en
+   page : le mode terrain ne concerne que l'écran. */
+@media print {
+  .mode-terrain {
+    font-size: 16px;
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -67,8 +95,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* ---------- Sélection de texte et focus ---------- */
