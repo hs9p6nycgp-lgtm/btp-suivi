@@ -1,18 +1,29 @@
 "use client";
 
-import { Box, Calculator } from "lucide-react";
+import { Box, Calculator, Download, FileText, Save, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { templates } from "@/lib/devis/templates";
 import { modele3dDevis } from "@/lib/devis/model3d";
 import { templatePourTypeDeChantier } from "@/lib/devis/types-projets";
+import {
+  calculerLignes,
+  formaterMontantFcfa,
+  lignesDevisDepuisModele,
+  numeroDevisAuto,
+  totalDevis,
+  validerDevis,
+  type DevisEnregistre,
+} from "@/lib/devis/enregistrement";
 import { groupesTypesDetailles } from "@/lib/chantiers/types";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { getLangue } from "@/lib/i18n";
+import { toast } from "@/components/ui/toast";
+import { getLangue, traduireErreur } from "@/lib/i18n";
 
 // three.js est lourd (≈ 600 Ko) : la vue 3D se charge à part, juste après
 // l'affichage de la page, avec un squelette animé en attendant.
@@ -43,6 +54,41 @@ export default function DevisAssistantPage() {
   );
   const [bpu, setBpu] = useState<Bpu[]>([]);
   const [selections, setSelections] = useState<Record<string, string>>({});
+
+  // Enregistrement du devis (MET-02 / MET-03)
+  const [client, setClient] = useState("");
+  const [numero, setNumero] = useState("DEV-001");
+  const [dateDevis, setDateDevis] = useState(() => new Date().toISOString().slice(0, 10));
+  const [objet, setObjet] = useState("");
+  const [chantierId, setChantierId] = useState("");
+  const [chantiers, setChantiers] = useState<{ id: string; nom: string }[]>([]);
+  const [devisEnregistres, setDevisEnregistres] = useState<DevisEnregistre[]>([]);
+  const [devisDisponible, setDevisDisponible] = useState<boolean | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    async function loadDevis() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const [cRes, dRes] = await Promise.all([
+        supabase.from("chantiers").select("id,nom").eq("proprietaire_id", user.id).order("nom"),
+        supabase.from("devis").select("id,numero,client,objet,date_devis,chantier_id,total").eq("proprietaire_id", user.id).order("date_devis", { ascending: false }),
+      ]);
+      setChantiers((cRes.data ?? []) as { id: string; nom: string }[]);
+      if (dRes.error) {
+        // Table absente : la migration 0022 n'a pas encore été appliquée.
+        setDevisDisponible(false);
+        return;
+      }
+      setDevisDisponible(true);
+      const devis = (dRes.data ?? []) as DevisEnregistre[];
+      setDevisEnregistres(devis);
+      setNumero((actuel) => (actuel === "DEV-001" || !actuel ? numeroDevisAuto(devis.map((d) => d.numero)) : actuel));
+    }
+    loadDevis();
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -92,11 +138,91 @@ export default function DevisAssistantPage() {
     return bpu.find((b) => b.id === selections[code]) ?? null;
   }
 
-  const total = template.lignes.reduce((sum, line) => {
-    const q = line.quantite(inputs);
-    const item = selectedPrice(line.code);
-    return sum + (item ? q * item.prix_unitaire : 0);
-  }, 0);
+  // Prix retenus par poste, puis lignes du devis (montants arrondis au franc).
+  const prixParCode = Object.fromEntries(
+    template.lignes.map((l) => [l.code, selectedPrice(l.code)?.prix_unitaire ?? 0]),
+  );
+  const lignesDevis = calculerLignes(lignesDevisDepuisModele(template, inputs, prixParCode));
+  const total = totalDevis(lignesDevis);
+
+  async function enregistrerDevis(e: React.FormEvent) {
+    e.preventDefault();
+    setMessage(null);
+    const controle = validerDevis({
+      client,
+      numero,
+      date_devis: dateDevis,
+      lignes: lignesDevis,
+    });
+    if (!controle.ok) {
+      setMessage(controle.erreurs.join(" "));
+      return;
+    }
+    setSaving(true);
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setSaving(false);
+      return;
+    }
+    const { data: entete, error } = await supabase
+      .from("devis")
+      .insert({
+        proprietaire_id: user.id,
+        chantier_id: chantierId || null,
+        numero: numero.trim(),
+        client: client.trim(),
+        objet: objet.trim() || template.nom,
+        date_devis: dateDevis,
+        notes: null,
+        total,
+      })
+      .select()
+      .single();
+    if (error || !entete) {
+      setSaving(false);
+      setMessage(traduireErreur(error ?? {}));
+      return;
+    }
+    const { error: errLignes } = await supabase.from("devis_lignes").insert(
+      lignesDevis.map((ligne, i) => ({
+        devis_id: entete.id,
+        ordre: i + 1,
+        designation: ligne.designation,
+        unite: ligne.unite,
+        quantite: ligne.quantite,
+        prix_unitaire: ligne.prix_unitaire,
+        total: ligne.total,
+      })),
+    );
+    setSaving(false);
+    if (errLignes) {
+      setMessage(traduireErreur(errLignes));
+      return;
+    }
+    toast(`Devis ${numero.trim()} enregistré.`);
+    setMessage(
+      `Devis ${numero.trim()} enregistré (${formaterMontantFcfa(total)}) — ouvrez-le pour l'imprimer ou l'exporter.`,
+    );
+    setNumero(numeroDevisAuto([...devisEnregistres.map((d) => d.numero), numero.trim()]));
+    const { data: liste } = await supabase
+      .from("devis")
+      .select("id,numero,client,objet,date_devis,chantier_id,total")
+      .eq("proprietaire_id", user.id)
+      .order("date_devis", { ascending: false });
+    setDevisEnregistres((liste ?? []) as DevisEnregistre[]);
+  }
+
+  async function supprimerDevis(devis: DevisEnregistre) {
+    const supabase = createClient();
+    const { error } = await supabase.from("devis").delete().eq("id", devis.id);
+    if (error) {
+      setMessage(traduireErreur(error));
+      return;
+    }
+    toast("Devis supprimé.");
+    setDevisEnregistres((prev) => prev.filter((d) => d.id !== devis.id));
+  }
 
   // Vue 3D : recalculée à partir des saisies avec un léger différé,
   // pour ne pas reconstruire le rendu à chaque frappe.
@@ -270,6 +396,143 @@ export default function DevisAssistantPage() {
                 <span className="ml-1.5 text-sm font-semibold text-white/70">FCFA</span>
               </p>
             </div>
+          </Card>
+        </section>
+
+        <section className="anim-fade-up anim-delay-4 mb-6">
+          <Card padding="lg">
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
+                  <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+                  Enregistrer le devis
+                </h2>
+                <p className="mt-1 text-sm text-muted">
+                  Nommez le devis et rattachez-le à un chantier : il sera conservé, imprimable et
+                  exportable en Excel.
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-surface-2 px-3 py-1.5 text-xs font-semibold text-muted">
+                <FileText className="h-3.5 w-3.5" />
+                {lignesDevis.length} lignes · {formaterMontantFcfa(total)}
+              </span>
+            </div>
+
+            {devisDisponible === false && (
+              <p className="mb-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-foreground">
+                L&apos;enregistrement des devis nécessite la migration{" "}
+                <code className="font-mono">0022_devis_enregistres.sql</code> à exécuter dans Supabase.
+                Le calcul du devis et son total restent disponibles.
+              </p>
+            )}
+
+            <form onSubmit={enregistrerDevis} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <label className="block text-sm font-medium text-foreground">
+                Client *
+                <input
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  placeholder="ex. : SODECI"
+                  value={client}
+                  onChange={(e) => setClient(e.target.value)}
+                  required
+                />
+              </label>
+              <label className="block text-sm font-medium text-foreground">
+                Numéro du devis *
+                <input
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  placeholder="ex. : DEV-001"
+                  value={numero}
+                  onChange={(e) => setNumero(e.target.value)}
+                  required
+                />
+              </label>
+              <label className="block text-sm font-medium text-foreground">
+                Date du devis *
+                <input
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  type="date"
+                  value={dateDevis}
+                  onChange={(e) => setDateDevis(e.target.value)}
+                  required
+                />
+              </label>
+              <label className="block text-sm font-medium text-foreground">
+                Chantier rattaché (facultatif)
+                <select
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  value={chantierId}
+                  onChange={(e) => setChantierId(e.target.value)}
+                >
+                  <option value="">Aucun chantier rattaché</option>
+                  {chantiers.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nom}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-sm font-medium text-foreground md:col-span-2">
+                Objet du devis
+                <input
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  placeholder={template.nom}
+                  value={objet}
+                  onChange={(e) => setObjet(e.target.value)}
+                />
+              </label>
+              <div className="md:col-span-2">
+                <Button type="submit" disabled={saving || devisDisponible === false}>
+                  <Save className="h-4 w-4" />
+                  {saving ? "Enregistrement..." : "Enregistrer le devis"}
+                </Button>
+              </div>
+            </form>
+
+            {message && (
+              <p className="mt-3 rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
+                {message}
+              </p>
+            )}
+
+            {devisEnregistres.length > 0 && (
+              <div className="mt-6">
+                <h3 className="mb-2 text-sm font-semibold text-foreground">Devis enregistrés</h3>
+                <ul className="divide-y divide-border/60">
+                  {devisEnregistres.map((d) => (
+                    <li key={d.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-foreground">
+                          {d.numero} — {d.client}
+                        </p>
+                        <p className="truncate text-xs text-muted">
+                          {d.objet ?? "Offre de prix"} ·{" "}
+                          {new Date(`${d.date_devis}T00:00:00`).toLocaleDateString("fr-FR")} ·{" "}
+                          {formaterMontantFcfa(Number(d.total))}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/calculateurs/devis/${d.id}`}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/10"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          Ouvrir / Imprimer
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => supprimerDevis(d)}
+                          className="rounded-lg p-2 text-muted transition hover:bg-danger/10 hover:text-danger"
+                          aria-label={`Supprimer le devis ${d.numero}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </Card>
         </section>
 
