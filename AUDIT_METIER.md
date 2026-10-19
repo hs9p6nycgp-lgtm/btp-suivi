@@ -221,6 +221,28 @@ Sur le formulaire de création d'une route : longueur du tracé **1 200 m**, lon
 
 ---
 
+# Partie 4 — Vérification des corrections livrées pendant la nuit
+
+Deux corrections issues du dispatch de la partie 1 ont été livrées par les sessions **pendant** ce test (commits `113e7f9` et `94cb213`). Je les ai reprises dans l'application réelle, comme un ingénieur réceptionne un lot.
+
+## 19. Qualité — plans de contrôle et non-conformité automatique (RG-04) : ✅ **CORRIGÉ ET VÉRIFIÉ**
+
+- **Création du plan de contrôle** : le bouton « Appliquer le modèle (**8**) » crée les 8 paramètres d'une route, aux valeurs de l'art : largeur de la chaussée 7 m ± 0,15 (6,85–7,15) ; dévers en alignement 2,5 % ± 0,5 (2–3) ; compacité de la couche de fondation (Proctor) ≥ 95 % OPM ; épaisseur de la couche de roulement 5 cm ± 1 (4–6) ; épaisseur de la couche de fondation 25 cm ± 2 (23–27) ; planéité (écart maximal) ≤ 5 mm ; écart d'implantation 0 m ± 0,05 ; écart altimétrique (nivellement).
+- Le menu « Sélectionner un paramètre » est désormais **alimenté** (il était vide avant).
+- **Essai hors tolérance** : mesure 999 m sur la largeur de chaussée (exigée 7 m ± 0,15) → l'écran affiche **« Essai NON CONFORME — Fiche NC créée »**, le taux de conformité passe à 0 %, les non-conformités actives à 1, et la fiche est créée : « Contrôle non conforme : Largeur de la chaussée = 999 m (exige : 7 m +0.15/−0.15) », **gravité critique, statut ouverte**, avec sa date d'échéance.
+
+→ **L'exigence RG-04 est désormais respectée et démontrée.** Le blocage métier n°1 est levé.
+
+## 20. Planning — liens entre tâches et vrai chemin critique (PLA-02) : ✅ **CORRIGÉ ET VÉRIFIÉ**
+
+- Nouvelle section « **Enchaînement des tâches** » (« Reliez les tâches dans l'ordre réel des travaux (fin → début) »), et nouvelle colonne « **Prédécesseurs** » dans le tableau PERT.
+- Liens créés et vérifiés : **Décapage (10 j) → Remblai (12 j) → Couche de base (15 j) → Revêtement (20 j)**.
+- Résultats du PERT après lien : ES/EF = 0→10, 10→22, 22→37, 37→**57** ; **marge 0 et « OUI » (critique) sur les 4 tâches de la chaîne** ; Installation de chantier : marge 52 j ; Assainissement : marge 39 j ; LS/LF recalculés sur une fin de projet à J57.
+
+→ La durée du chantier passe de **20 j** (la plus longue tâche seule, faux chemin critique) à **57 j** (chaîne réelle), et le bandeau de la page affiche « Durée projet 57 j · chemin critique 4 ». **L'exigence PLA-02 est respectée.** Contrôles vérifiés : un **lien à l'envers est refusé** avec le message « Ce lien créerait un cycle : les deux tâches ne peuvent pas dépendre l'une de l'autre », un **lien sur soi-même est refusé** lui aussi, et les liens enregistrés sont bien de type « fin → début ».
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
