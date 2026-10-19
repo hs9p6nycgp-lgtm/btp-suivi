@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getLangue } from "@/lib/i18n";
-import { Download, Mail, Printer } from "lucide-react";
+import { Download, FileText, Mail, Printer } from "lucide-react";
 import * as XLSX from "xlsx";
 import {
   corpsRapport,
@@ -20,6 +20,7 @@ import {
   type DonneesRapportEmail,
 } from "@/lib/entreprise/parametres";
 import { useEntreprise } from "@/lib/entreprise/useEntreprise";
+import { genererPdfRapport } from "@/lib/rapport/pdf";
 import {
   agregatJournaux,
   agregatNonConformites,
@@ -184,9 +185,9 @@ export default function RapportsPage() {
 
   /**
    * REP-04 : preparation de l'envoi du rapport par e-mail. Le rapport est
-   * produit en un fichier HTML autonome (logo integre) ; sur telephone, le
-   * partage natif ouvre la messagerie avec le fichier joint ; sur ordinateur,
-   * le fichier est telecharge et un message est prepare.
+   * produit en PDF (logo integre) ; sur telephone, le partage natif ouvre la
+   * messagerie avec le fichier joint ; sur ordinateur, le fichier est
+   * telecharge et un message est prepare.
    */
   async function envoyerParEmail() {
     if (!reportData) return;
@@ -196,28 +197,24 @@ export default function RapportsPage() {
       setMessageErreur(erreur);
       return;
     }
-    const donnees: DonneesRapportEmail = {
-      chantier: reportData.chantier,
-      debut: reportData.debut,
-      fin: reportData.fin,
-      avancement: Number(reportData.avancement) || 0,
-      montantMarche: Number(reportData.totalCoutPrevu) || 0,
-      valorisation: Number(reportData.totalCoutReal) || 0,
-      depenses: Number(reportData.totalDepenses) || 0,
-      marge: Number(reportData.marge) || 0,
-      nbJournaux: Number(reportData.nbJournaux) || 0,
-      nonConformitesOuvertes: Number(reportData.nonConformites?.ouvertes) || 0,
-      tauxConformite: Number(reportData.tauxConformite) || 0,
-      delai: reportData.delai?.libelle ?? "—",
-    };
+    const donnees = donneesRapport();
     const objet = objetRapport(donnees);
     const corps = corpsRapport(donnees);
-    const html = htmlRapport(donnees, entreprise, logo.dataUrl, reportData.valorisation ?? []);
-    const nomFichier = nomFichierRapport(donnees);
 
     setEnvoiEnCours(true);
     try {
-      const fichier = new File([html], nomFichier, { type: "text/html" });
+      // PDF en premier ; si la generation echoue (police absente, appareil
+      // ancien), on part sur la version HTML, qui reste lisible partout.
+      let fichier: File;
+      let nomFichier = nomFichierRapport(donnees).replace(/\.html$/, ".pdf");
+      try {
+        const pdf = await genererPdfRapport(donnees, entreprise, logo.dataUrl, lignesValorisationPdf());
+        fichier = new File([pdf], nomFichier, { type: "application/pdf" });
+      } catch {
+        const html = htmlRapport(donnees, entreprise, logo.dataUrl, reportData.valorisation ?? []);
+        nomFichier = nomFichierRapport(donnees);
+        fichier = new File([html], nomFichier, { type: "text/html" });
+      }
       const partage = navigator as Navigator & {
         canShare?: (data: { files?: File[] }) => boolean;
         share?: (data: { files?: File[]; title?: string; text?: string }) => Promise<void>;
@@ -226,13 +223,11 @@ export default function RapportsPage() {
         await partage.share({ files: [fichier], title: objet, text: corps });
         setMessageOk(
           langue === "fr"
-            ? "Rapport prêt : choisissez la messagerie dans la fenêtre de partage."
-            : "Report ready: choose the mail app in the share sheet.",
+            ? "Rapport PDF prêt : choisissez la messagerie dans la fenêtre de partage."
+            : "PDF report ready: choose the mail app in the share sheet.",
         );
       } else {
-        // Ordinateur : on telecharge le rapport et on ouvre le message.
-        const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(fichier);
         const lien = document.createElement("a");
         lien.href = url;
         lien.download = nomFichier;
@@ -243,15 +238,84 @@ export default function RapportsPage() {
         window.location.href = lienMailto(liste, objet, corps);
         setMessageOk(
           langue === "fr"
-            ? "Rapport téléchargé et message préparé dans votre messagerie."
-            : "Report downloaded and the message was prepared in your mail app.",
+            ? "Rapport PDF téléchargé et message préparé dans votre messagerie."
+            : "PDF report downloaded and the message was prepared in your mail app.",
         );
       }
-    } catch (err) {
+    } catch {
       setMessageErreur(
         langue === "fr"
           ? "Envoi impossible depuis l'application : le rapport a été préparé, envoyez-le manuellement."
           : "Sending from the app is not possible: the report was prepared, send it manually.",
+      );
+    } finally {
+      setEnvoiEnCours(false);
+    }
+  }
+
+  /** Donnees du rapport, au format attendu par le message et le PDF. */
+  function donneesRapport(): DonneesRapportEmail {
+    return {
+      chantier: reportData.chantier,
+      debut: reportData.debut,
+      fin: reportData.fin,
+      avancement: Number(reportData.avancement) || 0,
+      montantMarche: Number(reportData.totalCoutPrevu) || 0,
+      valorisation: Number(reportData.totalCoutReel) || 0,
+      depenses: Number(reportData.totalDepenses) || 0,
+      marge: Number(reportData.marge) || 0,
+      nbJournaux: Number(reportData.nbJournaux) || 0,
+      nonConformitesOuvertes: Number(reportData.nonConformites?.ouvertes) || 0,
+      tauxConformite: Number(reportData.tauxConformite) || 0,
+      delai: reportData.delai?.libelle ?? "—",
+    };
+  }
+
+  /** Lignes de valorisation au format du PDF. */
+  function lignesValorisationPdf() {
+    return ((reportData.valorisation ?? []) as Array<{
+      code: string | null;
+      designation: string;
+      unite: string;
+      quantiteMarche: number;
+      quantiteRealisee: number;
+      prixUnitaire: number;
+      montantRealise: number;
+    }>).map((l) => ({
+      code: l.code,
+      designation: l.designation,
+      unite: l.unite,
+      quantiteMarche: Number(l.quantiteMarche) || 0,
+      quantiteRealisee: Number(l.quantiteRealisee) || 0,
+      prixUnitaire: Number(l.prixUnitaire) || 0,
+      montantRealise: Number(l.montantRealise) || 0,
+    }));
+  }
+
+  /** Telechargement direct du rapport en PDF. */
+  async function telechargerPdf() {
+    if (!reportData) return;
+    setEnvoiEnCours(true);
+    try {
+      const donnees = donneesRapport();
+      const pdf = await genererPdfRapport(donnees, entreprise, logo.dataUrl, lignesValorisationPdf());
+      const nomFichier = nomFichierRapport(donnees).replace(/\.html$/, ".pdf");
+      const url = URL.createObjectURL(pdf);
+      const lien = document.createElement("a");
+      lien.href = url;
+      lien.download = nomFichier;
+      document.body.appendChild(lien);
+      lien.click();
+      lien.remove();
+      URL.revokeObjectURL(url);
+      setMessageOk(
+        langue === "fr" ? "Rapport PDF téléchargé." : "PDF report downloaded.",
+      );
+    } catch {
+      setMessageErreur(
+        langue === "fr"
+          ? "La création du PDF a échoué : utilisez « Imprimer / PDF »."
+          : "PDF generation failed: use “Print / PDF”.",
       );
     } finally {
       setEnvoiEnCours(false);
@@ -323,6 +387,10 @@ export default function RapportsPage() {
               <Button variant="outline" onClick={exporterExcel}>
                 <Download className="h-4 w-4" />
                 Exporter en Excel
+              </Button>
+              <Button variant="outline" onClick={telechargerPdf} disabled={envoiEnCours}>
+                <FileText className="h-4 w-4" />
+                {langue === "fr" ? "Télécharger en PDF" : "Download PDF"}
               </Button>
               <Button variant="outline" onClick={envoyerParEmail} disabled={envoiEnCours}>
                 <Mail className="h-4 w-4" />
