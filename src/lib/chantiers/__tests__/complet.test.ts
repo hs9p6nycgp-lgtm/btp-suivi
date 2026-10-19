@@ -11,6 +11,7 @@ import {
   formaterMetres,
   formaterPK,
   genererSectionsRoute,
+  genererSectionsRouteManquantes,
   joursRestants,
   libelleTypeDocument,
   longueurSection,
@@ -64,6 +65,53 @@ describe("chantiers : suivi complet (CHA-01, CHA-02, CHA-03)", () => {
       assert.deepEqual(genererSectionsRoute(2500, 0), []);
       assert.deepEqual(genererSectionsRoute(null, 500), []);
       assert.deepEqual(genererSectionsRoute(100000, 10), []);
+    });
+
+    it("complete un decoupage routier sans toucher aux sections existantes", () => {
+      const sections = genererSectionsRouteManquantes(2500, 500, []);
+      assert.equal(sections.length, 5);
+      assert.deepEqual(sections[0], {
+        nom: "PK 0+000 → PK 0+500",
+        pkDebut: "0+000",
+        pkFin: "0+500",
+      });
+
+      const complement = genererSectionsRouteManquantes(2500, 500, [
+        { pk_debut: 0, pk_fin: 1000 },
+      ]);
+      assert.equal(complement.length, 3);
+      assert.deepEqual(complement[0], {
+        nom: "PK 1+000 → PK 1+500",
+        pkDebut: "1+000",
+        pkFin: "1+500",
+      });
+    });
+
+    it("fusionne les sections adjacentes et gere les trous", () => {
+      const sections = genererSectionsRouteManquantes(1000, 500, [
+        { pk_debut: 250, pk_fin: 750 },
+      ]);
+      assert.deepEqual(
+        sections.map((s) => [s.pkDebut, s.pkFin]),
+        [
+          ["0+000", "0+250"],
+          ["0+750", "1+000"],
+        ],
+      );
+
+      assert.deepEqual(
+        genererSectionsRouteManquantes(1000, 500, [
+          { pk_debut: 0, pk_fin: 500 },
+          { pk_debut: 500, pk_fin: 1000 },
+        ]),
+        [],
+      );
+    });
+
+    it("refuse un complement impossible ou trop nombreux", () => {
+      assert.deepEqual(genererSectionsRouteManquantes(0, 500, []), []);
+      assert.deepEqual(genererSectionsRouteManquantes(2500, 0, []), []);
+      assert.deepEqual(genererSectionsRouteManquantes(100000, 10, []), []);
     });
 
     it("affiche les distances en metres ou kilometres", () => {

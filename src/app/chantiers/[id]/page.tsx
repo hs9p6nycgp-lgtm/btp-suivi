@@ -308,6 +308,7 @@ export default function ChantierDetailPage() {
             onReload={chargerSections}
             avancementDisponible={avancementSectionOk}
             niveauxSuggeres={niveaux}
+            longueurRoute={chantier.longueur}
           />
         </div>
 

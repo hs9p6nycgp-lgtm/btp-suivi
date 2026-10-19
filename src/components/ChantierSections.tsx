@@ -14,6 +14,7 @@ import {
   detailSection,
   formaterMetres,
   formaterPK,
+  genererSectionsRouteManquantes,
   longueurSection,
 } from "@/lib/chantiers/complet";
 
@@ -56,6 +57,7 @@ export default function ChantierSections({
   onReload,
   avancementDisponible = true,
   niveauxSuggeres = [],
+  longueurRoute = null,
 }: {
   chantierId: string;
   typeChantier: string;
@@ -63,6 +65,7 @@ export default function ChantierSections({
   onReload: () => void;
   avancementDisponible?: boolean;
   niveauxSuggeres?: string[];
+  longueurRoute?: number | null;
 }) {
   const route = typeChantier === "route";
 
@@ -79,6 +82,7 @@ export default function ChantierSections({
   const [message, setMessage] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<DemandeConfirmation | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
+  const [pasSectionsRoute, setPasSectionsRoute] = useState("500");
   // Correction d'une section existante (sans perdre son avancement)
   const [editionId, setEditionId] = useState<string | null>(null);
   const [editNom, setEditNom] = useState("");
@@ -107,6 +111,19 @@ export default function ChantierSections({
   const niveauxManquants = route
     ? []
     : niveauxSuggeres.filter((niveau) => !niveauxExistants.has(niveau.trim().toLowerCase()));
+  const pkComplets = sections.every((s) => longueurSection(s.pk_debut, s.pk_fin) !== null);
+  const totalRoute = Number(longueurRoute);
+  const pasRoute = Number(pasSectionsRoute);
+  const pasRouteValide = Number.isFinite(pasRoute) && pasRoute > 0;
+  const decoupageRouteDisponible =
+    route && Number.isFinite(totalRoute) && totalRoute > 0 && pkComplets;
+  const sectionsRouteManquantes =
+    decoupageRouteDisponible && pasRouteValide
+      ? genererSectionsRouteManquantes(totalRoute, pasRoute, sections)
+      : [];
+  const afficherDecoupageRoute =
+    decoupageRouteDisponible &&
+    (sections.length === 0 || sectionsRouteManquantes.length > 0 || !pasRouteValide);
 
   async function ajouter() {
     setMessage(null);
@@ -161,6 +178,42 @@ export default function ChantierSections({
     setLongueur3D("");
     setLargeur3D("");
     setHauteur3D("");
+    onReload();
+  }
+
+  async function genererSectionsManquantes() {
+    if (sectionsRouteManquantes.length === 0) return;
+    setMessage(null);
+    setSaving("route-sections");
+    const supabase = createClient();
+    const { error } = await supabase.from("sections_chantier").insert(
+      sectionsRouteManquantes.map((section) => {
+        const debut = analyserPK(section.pkDebut);
+        const fin = analyserPK(section.pkFin);
+        return {
+          chantier_id: chantierId,
+          nom: section.nom,
+          pk_debut: debut,
+          pk_fin: fin,
+          niveau: null,
+          lot: null,
+          type_ouvrage: null,
+          longueur: longueurSection(debut, fin),
+          largeur: null,
+          hauteur: null,
+        };
+      }),
+    );
+    setSaving(null);
+    if (error) {
+      setMessage(traduireErreur(error));
+      return;
+    }
+    toast(
+      `${sectionsRouteManquantes.length} section${sectionsRouteManquantes.length > 1 ? "s" : ""} ajoutée${
+        sectionsRouteManquantes.length > 1 ? "s" : ""
+      }.`,
+    );
     onReload();
   }
 
@@ -345,6 +398,61 @@ export default function ChantierSections({
               ? "Ajout…"
               : `Générer les niveaux (${niveauxManquants.length})`}
           </Button>
+        </div>
+      )}
+
+      {afficherDecoupageRoute && (
+        <div className="mb-3 flex flex-wrap items-end justify-between gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              {!pasRouteValide
+                ? "Découpage automatique du tracé"
+                : sectionsRouteManquantes.length === 0
+                  ? "Découpage impossible"
+                  : sections.length === 0
+                    ? `Découper le tracé en ${sectionsRouteManquantes.length} section${
+                        sectionsRouteManquantes.length > 1 ? "s" : ""
+                      }`
+                    : `${sectionsRouteManquantes.length} section${
+                        sectionsRouteManquantes.length > 1 ? "s" : ""
+                      } manquante${sectionsRouteManquantes.length > 1 ? "s" : ""}`}
+            </p>
+            <p className="mt-0.5 text-xs text-muted">
+              {!pasRouteValide
+                ? "Indiquez une longueur de tronçon valide (en mètres)."
+                : sectionsRouteManquantes.length === 0
+                  ? "Augmentez la longueur des tronçons (200 sections maximum)."
+                  : `Tronçons de ${formaterMetres(pasRoute) ?? "—"} — les sections existantes sont conservées.`}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-end gap-2">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-foreground">
+                Longueur des tronçons (m)
+              </label>
+              <input
+                className={`${CLASSE_CHAMP} w-28`}
+                type="number"
+                min="10"
+                step="10"
+                value={pasSectionsRoute}
+                onChange={(e) => setPasSectionsRoute(e.target.value)}
+              />
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={genererSectionsManquantes}
+              disabled={!pasRouteValide || sectionsRouteManquantes.length === 0 || saving === "route-sections"}
+            >
+              <Layers className="h-4 w-4" />
+              {saving === "route-sections"
+                ? "Ajout…"
+                : sections.length === 0
+                  ? "Générer les sections"
+                  : "Compléter le découpage"}
+            </Button>
+          </div>
         </div>
       )}
 

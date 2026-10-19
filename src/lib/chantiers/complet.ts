@@ -80,6 +80,74 @@ export function genererSectionsRoute(
   return sections;
 }
 
+/**
+ * Complete un decoupage routier : renvoie uniquement les troncons manquants
+ * entre 0 et la longueur totale, avec le pas demande (CHA-02).
+ * Les sections existantes avec des PK valides sont considerees comme deja
+ * couvertes ; les chevauchements sont fusionnes.
+ * Renvoie [] si tout est couvert, si les valeurs sont invalides ou si le
+ * decoupage depasserait 200 sections.
+ */
+export function genererSectionsRouteManquantes(
+  longueur: number | null | undefined,
+  pas: number | null | undefined,
+  sections: Array<{ pk_debut?: number | null; pk_fin?: number | null }> = [],
+  maximum = 200,
+): SectionGeneree[] {
+  const total = Number(longueur);
+  const intervalle = Number(pas);
+  if (!Number.isFinite(total) || total <= 0) return [];
+  if (!Number.isFinite(intervalle) || intervalle <= 0) return [];
+
+  const couvertures = sections
+    .map((s) => {
+      const debut = Number(s.pk_debut);
+      const fin = Number(s.pk_fin);
+      if (!Number.isFinite(debut) || !Number.isFinite(fin) || fin <= debut) return null;
+      const d = Math.max(0, debut);
+      const f = Math.min(total, fin);
+      return f > d ? { debut: d, fin: f } : null;
+    })
+    .filter((c): c is { debut: number; fin: number } => c !== null)
+    .sort((a, b) => a.debut - b.debut);
+
+  const fusionnees: Array<{ debut: number; fin: number }> = [];
+  for (const c of couvertures) {
+    const derniere = fusionnees[fusionnees.length - 1];
+    if (derniere && c.debut <= derniere.fin) {
+      derniere.fin = Math.max(derniere.fin, c.fin);
+    } else {
+      fusionnees.push({ ...c });
+    }
+  }
+
+  const trous: Array<{ debut: number; fin: number }> = [];
+  let curseur = 0;
+  for (const c of fusionnees) {
+    if (c.debut > curseur) trous.push({ debut: curseur, fin: c.debut });
+    curseur = Math.max(curseur, c.fin);
+    if (curseur >= total) break;
+  }
+  if (curseur < total) trous.push({ debut: curseur, fin: total });
+
+  const generees: SectionGeneree[] = [];
+  for (const trou of trous) {
+    let debut = trou.debut;
+    while (debut < trou.fin) {
+      const fin = Math.min(trou.fin, debut + intervalle);
+      if (fin <= debut) break;
+      generees.push({
+        nom: `${formaterPK(debut)} → ${formaterPK(fin)}`,
+        pkDebut: (formaterPK(debut) ?? "").replace("PK ", ""),
+        pkFin: (formaterPK(fin) ?? "").replace("PK ", ""),
+      });
+      if (generees.length > maximum) return [];
+      debut = fin;
+    }
+  }
+  return generees;
+}
+
 /** Affichage court d'une distance : "2,5 km" ou "450 m". */
 export function formaterMetres(metres: number | null | undefined): string | null {
   if (metres === null || metres === undefined) return null;
