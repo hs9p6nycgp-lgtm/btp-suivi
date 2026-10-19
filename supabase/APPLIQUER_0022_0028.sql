@@ -1,34 +1,100 @@
 -- ==============================================================
--- BTP Suivi Pro - Migrations en attente (0024 a 0028)
+-- BTP Suivi Pro - Migrations 0022 a 0028 (un seul fichier)
 --
--- Un seul fichier a coller dans le SQL Editor de Supabase
+-- A coller dans le SQL Editor de Supabase
 -- (SQL Editor > New query > Run).
 --
--- Contenu (idempotent : peut etre relance sans risque) :
---   0024  unite des offres fournisseurs + acces aux offres sans chantier
+-- Contenu :
+--   0022  devis enregistres et exportables (MET-02, MET-03)
+--   0023  planning : equipe et engins affectes aux taches
+--   0024  conditions tarifaires : unite de l'offre + acces sans chantier
 --   0025  declarations HSE (accidents, incidents, presqu'accidents)
---   0026  documents administratifs des fournisseurs
+--   0026  documents administratifs des fournisseurs (FOU-07)
+--   0026  planning : poste DQE suivi par une tache (PLA-03)
 --   0027  parametres de l'entreprise (logo, coordonnees, destinataires)
 --   0028  check-list HSE quotidienne (EPI, echauffement, signalisation,
 --         extincteur)
 --
--- Verification finale (a lancer apres) :
+-- Tout est idempotent : le fichier peut etre relance sans risque
+-- (c'est ce que l'on fait pour etre sur que rien n'a ete oublie).
+--
+-- Verification finale (a lancer apres le Run) :
 --   select count(*) as "tables manquantes" from (
---     select 'hse_incidents' where not exists (
---       select 1 from information_schema.tables where table_name = 'hse_incidents')
---     union all select 'hse_checklists' where not exists (
---       select 1 from information_schema.tables where table_name = 'hse_checklists')
---     union all select 'documents_fournisseur' where not exists (
---       select 1 from information_schema.tables where table_name = 'documents_fournisseur')
---     union all select 'parametres_entreprise' where not exists (
---       select 1 from information_schema.tables where table_name = 'parametres_entreprise')
+--     select 'devis' where not exists (select 1 from information_schema.tables where table_name = 'devis')
+--     union all select 'devis_lignes' where not exists (select 1 from information_schema.tables where table_name = 'devis_lignes')
+--     union all select 'hse_incidents' where not exists (select 1 from information_schema.tables where table_name = 'hse_incidents')
+--     union all select 'hse_checklists' where not exists (select 1 from information_schema.tables where table_name = 'hse_checklists')
+--     union all select 'documents_fournisseur' where not exists (select 1 from information_schema.tables where table_name = 'documents_fournisseur')
+--     union all select 'parametres_entreprise' where not exists (select 1 from information_schema.tables where table_name = 'parametres_entreprise')
 --   ) manquantes;
 --   -> la colonne « manquantes » doit valoir 0
 --
--- Puis, dans le projet :
---   node scripts/audit-base.mjs
+-- Puis, dans le projet : node scripts/audit-base.mjs
 --   -> « Base a jour : toutes les migrations sont appliquees »
 -- ==============================================================
+
+
+-- ==============================================================
+-- 0022 - Devis enregistres et exportables (MET-02, MET-03)
+-- ==============================================================
+
+create table if not exists devis (
+  id uuid primary key default gen_random_uuid(),
+  proprietaire_id uuid not null references profils(id) on delete cascade default auth.uid(),
+  chantier_id uuid references chantiers(id) on delete set null,
+  numero text not null,
+  client text not null,
+  objet text,
+  date_devis date not null default current_date,
+  notes text,
+  total bigint not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists devis_lignes (
+  id uuid primary key default gen_random_uuid(),
+  devis_id uuid not null references devis(id) on delete cascade,
+  ordre integer not null default 0,
+  designation text not null,
+  unite text not null default '',
+  quantite numeric(12,2) not null default 0,
+  prix_unitaire numeric(12,2) not null default 0,
+  total numeric(14,2) not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists devis_proprietaire_idx on devis (proprietaire_id, date_devis desc);
+create index if not exists devis_lignes_devis_idx on devis_lignes (devis_id, ordre);
+
+alter table devis enable row level security;
+alter table devis_lignes enable row level security;
+
+drop policy if exists "devis - acces" on devis;
+create policy "devis - acces"
+  on devis for all to authenticated
+  using (proprietaire_id = auth.uid())
+  with check (proprietaire_id = auth.uid());
+
+drop policy if exists "devis_lignes - acces" on devis_lignes;
+create policy "devis_lignes - acces"
+  on devis_lignes for all to authenticated
+  using (exists (select 1 from devis d where d.id = devis_id and d.proprietaire_id = auth.uid()))
+  with check (exists (select 1 from devis d where d.id = devis_id and d.proprietaire_id = auth.uid()));
+
+
+-- ==============================================================
+-- 0023 - Planning : equipe et engins affectes aux taches
+-- ==============================================================
+
+alter table taches_planning
+  add column if not exists equipe text,
+  add column if not exists engins text;
+
+comment on column taches_planning.equipe is
+  'Equipe affectee a la tache (ex. : Terrassiers)';
+comment on column taches_planning.engins is
+  'Engins et materiels utilises sur la tache (ex. : 1 pelleteuse, 2 camions)';
 
 
 -- ==============================================================
@@ -135,6 +201,17 @@ create policy "documents_fournisseur - acces"
     where f.id = documents_fournisseur.fournisseur_id
       and f.proprietaire_id = auth.uid()
   ));
+
+
+-- ==============================================================
+-- 0026 - Planning : poste DQE suivi par une tache (PLA-03)
+-- ==============================================================
+
+alter table taches_planning
+  add column if not exists poste_dqe_id uuid references postes_dqe(id) on delete set null;
+
+comment on column taches_planning.poste_dqe_id is
+  'Poste du DQE suivi par la tache : avancement calcule sur les quantites saisies (PLA-03)';
 
 
 -- ==============================================================
