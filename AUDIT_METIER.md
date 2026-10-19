@@ -280,6 +280,28 @@ Rapport généré sur la période 01/10/2026 → 31/12/2026 sur le chantier de t
 
 ---
 
+# Partie 7 — Centre d'alertes et état de la suite de tests
+
+## 23. Centre d'alertes (/alertes) — ✅ nouveau module opérationnel
+
+Écran livré pendant la nuit (commit `dc49fd8`) : « Centre d'alertes — Tout ce qui demande votre attention, sur tous vos chantiers ».
+
+- **Indicateurs** : critiques 1 · à traiter 1 · informations 0.
+- **Filtres** : Toutes (2) · Alertes (1) · Non-conformités (1) · Retards (0) — les non-conformités et les écarts de quantité sont bien distingués.
+- **Alertes affichées** : (1) *Non-conformité qualité — « Contrôle non conforme : Largeur de la chaussée = 999 m (exige : 7 m +0,15/−0,15) »* du 19/10/2026 (celle créée par l'essai du test) ; (2) *Écart de quantité — « Écart : −76,2 % · seuil : 10 % »* — le calcul est exact (2 000 m² décapés sur un poste de 8 400 m²).
+
+## 24. Suite de tests automatique
+
+| Moment | Tests | Résultat |
+|---|---|---|
+| Début de l'audit (19/10) | 288 | 288 verts |
+| Après les premières corrections | 321 | 321 verts |
+| Après les corrections de la nuit | **355** | **355 verts, 0 échec** |
+
+Les sessions ont ajouté 67 tests en encryptant les corrections (qualité, planning, devis, rapport, référentiel…). **Aucun test rouge** : le filet de sécurité tient.
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
