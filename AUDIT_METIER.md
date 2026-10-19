@@ -421,6 +421,27 @@ Le calcul est exact (2 000 / 8 400 = 23,8 %). C'était le point manquant en part
 
 ---
 
+# Partie 16 — Livraisons et non-conformités : deux corrections vérifiées
+
+## 33. Livraisons : matériau dans une liste, stocks regroupés (T-LOG-44) — ✅ **CORRIGÉ ET VÉRIFIÉ**
+
+- Le champ « Matériau » n'est plus une saisie libre : la page propose **293 matériaux** (base de prix + postes du chantier) et le stock est regroupé par **clé canonique** du matériau — « Laterite », « Latérite » et « LAT-01 » désignent désormais **le même stock** (le seuil d'alerte s'y applique de la même façon).
+- La livraison déjà enregistrée (Laterite 120 / 60, stock 60) reste correctement présentée.
+
+→ Le risque signalé en partie 2 §11 (fautes de frappe créant des stocks parallèles) est levé.
+
+## 34. Non-conformités : traitement et clôture (QUA-03) — ✅ **CORRIGÉ ET VÉRIFIÉ**
+
+Cycle complet testé sur la fiche de non-conformité créée pendant ce test :
+
+1. **Traitement** : responsable (« Ingénieur travaux »), action corrective (« Reprise de la couche de base sur 120 m »), **échéance** (26/10/2026) avec le décompte « **Dans 7 jour(s)** » et la photo du défaut — les colonnes du tableau NC sont désormais DESCRIPTION · GRAVITÉ · STATUT · RESPONSABLE · ACTION CORRECTIVE · PHOTOS · ÉCHÉANCE · ACTION.
+2. **Clôture** : statut « **Clôturée** » avec la mention « **Clôturée le 19/10/2026** ».
+3. Un nouvel essai hors tolérance (999 m) a recréé automatiquement une **NC ouverte** : l'écran présente donc les deux situations, ouverte et clôturée.
+
+→ **L'exigence QUA-03 est couverte** (description, photos, responsable, action corrective, échéance, clôture) et le cycle complet d'une non-conformité fonctionne.
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
@@ -429,6 +450,6 @@ Le calcul est exact (2 000 / 8 400 = 23,8 %). C'était le point manquant en part
 - Import DQE 3 postes, 1 dépense 170 000 FCFA, exports Excel de test.
 - **Livraison** (partie 2) : Laterite 120, commandée 150, mise en œuvre 60, bon `TEST-BL-2026-01`, du 19/10/2026.
 - **Devis enregistré** (partie 5) : DEV-2026-019, client SODECI, 230 120 800 FCFA, 10 lignes (`e5c4d8ac-b1ea-4372-860e-d7695257ea8c`) + le fichier Excel correspondant dans `downloads-devis/`.
-- **Plans de contrôle du chantier principal** (partie 4) : 8 paramètres « Route » + 1 essai non conforme (999 m) et sa fiche de non-conformité (gravité critique) — utiles pour montrer la démonstration RG-04 ; à supprimer si vous voulez un chantier de test vierge.
+- **Plans de contrôle du chantier principal** (partie 4) : 8 paramètres « Route » + 2 essais non conformes (999 m) et leurs 2 fiches de non-conformité — l'une **clôturée** (responsable « Ingénieur travaux », action corrective « Reprise de la couche de base sur 120 m », échéance 26/10/2026, clôturée le 19/10/2026) et l'autre **ouverte** — utiles pour montrer la démonstration RG-04 et QUA-03 ; à supprimer si vous voulez un chantier de test vierge.
 - **Chantiers de test de la partie 3** (« TEST INGENIEUR 2 », « 3 », « 4 ») : **supprimés le 19/10/2026 sur accord de l'utilisateur** (sauvegarde JSON préalable, cascade vérifiée, aucune donnée orpheline).
 - Compte de test : `test-pc-20261018@example.com` (conservé).
