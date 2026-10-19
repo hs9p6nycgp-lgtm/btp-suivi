@@ -67,6 +67,7 @@ export default function ChantierSections({
   const [pkFin, setPkFin] = useState("");
   const [niveau, setNiveau] = useState("");
   const [lot, setLot] = useState("");
+  const [typeOuvrage, setTypeOuvrage] = useState("");
   const [longueur3D, setLongueur3D] = useState("");
   const [largeur3D, setLargeur3D] = useState("");
   const [hauteur3D, setHauteur3D] = useState("");
@@ -117,7 +118,7 @@ export default function ChantierSections({
       pk_fin: route ? finNum : null,
       niveau: route ? null : niveau.trim() || null,
       lot: route ? null : lot.trim() || null,
-      type_ouvrage: null,
+      type_ouvrage: route ? null : typeOuvrage.trim() || null,
       longueur: route ? longueurCalculee : longueur3D ? Number(longueur3D) : null,
       largeur: route ? null : largeur3D ? Number(largeur3D) : null,
       hauteur: route ? null : hauteur3D ? Number(hauteur3D) : null,
@@ -131,6 +132,7 @@ export default function ChantierSections({
     setPkFin("");
     setNiveau("");
     setLot("");
+    setTypeOuvrage("");
     setLongueur3D("");
     setLargeur3D("");
     setHauteur3D("");
@@ -223,7 +225,8 @@ export default function ChantierSections({
               <Plus className="h-4 w-4" />
               Ajouter
             </Button>
-            <div className="grid grid-cols-3 gap-2 sm:col-span-2 lg:col-span-4">
+            <div className="grid grid-cols-2 gap-2 sm:col-span-2 lg:col-span-4 sm:grid-cols-4">
+              <input className={CLASSE_CHAMP} placeholder="Type d'ouvrage (ex. : magasin)" value={typeOuvrage} onChange={(e) => setTypeOuvrage(e.target.value)} />
               <input className={CLASSE_CHAMP} placeholder="Longueur 3D (m)" type="number" step="0.01" value={longueur3D} onChange={(e) => setLongueur3D(e.target.value)} />
               <input className={CLASSE_CHAMP} placeholder="Largeur 3D (m)" type="number" step="0.01" value={largeur3D} onChange={(e) => setLargeur3D(e.target.value)} />
               <input className={CLASSE_CHAMP} placeholder="Hauteur 3D (m)" type="number" step="0.01" value={hauteur3D} onChange={(e) => setHauteur3D(e.target.value)} />
