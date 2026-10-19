@@ -37,6 +37,7 @@ import { avancementMoyenSections, avancementParNiveau, etatEcheance, formaterMet
 import { descriptionOuvrage, niveauxDepuisChantier, surfacesOuvrage } from "@/lib/chantiers/detailsOuvrage";
 import { receptionAutorisee } from "@/lib/chantiers/statuts";
 import { toast } from "@/components/ui/toast";
+import { urlsSignees } from "@/lib/photos/urls";
 
 type Chantier = {
   id: string;
@@ -100,6 +101,9 @@ export default function ChantierDetailPage() {
   const [sections, setSections] = useState<SectionChantier[]>([]);
   const [avancementSectionOk, setAvancementSectionOk] = useState(true);
   const [compteurs, setCompteurs] = useState({ alertes: 0, nonConformites: 0 });
+  const [photos, setPhotos] = useState<
+    { id: string; journalId: string; chemin: string; legende: string; date: string; url: string | null }[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [statut, setStatut] = useState("");
 
@@ -121,7 +125,7 @@ export default function ChantierDetailPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.replace("/login"); return; }
 
-      const [cRes, pRes, mRes, sRes, aRes, nRes, avRes] = await Promise.all([
+      const [cRes, pRes, mRes, sRes, aRes, nRes, avRes, jrRes] = await Promise.all([
         supabase.from("chantiers").select("*").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle(),
         supabase.from("postes_dqe").select("*").eq("chantier_id", chantierId).order("created_at", { ascending: true }),
         supabase.from("chantier_utilisateurs").select("*, profil:profils(id,nom,email)").eq("chantier_id", chantierId),
@@ -141,6 +145,12 @@ export default function ChantierDetailPage() {
           .eq("chantier_id", chantierId)
           .in("statut", ["ouverte", "en_cours"]),
         supabase.from("sections_chantier").select("avancement_pct").limit(1),
+        supabase
+          .from("journaux")
+          .select("id,date_journal")
+          .eq("chantier_id", chantierId)
+          .order("date_journal", { ascending: false })
+          .limit(30),
       ]);
 
       if (cRes.data) setChantier(cRes.data as Chantier);
@@ -151,6 +161,36 @@ export default function ChantierDetailPage() {
       setCompteurs({ alertes: aRes.count ?? 0, nonConformites: nRes.count ?? 0 });
       setAvancementSectionOk(!avRes.error);
       if (cRes.data?.statut) setStatut(cRes.data.statut);
+
+      // Galerie des dernières photos du chantier (tableau de bord, §6.1)
+      const journaux = (jrRes.data ?? []) as { id: string; date_journal: string }[];
+      if (journaux.length > 0) {
+        const { data: phRes } = await supabase
+          .from("photos_journal")
+          .select("id,journal_id,chemin,legende,created_at")
+          .in("journal_id", journaux.map((j) => j.id))
+          .order("created_at", { ascending: false })
+          .limit(12);
+        const dateParJournal = new Map(journaux.map((j) => [j.id, j.date_journal]));
+        const liste = (phRes ?? []) as {
+          id: string;
+          journal_id: string;
+          chemin: string;
+          legende: string | null;
+          created_at: string | null;
+        }[];
+        const urls = await urlsSignees(liste.map((p) => p.chemin));
+        setPhotos(
+          liste.map((p) => ({
+            id: p.id,
+            journalId: p.journal_id,
+            chemin: p.chemin,
+            legende: p.legende ?? "",
+            date: dateParJournal.get(p.journal_id) ?? "",
+            url: urls.get(p.chemin) ?? null,
+          })),
+        );
+      }
       setLoading(false);
     }
     load();
@@ -454,6 +494,55 @@ export default function ChantierDetailPage() {
         <ChantierIntervenants chantierId={chantier.id} />
         <ChantierDocuments chantierId={chantier.id} />
       </div>
+
+      {/* Galerie des dernières photos (tableau de bord chantier, §6.1) */}
+      {photos.length > 0 && (
+        <div className="anim-fade-up anim-delay-3 mb-6">
+          <Card padding="lg">
+            <div className="mb-4">
+              <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
+                <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+                {langue === "fr" ? "Dernières photos du chantier" : "Latest site photos"}
+              </h2>
+              <p className="mt-1 text-sm text-muted">
+                {langue === "fr"
+                  ? "Photos horodatées et géolocalisées prises lors des derniers journaux. Un clic ouvre le journal du jour."
+                  : "Timestamped and geolocated photos from the latest site logs. Click to open the day's log."}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {photos.map((photo) => (
+                <Link
+                  key={photo.id}
+                  href={`/chantiers/${chantier.id}/journaux/${photo.journalId}`}
+                  className="group overflow-hidden rounded-xl border border-border/80 bg-surface-2/60 transition hover:border-primary/40"
+                >
+                  {photo.url ? (
+                    <img
+                      src={photo.url}
+                      alt={photo.legende || "Photo du chantier"}
+                      className="h-28 w-full object-cover transition group-hover:scale-[1.03]"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-28 w-full items-center justify-center text-xs text-muted">
+                      Photo
+                    </div>
+                  )}
+                  <div className="px-2.5 py-2">
+                    <p className="truncate text-xs font-medium text-foreground">
+                      {photo.legende || "Photo du journal"}
+                    </p>
+                    <p className="text-[11px] text-muted">
+                      {photo.date ? formaterDate(photo.date) : ""}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* Suivi rapide */}
       <div className="anim-fade-up anim-delay-3 mb-8">
