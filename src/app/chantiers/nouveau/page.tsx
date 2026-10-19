@@ -25,6 +25,7 @@ import {
   estNomChantierSimilaire,
   formaterMetres,
   formaterPK,
+  genererSectionsRoute,
   longueurSection,
 } from "@/lib/chantiers/complet";
 
@@ -125,6 +126,7 @@ export default function NouveauChantierPage() {
   const [details, setDetails] = useState<DetailsOuvrage>(detailsOuvrageVides);
   const [detailsOk, setDetailsOk] = useState<boolean | null>(null);
   const [apercuVisible, setApercuVisible] = useState(false);
+  const [pasSections, setPasSections] = useState("500");
   const [seuil, setSeuil] = useState("10");
   const [sections, setSections] = useState<LigneSection[]>([nouvelleSection()]);
   const [intervenants, setIntervenants] = useState<LigneIntervenant[]>([]);
@@ -189,6 +191,46 @@ export default function NouveauChantierPage() {
         .map((niveau) => ({ ...nouvelleSection(), nom: niveau, niveau }));
       return ajouts.length > 0 ? [...prev, ...ajouts] : prev;
     });
+  }
+
+  function genererSections() {
+    const total = details.longueur.trim() ? Number(details.longueur) : NaN;
+    const pas = Number(pasSections);
+    if (!Number.isFinite(total) || total <= 0) {
+      setMessage("Renseignez d'abord la longueur du tracé dans la description de l'ouvrage.");
+      return;
+    }
+    if (!Number.isFinite(pas) || pas <= 0) {
+      setMessage("Indiquez une longueur de tronçon valide (en mètres).");
+      return;
+    }
+    const generees = genererSectionsRoute(total, pas);
+    if (generees.length === 0) {
+      setMessage("Découpage impossible : augmentez la longueur des tronçons (200 sections maximum).");
+      return;
+    }
+    const dejaRempli = sections.some(
+      (s) => s.nom.trim() || s.pkDebut.trim() || s.pkFin.trim() || s.niveau.trim() || s.lot.trim(),
+    );
+    if (
+      dejaRempli &&
+      !window.confirm(
+        `Remplacer le découpage actuel par ${generees.length} section${generees.length > 1 ? "s" : ""} ?`,
+      )
+    ) {
+      return;
+    }
+    setSections(
+      generees.map((g) => ({
+        cle: Math.random().toString(36).slice(2),
+        nom: g.nom,
+        pkDebut: g.pkDebut,
+        pkFin: g.pkFin,
+        niveau: "",
+        lot: "",
+      })),
+    );
+    setMessage(null);
   }
 
 
@@ -683,6 +725,16 @@ export default function NouveauChantierPage() {
                           ? "Chaussée, voies et accotements se mettent à jour avec vos saisies."
                           : "Niveaux, poteaux et toiture se mettent à jour avec vos saisies."}
                       </p>
+                      {type === "batiment" && (!details.longueur || !details.largeur) && (
+                        <p className="mt-1 text-xs text-amber-700">
+                          Dimensions non renseignées : l&apos;aperçu utilise 20 × 10 m.
+                        </p>
+                      )}
+                      {type === "route" && !details.largeur && (
+                        <p className="mt-1 text-xs text-amber-700">
+                          Largeur non renseignée : l&apos;aperçu utilise 3,5 m par voie.
+                        </p>
+                      )}
                     </div>
                     <Button type="button" variant="secondary" onClick={() => setApercuVisible((v) => !v)}>
                       <Box className="h-4 w-4" />
@@ -793,6 +845,30 @@ export default function NouveauChantierPage() {
                     </Button>
                   )}
                 </div>
+                {type === "route" && (
+                  <div className="flex flex-wrap items-end gap-2 rounded-xl border border-border/70 bg-surface-2/40 p-3">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-foreground">
+                        Longueur des tronçons (m)
+                      </label>
+                      <input
+                        className={`${CLASSE_CHAMP} w-28`}
+                        type="number"
+                        min="10"
+                        step="10"
+                        value={pasSections}
+                        onChange={(e) => setPasSections(e.target.value)}
+                      />
+                    </div>
+                    <Button type="button" variant="secondary" onClick={genererSections}>
+                      <Layers className="h-4 w-4" />
+                      Générer les sections
+                    </Button>
+                    <p className="max-w-xs text-xs text-muted">
+                      Découpe automatique du tracé en sections régulières (PK).
+                    </p>
+                  </div>
+                )}
                 <datalist id="creation-niveaux">
                   {NIVEAUX.map((n) => (
                     <option key={n} value={n} />

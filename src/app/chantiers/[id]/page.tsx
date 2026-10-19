@@ -32,7 +32,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { getLangue } from "@/lib/i18n";
 import { libelleTypeDetail } from "@/lib/chantiers/types";
 import { avancementMoyenSections, etatEcheance, formaterMetres, joursRestants, longueurSection } from "@/lib/chantiers/complet";
-import { descriptionOuvrage } from "@/lib/chantiers/detailsOuvrage";
+import { descriptionOuvrage, surfacesOuvrage } from "@/lib/chantiers/detailsOuvrage";
 
 type Chantier = {
   id: string;
@@ -169,7 +169,7 @@ export default function ChantierDetailPage() {
     echeance === "depasse" ? "rose" : echeance === "proche" ? "amber" : echeance === "normal" ? "emerald" : "slate";
   const lineaire = sections.reduce((total, section) => total + (longueurSection(section.pk_debut, section.pk_fin) ?? 0), 0);
   const avancementGlobal = avancementMoyenSections(sections);
-  const description = descriptionOuvrage(chantier);
+  const description = [...descriptionOuvrage(chantier), ...surfacesOuvrage(chantier)];
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">

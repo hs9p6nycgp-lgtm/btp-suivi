@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { avancementMoyenSections, etatEcheance, formaterMetres, formaterPK, joursRestants, libelleTypeDocument, longueurSection } from "@/lib/chantiers/complet";
 import { resumerProgression, type PointAvancement } from "@/lib/chantiers/avancement";
-import { descriptionOuvrage } from "@/lib/chantiers/detailsOuvrage";
+import { descriptionOuvrage, surfacesOuvrage } from "@/lib/chantiers/detailsOuvrage";
 
 // Feuille A4 imprimable : fiche de suivi complete d'un chantier.
 // La coquille de l'application est masquee sur cette page (voir AppShell).
@@ -157,7 +157,7 @@ export default function FicheImprimablePage() {
   const lineaire = sections.reduce((total, s) => total + (longueurSection(s.pk_debut, s.pk_fin) ?? 0), 0);
   const progression = resumerProgression(points);
   const typeDetail = chantier.type === "route" ? "Route" : "Bâtiment";
-  const description = descriptionOuvrage(chantier);
+  const description = [...descriptionOuvrage(chantier), ...surfacesOuvrage(chantier)];
 
   return (
     <div className="min-h-screen bg-slate-100 py-6 print:bg-white print:py-0">

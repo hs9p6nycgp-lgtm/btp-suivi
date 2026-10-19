@@ -118,6 +118,8 @@ export function niveauxDepuisDetails(details: DetailsOuvrage): string[] {
 /** Champs de description lus depuis la base (nombres ou textes). */
 export type ChantierDescription = {
   type: string;
+  longueur?: number | null;
+  largeur?: number | null;
   nb_sous_sols?: number | null;
   nb_etages?: number | null;
   hauteur_niveau?: number | null;
@@ -194,6 +196,53 @@ export function descriptionOuvrage(chantier: ChantierDescription): LigneDescript
   if (structure) lignes.push({ libelle: "Structure", valeur: structure });
   const toiture = libelleOption(TOITURES_BATIMENT, chantier.type_toiture);
   if (toiture) lignes.push({ libelle: "Toiture", valeur: toiture });
+  return lignes;
+}
+
+/** Formate une surface en m2 (ou en hectares au-dela de 10 000 m2). */
+export function formaterSurface(m2: number): string {
+  if (!Number.isFinite(m2) || m2 <= 0) return "—";
+  if (m2 >= 10000) {
+    const ha = Math.round(m2 / 100) / 100;
+    return `${ha.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} ha`;
+  }
+  return `${m2.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} m²`;
+}
+
+/**
+ * Surfaces indicatives deduites des dimensions (metre rapide) :
+ * - batiment : emprise au sol, planchers RDC + etages, sous-sols ;
+ * - route : chaussee et accotements.
+ * Renvoie [] tant que longueur et largeur ne sont pas renseignees.
+ */
+export function surfacesOuvrage(chantier: ChantierDescription): LigneDescription[] {
+  const longueur = nombre(chantier.longueur as number | null | undefined);
+  const largeur = nombre(chantier.largeur as number | null | undefined);
+  if (longueur === null || largeur === null) return [];
+
+  if (chantier.type === "route") {
+    const lignes: LigneDescription[] = [
+      { libelle: "Surface chaussée", valeur: formaterSurface(longueur * largeur) },
+    ];
+    const accotement = nombre(chantier.largeur_accotement as number | null | undefined);
+    const largeurAccotement = accotement ?? largeur * 0.2;
+    lignes.push({
+      libelle: accotement !== null ? "Surface accotements" : "Surface accotements (20 %)",
+      valeur: formaterSurface(longueur * largeurAccotement * 2),
+    });
+    return lignes;
+  }
+
+  const emprise = longueur * largeur;
+  const lignes: LigneDescription[] = [{ libelle: "Emprise au sol", valeur: formaterSurface(emprise) }];
+  const etages = entier(chantier.nb_etages as number | null | undefined);
+  if (etages !== null) {
+    lignes.push({ libelle: "Surface planchers", valeur: formaterSurface(emprise * (1 + etages)) });
+  }
+  const sousSols = entier(chantier.nb_sous_sols as number | null | undefined);
+  if (sousSols !== null && sousSols > 0) {
+    lignes.push({ libelle: "Surface sous-sols", valeur: formaterSurface(emprise * sousSols) });
+  }
   return lignes;
 }
 

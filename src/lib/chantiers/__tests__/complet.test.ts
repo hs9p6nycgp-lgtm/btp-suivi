@@ -9,6 +9,7 @@ import {
   etatEcheance,
   formaterMetres,
   formaterPK,
+  genererSectionsRoute,
   joursRestants,
   libelleTypeDocument,
   longueurSection,
@@ -42,6 +43,26 @@ describe("chantiers : suivi complet (CHA-01, CHA-02, CHA-03)", () => {
       assert.strictEqual(longueurSection(1000, 1000), null);
       assert.strictEqual(longueurSection(2000, 1000), null);
       assert.strictEqual(longueurSection(null, 1000), null);
+    });
+
+    it("genere un decoupage regulier par PK", () => {
+      const sections = genererSectionsRoute(2500, 500);
+      assert.equal(sections.length, 5);
+      assert.deepEqual(sections[0], { nom: "Section 1", pkDebut: "0+000", pkFin: "0+500" });
+      assert.deepEqual(sections[4], { nom: "Section 5", pkDebut: "2+000", pkFin: "2+500" });
+    });
+
+    it("genere une derniere section plus courte", () => {
+      const sections = genererSectionsRoute(2600, 500);
+      assert.equal(sections.length, 6);
+      assert.deepEqual(sections[5], { nom: "Section 6", pkDebut: "2+500", pkFin: "2+600" });
+    });
+
+    it("refuse un decoupage impossible ou trop nombreux", () => {
+      assert.deepEqual(genererSectionsRoute(0, 500), []);
+      assert.deepEqual(genererSectionsRoute(2500, 0), []);
+      assert.deepEqual(genererSectionsRoute(null, 500), []);
+      assert.deepEqual(genererSectionsRoute(100000, 10), []);
     });
 
     it("affiche les distances en metres ou kilometres", () => {

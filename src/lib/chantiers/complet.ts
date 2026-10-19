@@ -47,6 +47,39 @@ export function longueurSection(
   return Math.round((f - d) * 100) / 100;
 }
 
+export type SectionGeneree = { nom: string; pkDebut: string; pkFin: string };
+
+/**
+ * Decoupe un trace en sections regulieres (CHA-02).
+ * Renvoie les PK au format de saisie (« 0+000 ») et des noms « Section 1 »...
+ * La derniere section est plus courte si la longueur n'est pas un multiple du pas.
+ * Renvoie [] si les valeurs sont invalides ou si le decoupage depasserait 200 sections.
+ */
+export function genererSectionsRoute(
+  longueur: number | null | undefined,
+  pas: number | null | undefined,
+  maximum = 200,
+): SectionGeneree[] {
+  const total = Number(longueur);
+  const intervalle = Number(pas);
+  if (!Number.isFinite(total) || total <= 0) return [];
+  if (!Number.isFinite(intervalle) || intervalle <= 0) return [];
+  const nombre = Math.ceil(total / intervalle);
+  if (!Number.isFinite(nombre) || nombre < 1 || nombre > maximum) return [];
+  const sections: SectionGeneree[] = [];
+  for (let i = 0; i < nombre; i++) {
+    const debut = Math.min(total, i * intervalle);
+    const fin = Math.min(total, debut + intervalle);
+    if (fin <= debut) break;
+    sections.push({
+      nom: `Section ${i + 1}`,
+      pkDebut: (formaterPK(debut) ?? "").replace("PK ", ""),
+      pkFin: (formaterPK(fin) ?? "").replace("PK ", ""),
+    });
+  }
+  return sections;
+}
+
 /** Affichage court d'une distance : "2,5 km" ou "450 m". */
 export function formaterMetres(metres: number | null | undefined): string | null {
   if (metres === null || metres === undefined) return null;

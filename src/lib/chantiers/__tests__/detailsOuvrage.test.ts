@@ -6,8 +6,10 @@ import {
   descriptionOuvrage,
   detailsOuvrageDepuisChantier,
   detailsOuvrageVides,
+  formaterSurface,
   hauteurTotaleBatiment,
   niveauxDepuisDetails,
+  surfacesOuvrage,
   type DetailsOuvrage,
 } from "../detailsOuvrage.ts";
 
@@ -175,5 +177,52 @@ describe("affichage et niveaux a suivre", () => {
   it("ne renvoie rien pour un ancien chantier sans details", () => {
     assert.deepEqual(descriptionOuvrage({ type: "batiment" }), []);
     assert.deepEqual(descriptionOuvrage({ type: "route" }), []);
+  });
+});
+
+describe("surfaces indicatives", () => {
+  it("calcule emprise, planchers et sous-sols d'un batiment", () => {
+    const lignes = surfacesOuvrage({
+      type: "batiment",
+      longueur: 24,
+      largeur: 12,
+      nb_sous_sols: 1,
+      nb_etages: 3,
+    });
+    const valeurs = Object.fromEntries(lignes.map((l) => [l.libelle, l.valeur]));
+    assert.equal(valeurs["Emprise au sol"], formaterSurface(288));
+    assert.equal(valeurs["Surface planchers"], formaterSurface(1152));
+    assert.equal(valeurs["Surface sous-sols"], formaterSurface(288));
+  });
+
+  it("ne calcule pas les planchers sans nombre d'etages connu", () => {
+    const lignes = surfacesOuvrage({ type: "batiment", longueur: 20, largeur: 10 });
+    const valeurs = Object.fromEntries(lignes.map((l) => [l.libelle, l.valeur]));
+    assert.equal(valeurs["Emprise au sol"], formaterSurface(200));
+    assert.equal(valeurs["Surface planchers"], undefined);
+  });
+
+  it("calcule la chaussee et les accotements d'une route", () => {
+    const lignes = surfacesOuvrage({
+      type: "route",
+      longueur: 2500,
+      largeur: 7,
+      largeur_accotement: 1.5,
+    });
+    const valeurs = Object.fromEntries(lignes.map((l) => [l.libelle, l.valeur]));
+    assert.equal(valeurs["Surface chaussée"], "1,75 ha");
+    assert.equal(valeurs["Surface accotements"], formaterSurface(7500));
+  });
+
+  it("signale les accotements estimes a 20 % quand leur largeur manque", () => {
+    const lignes = surfacesOuvrage({ type: "route", longueur: 1000, largeur: 10 });
+    const valeurs = Object.fromEntries(lignes.map((l) => [l.libelle, l.valeur]));
+    assert.equal(valeurs["Surface chaussée"], "1 ha");
+    assert.equal(valeurs["Surface accotements (20 %)"], formaterSurface(4000));
+  });
+
+  it("ne renvoie rien sans longueur ou largeur", () => {
+    assert.deepEqual(surfacesOuvrage({ type: "batiment" }), []);
+    assert.deepEqual(surfacesOuvrage({ type: "route", longueur: 2500 }), []);
   });
 });
