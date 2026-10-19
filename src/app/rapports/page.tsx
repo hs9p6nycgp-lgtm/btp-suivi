@@ -1,12 +1,20 @@
 "use client";
 
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { getLangue } from "@/lib/i18n";
 import { Printer } from "lucide-react";
 
 type Periode = "journalier" | "hebdomadaire" | "mensuel";
+
+// Affichage compact des dates (règle du projet : JJ/MM/AAAA)
+function afficherDate(iso: string) {
+  const [annee, mois, jour] = (iso || "").split("-");
+  return annee && mois && jour ? `${jour}/${mois}/${annee}` : iso;
+}
 
 export default function RapportsPage() {
   const langue = getLangue();
@@ -98,14 +106,15 @@ export default function RapportsPage() {
         icon={<Printer className="h-5 w-5" />}
         actions={
           reportData ? (
-            <button onClick={imprimer} className="btn-primary">
+            <Button onClick={imprimer}>
+              <Printer className="h-4 w-4" />
               Imprimer / PDF
-            </button>
+            </Button>
           ) : undefined
         }
       />
 
-      <div className="mb-6 card p-4 max-w-2xl">
+      <Card className="mb-6 max-w-2xl">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div>
             <label className="mb-1 block text-sm font-medium">Chantier</label>
@@ -131,16 +140,16 @@ export default function RapportsPage() {
             <input type="date" value={dateFin} onChange={(e) => setDateFin(e.target.value)} className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" />
           </div>
         </div>
-        <button onClick={genererRapport} disabled={generating || !selectedChantier} className="btn-primary mt-4 disabled:opacity-50">
+        <Button onClick={genererRapport} disabled={generating || !selectedChantier} className="mt-4">
           {generating ? "Génération..." : "Générer le rapport"}
-        </button>
-      </div>
+        </Button>
+      </Card>
 
       {reportData && (
-        <div className="card p-6 print:shadow-none" id="rapport">
+        <Card padding="lg" className="print:shadow-none" id="rapport">
           <h2 className="mb-1 text-xl font-bold">Rapport de synthèse</h2>
           <p className="mb-4 text-sm text-muted">
-            Chantier : {reportData.chantier} · Période : {reportData.periode} · {reportData.debut} → {reportData.fin}
+            Chantier : {reportData.chantier} · Période : {reportData.periode} · {afficherDate(reportData.debut)} → {afficherDate(reportData.fin)}
           </p>
           <p className="mb-4 text-xs text-muted">Généré le {reportData.dateGeneration}</p>
 
@@ -178,7 +187,7 @@ export default function RapportsPage() {
               <p className="text-lg font-bold">{reportData.tauxConformite} %</p>
             </div>
           </div>
-        </div>
+        </Card>
       )}
     </main>
   );

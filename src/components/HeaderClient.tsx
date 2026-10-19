@@ -118,30 +118,30 @@ export default function HeaderClient() {
 
       {/* Menu langue mobile */}
       {userMenuOuvert && (
-        <div className="md:hidden absolute right-0 mt-8 w-48 rounded-lg bg-white border border-slate-200 shadow-lg z-50">
-          <div className="px-3 py-2 border-b border-slate-100">
+        <div className="md:hidden absolute right-0 mt-8 w-48 overflow-hidden rounded-2xl border border-border/80 bg-surface shadow-soft-lg z-50">
+          <div className="px-3 py-2 border-b border-border/70">
             <p className="text-xs font-semibold text-muted uppercase tracking-wider">{t("langue.titre")}</p>
           </div>
           <button
             onClick={() => { handleLangueChange("fr"); setUserMenuOuvert(false); }}
-            className={`w-full px-3 py-2 text-left text-sm rounded-none hover:bg-slate-50 transition ${
-              langue === "fr" ? "bg-orange-50 text-orange-700 font-semibold" : "text-slate-600"
+            className={`w-full px-3 py-2 text-left text-sm rounded-none transition hover:bg-surface-2 ${
+              langue === "fr" ? "bg-action/10 text-action font-semibold" : "text-muted"
             }`}
           >
             🇫🇷 {t("langue.francais")}
           </button>
           <button
             onClick={() => { handleLangueChange("en"); setUserMenuOuvert(false); }}
-            className={`w-full px-3 py-2 text-left text-sm rounded-none hover:bg-slate-50 transition ${
-              langue === "en" ? "bg-orange-50 text-orange-700 font-semibold" : "text-slate-600"
+            className={`w-full px-3 py-2 text-left text-sm rounded-none transition hover:bg-surface-2 ${
+              langue === "en" ? "bg-action/10 text-action font-semibold" : "text-muted"
             }`}
           >
             🇬🇧 {t("langue.anglais")}
           </button>
-          <div className="border-t border-slate-100" />
+          <div className="border-t border-border/70" />
           <button
             onClick={handleLogout}
-            className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition"
+            className="w-full px-3 py-2 text-left text-sm text-danger hover:bg-danger/10 transition"
           >
             {t("auth.deconnecter")}
           </button>

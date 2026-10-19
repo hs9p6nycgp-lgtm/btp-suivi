@@ -1,6 +1,10 @@
 "use client";
 
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { getLangue } from "@/lib/i18n";
@@ -21,6 +25,12 @@ type Prix = {
   statut: string;
   zone: string | null;
 };
+
+// Affichage compact des dates (règle du projet : JJ/MM/AAAA)
+function afficherDate(iso: string) {
+  const [annee, mois, jour] = (iso || "").split("-");
+  return annee && mois && jour ? `${jour}/${mois}/${annee}` : iso;
+}
 
 export default function ReferentielPage() {
   const langue = getLangue();
@@ -234,11 +244,15 @@ export default function ReferentielPage() {
         description="Base centralisée des matériaux et matériels (REF-01 à REF-04). Chaque prix porte une source et une date."
         icon={<BookOpen className="h-5 w-5" />}
         actions={
-          <button onClick={() => { resetForm(); setShowForm(true); }} className="btn-primary">Nouveau prix</button>
+          <Button onClick={() => { resetForm(); setShowForm(true); }}>Nouveau prix</Button>
         }
       />
 
-      {message && <p className="mb-4 text-sm text-muted">{message}</p>}
+      {message && (
+        <p className="mb-4 rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
+          {message}
+        </p>
+      )}
 
       <div className="mb-4 flex flex-wrap gap-3">
         <input type="text" placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" />
@@ -248,21 +262,25 @@ export default function ReferentielPage() {
         </select>
       </div>
 
-      <button
+      <Button
+        variant="outline"
         onClick={exporterCSV}
-        className="btn-secondary mb-4"
+        className="mb-4"
         title="Exporte les lignes affichées dans un fichier CSV (séparateur point-virgule, ouvrable dans Excel)."
       >
         Exporter CSV ({filtres.length})
-      </button>
+      </Button>
 
       <div className="mb-4">
         <ReferentielImport onImporte={load} />
       </div>
 
       {showForm && (
-        <div className="mb-6 card p-4">
-          <h2 className="mb-3 text-lg font-medium text-primary">{editing ? "Modifier le prix" : "Nouveau prix"}</h2>
+        <Card className="mb-6">
+          <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+            <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+            {editing ? "Modifier le prix" : "Nouveau prix"}
+          </h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="Code" value={code} onChange={(e) => setCode(e.target.value)} />
             <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="Désignation *" value={designation} onChange={(e) => setDesignation(e.target.value)} required />
@@ -279,50 +297,68 @@ export default function ReferentielPage() {
             <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="Zone (ville)" value={zone} onChange={(e) => setZone(e.target.value)} />
             {editing && <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="Motif du changement de prix" value={motif} onChange={(e) => setMotif(e.target.value)} />}
             <div className="md:col-span-3 flex gap-3">
-              <button type="submit" className="btn-primary" disabled={loading}>{loading ? "Enregistrement..." : (editing ? "Mettre à jour" : "Créer")}</button>
-              <button type="button" onClick={resetForm} className="btn-secondary">Annuler</button>
+              <Button type="submit" disabled={loading}>{loading ? "Enregistrement..." : editing ? "Mettre à jour" : "Créer"}</Button>
+              <Button type="button" variant="outline" onClick={resetForm}>Annuler</Button>
             </div>
           </form>
+        </Card>
+      )}
+
+      {loading && (
+        <div className="space-y-2">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} variant="rect" height="2.75rem" />
+          ))}
         </div>
       )}
 
-      {loading && <p className="text-sm text-muted">Chargement...</p>}
-      {!loading && filtres.length === 0 && <p className="text-sm text-muted">Aucun prix dans le référentiel.</p>}
-
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-2xl border border-border/80 bg-surface shadow-soft">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border text-left">
-              <th className="p-3 font-semibold text-muted">Code</th>
-              <th className="p-3 font-semibold text-muted">Désignation</th>
-              <th className="p-3 font-semibold text-muted">Catégorie</th>
-              <th className="p-3 font-semibold text-muted">Unité</th>
-              <th className="p-3 text-right font-semibold text-muted">Prix (FCFA)</th>
-              <th className="p-3 font-semibold text-muted">Source</th>
-              <th className="p-3 font-semibold text-muted">Statut</th>
-              <th className="p-3"></th>
+            <tr className="border-b border-border/80 bg-surface-2 text-left">
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Code</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Désignation</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Catégorie</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Unité</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">Prix (FCFA)</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Source</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Statut</th>
+              <th className="px-4 py-3" />
             </tr>
           </thead>
           <tbody>
             {filtres.map((p) => (
-              <tr key={p.id} className="border-b border-border last:border-0">
-                <td className="p-3">{p.code ?? "-"}</td>
-                <td className="p-3">{p.designation}</td>
-                <td className="p-3">{p.categorie ?? "-"}</td>
-                <td className="p-3">{p.unite}</td>
-                <td className="p-3 text-right font-semibold">{p.prix_unitaire.toLocaleString("fr-FR")}</td>
-                <td className="p-3 text-xs text-muted">{p.source ?? "-"} {p.date_source ? `(${p.date_source})` : ""}</td>
-                <td className="p-3">
-                  <span className={`rounded-full px-2 py-0.5 text-xs ${p.statut === "valide" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>
-                    {p.statut === "valide" ? "Valide" : "À vérifier"}
-                  </span>
+              <tr key={p.id} className="border-b border-border/60 transition last:border-0 hover:bg-surface-2/70">
+                <td className="px-4 py-3 text-muted">{p.code ?? "-"}</td>
+                <td className="px-4 py-3 font-medium text-foreground">{p.designation}</td>
+                <td className="px-4 py-3 text-muted">{p.categorie ?? "-"}</td>
+                <td className="px-4 py-3 text-muted">{p.unite}</td>
+                <td className="px-4 py-3 text-right font-mono tabular-nums text-foreground">
+                  {p.prix_unitaire.toLocaleString("fr-FR")}
                 </td>
-                <td className="p-3 flex gap-2">
-                  <button onClick={() => startEdit(p)} className="text-xs text-primary hover:underline">Modifier</button>
-                  <button onClick={() => handleDelete(p.id)} className="text-xs text-danger hover:underline">Supprimer</button>
+                <td className="px-4 py-3 text-xs text-muted">
+                  {p.source ?? "-"} {p.date_source ? `(${afficherDate(p.date_source)})` : ""}
+                </td>
+                <td className="px-4 py-3">
+                  <Badge variant={p.statut === "valide" ? "success" : "warning"}>
+                    {p.statut === "valide" ? "Valide" : "À vérifier"}
+                  </Badge>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <div className="flex justify-end gap-3">
+                    <button onClick={() => startEdit(p)} className="text-xs font-medium text-primary hover:underline">Modifier</button>
+                    <button onClick={() => handleDelete(p.id)} className="text-xs font-medium text-danger hover:underline">Supprimer</button>
+                  </div>
                 </td>
               </tr>
             ))}
+            {!loading && filtres.length === 0 && (
+              <tr>
+                <td colSpan={8} className="px-4 py-8 text-center text-muted">
+                  Aucun prix dans le référentiel.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

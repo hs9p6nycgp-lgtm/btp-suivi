@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
 export default function ChantierParametresMetre({
   chantierId,
@@ -50,34 +52,37 @@ export default function ChantierParametresMetre({
       setMessage(error.message);
       return;
     }
-    setMessage("Parametres enregistres.");
+    setMessage("Paramètres enregistrés.");
   }
 
   return (
-    <section className="mb-8 card p-4">
-      <h2 className="mb-3 text-lg font-medium">Parametres de calcul (metre)</h2>
+    <Card className="mb-8">
+      <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+        <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+        Paramètres de calcul (mètre)
+      </h2>
       <form onSubmit={handleSave} className="grid grid-cols-1 gap-3 md:grid-cols-4">
         <div>
-          <label className="block text-sm font-medium">Coeff. foisonnement</label>
-          <input className="w-full rounded border p-2" type="number" step="0.01" value={foisonnement} onChange={(e) => setFoisonnement(e.target.value)} />
+          <label className="mb-1 block text-sm font-medium">Coeff. foisonnement</label>
+          <input className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" type="number" step="0.01" value={foisonnement} onChange={(e) => setFoisonnement(e.target.value)} />
         </div>
         <div>
-          <label className="block text-sm font-medium">Coeff. compactage</label>
-          <input className="w-full rounded border p-2" type="number" step="0.01" value={compactage} onChange={(e) => setCompactage(e.target.value)} />
+          <label className="mb-1 block text-sm font-medium">Coeff. compactage</label>
+          <input className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" type="number" step="0.01" value={compactage} onChange={(e) => setCompactage(e.target.value)} />
         </div>
         <div>
-          <label className="block text-sm font-medium">Coeff. pertes</label>
-          <input className="w-full rounded border p-2" type="number" step="0.01" value={pertes} onChange={(e) => setPertes(e.target.value)} />
+          <label className="mb-1 block text-sm font-medium">Coeff. pertes</label>
+          <input className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" type="number" step="0.01" value={pertes} onChange={(e) => setPertes(e.target.value)} />
         </div>
         <div>
-          <label className="block text-sm font-medium">Capacite benne (m3)</label>
-          <input className="w-full rounded border p-2" type="number" step="0.01" value={capacite} onChange={(e) => setCapacite(e.target.value)} />
+          <label className="mb-1 block text-sm font-medium">Capacité benne (m³)</label>
+          <input className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" type="number" step="0.01" value={capacite} onChange={(e) => setCapacite(e.target.value)} />
         </div>
-        <button type="submit" disabled={loading} className="btn-primary disabled:opacity-50">
+        <Button type="submit" disabled={loading}>
           {loading ? "Enregistrement..." : "Enregistrer"}
-        </button>
+        </Button>
       </form>
-      {message && <p className="mt-3 text-sm text-zinc-600">{message}</p>}
-    </section>
+      {message && <p className="mt-3 text-sm text-muted">{message}</p>}
+    </Card>
   );
 }

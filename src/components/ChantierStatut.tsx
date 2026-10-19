@@ -2,13 +2,14 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
+import { Card } from "@/components/ui/Card";
 
 const STATUTS = [
-  { value: "en_preparation", label: "En preparation" },
+  { value: "en_preparation", label: "En préparation" },
   { value: "en_cours", label: "En cours" },
   { value: "suspendu", label: "Suspendu" },
-  { value: "receptionne_provisoirement", label: "Receptionne provisoirement" },
-  { value: "cloture", label: "Cloture" },
+  { value: "receptionne_provisoirement", label: "Réceptionné prov." },
+  { value: "cloture", label: "Clôturé" },
 ];
 
 export default function ChantierStatut({
@@ -39,15 +40,18 @@ export default function ChantierStatut({
       setStatut(statutInitial);
       return;
     }
-    setMessage("Statut mis a jour.");
+    setMessage("Statut mis à jour.");
   }
 
   return (
-    <section className="mb-8 card p-4">
-      <h2 className="mb-3 text-lg font-medium">Statut du chantier</h2>
+    <Card className="mb-8">
+      <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+        <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+        Statut du chantier
+      </h2>
       <div className="flex flex-wrap items-center gap-3">
         <select
-          className="rounded border p-2"
+          className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
           value={statut}
           onChange={(e) => handleChange(e.target.value)}
           disabled={saving}
@@ -58,9 +62,9 @@ export default function ChantierStatut({
             </option>
           ))}
         </select>
-        {saving && <p className="text-sm text-zinc-600">Enregistrement...</p>}
-        {message && <p className="text-sm text-zinc-600">{message}</p>}
+        {saving && <p className="text-sm text-muted">Enregistrement...</p>}
+        {message && <p className="text-sm text-muted">{message}</p>}
       </div>
-    </section>
+    </Card>
   );
 }

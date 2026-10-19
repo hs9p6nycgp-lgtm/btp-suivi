@@ -1,6 +1,9 @@
 "use client";
 
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
@@ -144,10 +147,10 @@ export default function ExportPage() {
         icon={<Download className="h-5 w-5" />}
       />
 
-      {loading && <p className="text-sm text-muted">Chargement...</p>}
+      {loading && <Skeleton variant="rect" height="7.5rem" className="max-w-xl" />}
 
       {!loading && (
-        <div className="card p-4 max-w-xl">
+        <Card className="max-w-xl">
           <label className="mb-2 block text-sm font-medium">Chantier</label>
           <select
             value={selectedChantier}
@@ -157,15 +160,15 @@ export default function ExportPage() {
             <option value="">— Sélectionner —</option>
             {chantiers.map((c) => <option key={c.id} value={c.id}>{c.nom}</option>)}
           </select>
-          <button
-            onClick={handleExport}
-            disabled={exporting || !selectedChantier}
-            className="btn-primary disabled:opacity-50"
-          >
+          <Button onClick={handleExport} disabled={exporting || !selectedChantier}>
             {exporting ? "Export en cours..." : "Exporter en Excel"}
-          </button>
-          {message && <p className="mt-3 text-sm text-muted">{message}</p>}
-        </div>
+          </Button>
+          {message && (
+            <p className="mt-3 rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
+              {message}
+            </p>
+          )}
+        </Card>
       )}
     </main>
   );

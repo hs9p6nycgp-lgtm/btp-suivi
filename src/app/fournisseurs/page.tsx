@@ -1,6 +1,9 @@
 "use client";
 
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -153,13 +156,17 @@ export default function FournisseursPage() {
         description="Gérez vos fournisseurs de matériaux, loueurs d'engins, transporteurs, sous-traitants et laboratoires."
         icon={<Users className="h-5 w-5" />}
         actions={
-          <button onClick={() => { resetForm(); setShowForm(true); }} className="btn-primary">
+          <Button onClick={() => { resetForm(); setShowForm(true); }}>
             Nouveau fournisseur
-          </button>
+          </Button>
         }
       />
 
-      {message && <p className="mb-4 text-sm text-muted">{message}</p>}
+      {message && (
+        <p className="mb-4 rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
+          {message}
+        </p>
+      )}
 
       {/* Filtres */}
       <div className="mb-4 flex flex-wrap gap-3">
@@ -182,8 +189,11 @@ export default function FournisseursPage() {
 
       {/* Formulaire */}
       {showForm && (
-        <div className="mb-6 card p-4">
-          <h2 className="mb-3 text-lg font-medium text-primary">{editing ? "Modifier le fournisseur" : "Nouveau fournisseur"}</h2>
+        <Card className="mb-6">
+          <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+            <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+            {editing ? "Modifier le fournisseur" : "Nouveau fournisseur"}
+          </h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="Raison sociale *" value={raisonSociale} onChange={(e) => setRaisonSociale(e.target.value)} required />
             <select className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" value={type} onChange={(e) => setType(e.target.value)}>
@@ -197,34 +207,44 @@ export default function FournisseursPage() {
             <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="NIF" value={nif} onChange={(e) => setNif(e.target.value)} />
             <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" placeholder="RCCM" value={rccm} onChange={(e) => setRccm(e.target.value)} />
             <div className="md:col-span-2 flex gap-3">
-              <button type="submit" className="btn-primary" disabled={loading}>{loading ? "Enregistrement..." : (editing ? "Mettre à jour" : "Créer")}</button>
-              <button type="button" onClick={resetForm} className="btn-secondary">Annuler</button>
+              <Button type="submit" disabled={loading}>{loading ? "Enregistrement..." : editing ? "Mettre à jour" : "Créer"}</Button>
+              <Button type="button" variant="outline" onClick={resetForm}>Annuler</Button>
             </div>
           </form>
-        </div>
+        </Card>
       )}
 
       {/* Liste */}
-      {loading && <p className="text-sm text-muted">Chargement...</p>}
-      {!loading && filtres.length === 0 && <p className="text-sm text-muted">Aucun fournisseur.</p>}
+      {loading && (
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} variant="rect" height="7rem" />
+          ))}
+        </div>
+      )}
+      {!loading && filtres.length === 0 && (
+        <p className="rounded-xl border border-dashed border-border bg-surface-2/50 p-6 text-center text-sm text-muted">
+          Aucun fournisseur pour le moment.
+        </p>
+      )}
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {filtres.map((f) => (
-          <div key={f.id} className="card p-4">
+          <Card key={f.id}>
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-semibold text-foreground">{f.raison_sociale}</h3>
                 <p className="text-xs text-muted">{TYPES.find((t) => t.value === f.type)?.label ?? f.type}</p>
               </div>
-              <div className="flex gap-2">
-                <button onClick={() => startEdit(f)} className="text-xs text-primary hover:underline">Modifier</button>
-                <button onClick={() => handleDelete(f.id)} className="text-xs text-danger hover:underline">Supprimer</button>
+              <div className="flex gap-3">
+                <button onClick={() => startEdit(f)} className="text-xs font-medium text-primary hover:underline">Modifier</button>
+                <button onClick={() => handleDelete(f.id)} className="text-xs font-medium text-danger hover:underline">Supprimer</button>
               </div>
             </div>
             {f.ville && <p className="mt-2 text-sm text-muted">{f.ville}</p>}
             {f.contact_nom && <p className="text-sm">{f.contact_nom} {f.contact_tel ? `· ${f.contact_tel}` : ""}</p>}
             {f.contact_email && <p className="text-sm text-muted">{f.contact_email}</p>}
             {(f.nif || f.rccm) && <p className="mt-1 text-xs text-muted">NIF: {f.nif ?? "-"} · RCCM: {f.rccm ?? "-"}</p>}
-          </div>
+          </Card>
         ))}
       </div>
     </main>

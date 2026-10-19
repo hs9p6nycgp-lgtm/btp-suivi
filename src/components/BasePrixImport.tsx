@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/client";
 import * as XLSX from "xlsx";
 import { parseBasePrixWorkbook, validerBasePrix } from "@/lib/import/basePrix";
 import { useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
 export default function BasePrixImport({ onImported }: { onImported?: () => void }) {
   const [fileName, setFileName] = useState<string | null>(null);
@@ -23,7 +25,7 @@ export default function BasePrixImport({ onImported }: { onImported?: () => void
     const parsed = parseBasePrixWorkbook(workbook);
 
     if (parsed.length === 0) {
-      setMessage("Aucune ligne valide trouvee dans les onglets.");
+      setMessage("Aucune ligne valide trouvée dans les onglets.");
       return;
     }
     setRows(parsed);
@@ -44,14 +46,14 @@ export default function BasePrixImport({ onImported }: { onImported?: () => void
     if (problemes.length > 0) {
       setImporting(false);
       setMessage(
-        `Import bloque : ${problemes.length} ligne(s) sans source ou sans date de source. ` +
+        `Import bloqué : ${problemes.length} ligne(s) sans source ou sans date de source. ` +
         `Exemples : ${problemes.slice(0, 3).join(" ; ")}`,
       );
       return;
     }
 
     const payload = rows.map((r) => {
-      const extra = [r.categorie ? `Categorie: ${r.categorie}` : "", r.zone ? `Zone: ${r.zone}` : ""]
+      const extra = [r.categorie ? `Catégorie : ${r.categorie}` : "", r.zone ? `Zone : ${r.zone}` : ""]
         .filter(Boolean)
         .join(" | ");
       const source = [r.source, extra].filter(Boolean).join(" - ") || null;
@@ -73,33 +75,37 @@ export default function BasePrixImport({ onImported }: { onImported?: () => void
       setMessage(`Erreur d'import : ${error.message}`);
       return;
     }
-    setMessage(`${rows.length} poste(s) importe(s) avec succes.`);
+    setMessage(`${rows.length} poste(s) importé(s) avec succès.`);
     setRows([]);
     if (onImported) onImported();
   }
 
   return (
-    <section className="card p-4">
-      <h2 className="mb-3 text-lg font-medium text-primary">Import Excel (tous les onglets)</h2>
-      <p className="mb-3 text-sm text-slate-600">
-        Lit chaque feuille du classeur, ignore la ligne d&apos;en-tete et importe les colonnes
-        code, designation, unite, prix, source et dates.
+    <Card>
+      <h2 className="mb-1 flex items-center gap-2.5 text-lg font-bold text-foreground">
+        <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+        Import Excel (tous les onglets)
+      </h2>
+      <p className="mb-4 text-sm text-muted">
+        Lit chaque feuille du classeur, ignore la ligne d&apos;en-tête et importe les colonnes
+        code, désignation, unité, prix, source et dates.
       </p>
-      <input type="file" accept=".xlsx,.xls" onChange={onFile} className="block" />
-      {fileName && <p className="mt-2 text-sm">Fichier : {fileName}</p>}
+      <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border/80 bg-surface-2 px-4 py-6 text-center transition hover:border-primary-light/60">
+        <span className="text-sm font-medium text-foreground">
+          {fileName ?? "Choisir un fichier Excel"}
+        </span>
+        <span className="text-xs text-muted">Le fichier est analysé avant l&apos;import.</span>
+        <input type="file" accept=".xlsx,.xls" onChange={onFile} className="hidden" />
+      </label>
       {rows.length > 0 && (
         <div className="mt-3 flex items-center gap-3">
-          <p className="text-sm">{rows.length} ligne(s) prete(s).</p>
-          <button
-            onClick={handleImport}
-            disabled={importing}
-            className="btn-primary disabled:opacity-50"
-          >
+          <p className="text-sm">{rows.length} ligne(s) prête(s).</p>
+          <Button onClick={handleImport} disabled={importing}>
             {importing ? "Import en cours..." : "Importer dans le BPU"}
-          </button>
+          </Button>
         </div>
       )}
-      {message && <p className="mt-3 text-sm text-slate-600">{message}</p>}
-    </section>
+      {message && <p className="mt-3 text-sm text-muted">{message}</p>}
+    </Card>
   );
 }
