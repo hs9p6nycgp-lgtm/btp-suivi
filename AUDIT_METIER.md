@@ -165,7 +165,7 @@ Bon de livraison saisi (matériau, quantité 120, commandée 150, mise en œuvre
 - Enrobé : `BIT-02` 95 000 FCFA/t **et** `ENR-01` 95 000 FCFA/t (quasi doublon) **et** `MAT-008` **35 000 FCFA/t** (prix aberrant, marqué « Valide ») ;
 - Latérite : `LTR-01` 40 000 FCFA/m³ **et** `MB-06` 40 000 FCFA/m³, plus `BIT-05` 28 000 FCFA/m³ pour la latérite améliorée.
 
-**Point nouveau :** la table n'a **aucune date de source** (ni colonne, ni champ dans le formulaire d'ajout) alors que l'exigence REF-04 impose « source **et date** » pour chaque prix. Un prix peut donc être enregistré sans date — la règle n'est pas appliquée là où les devis vont le chercher.
+**Point nouveau (précisé en partie 11) :** la **date de source n'apparaît pas à l'écran** (ni colonne dans la table du BPU, ni champ dans le formulaire d'ajout) alors que l'exigence REF-04 impose « source **et date** ». Vérification faite directement en base : les colonnes `date_source` et `date_validite` ** existent et sont renseignées pour les 289 postes** — le correctif est donc un travail d'**affichage et de saisie**, pas de migration.
 
 ## 13. Référentiel de prix — ❌ vide
 
@@ -347,6 +347,30 @@ Une phrase explicative est affichée sous le tableau : « Les quantités sont co
 - **Fiche devis modifiable** : sur `/calculateurs/devis/<id>`, les champs (client, numéro, date, objet) deviennent éditables, avec « **Enregistrer les modifications** » et « **Supprimer le devis** » — la reprise d'un devis existant est possible.
 
 *(Les tâches n'ont pas été créées sur le chantier de test, pour ne pas polluer ses données.)*
+
+---
+
+# Partie 11 — Base de prix : état chiffré (contrôle direct en base)
+
+Pour que les sessions attaquent la bonne cible, voici l'état réel de la base des prix (`bpu_postes`, 289 lignes) et la liste exacte des corrections à faire.
+
+**Ce qui est déjà bon**
+- Les colonnes `date_source` et `date_validite` **existent** et sont **renseignées sur les 289 lignes** (dates du 14/10, 15/10 et 16/10/2026). Le problème est donc uniquement l'affichage et la saisie, pas la donnée.
+- 158 postes sont marqués « valide », 131 « à vérifier » (source générique « Marché ivoirien 2026 (estimation) – à vérifier »).
+- 29 lignes portent une source named (fournisseur, société bitume, etc.).
+
+**Ce qui bloque un devis (liste de travail)**
+
+| # | Constat chiffré | Impact | Tâche |
+|---|---|---|---|
+| 1 | **Enrobé : 35 000 vs 95 000 FCFA/t** — `MAT-008` « Enrobé à chaud » 35 000/tonne marqué **valide**, contre `BIT-02` et `ENR-01` à 95 000/t marqués « à vérifier ». | Choix de la mauvaise ligne = **−63 %** sur le poste le plus cher de la route | T-LOG-40 |
+| 2 | **Un vrai doublon** : `MAT-001` « Ciment CPJ 42,5 - sac 50kg » 4 500/sac (valide) et `MB-02` « Ciment CPJ 42,5 (sac 50 kg) » 4 800/sac 50 kg (à vérifier) — même produit, 300 FCFA d'écart. | Deux prix pour un même produit | T-LOG-40 |
+| 3 | **Quasi-doublons à prix identiques** : latérite `LTR-01` 40 000 et `MB-06` 40 000 ; enrobé `BIT-02` 95 000 et `ENR-01` 95 000 (« Enrobé » / « Enrobe »). | Choix ambigu à la saisie | T-LOG-40 |
+| 4 | **Unités écritures différentes pour le même produit** : « tonne » vs « t », « m3 » (95 postes) vs « m³ », « m2 » vs « m² », « sac » vs « sac 50 kg ». | Le devis prend « le premier poste correspondant » : une unité mal écrite fait manquer le bon prix ou choisir le mauvais | T-LOG-40 / T-LOG-42 |
+| 5 | **`referentiel_prix` = 0 ligne et `historique_prix` = 0 ligne** : les 289 prix vivent uniquement dans `bpu_postes`. | « Exporter CSV (0) », import REF-05 et historique REF-03 inopérants ; deux bases de prix à tenir | T-LOG-42 |
+| 6 | **131 postes « à vérifier »** avec une source d'estimation générique. | Un devis bâti sur des prix « à vérifier » n'est pas opposable | T-LOG-40 |
+
+**Règle de conduite retenue pour la suite** : ne pas supprimer de ligne de prix sans copie de sauvegarde ni confirmation de l'utilisateur ; la fusion doit conserver la ligne la plus complète (source + date) et renommer l'autre (pas l'inverse).
 
 ---
 

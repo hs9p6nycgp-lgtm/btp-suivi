@@ -167,15 +167,25 @@ décrites avec le détail.
 
 ---
 
-## TODO-LOGIC-010 — BPU : finir le dédoublonnage + conditions fournisseurs (T-LOG-40)
+## TODO-LOGIC-010 — BPU : incohérences de prix, doublons et unités (T-LOG-40)
 
 - **Zone** : base + logique (BPU, fournisseurs). Amélioration issue de l'audit métier du 19/10/2026.
-- **Constaté (test ingénieur)** : après le nettoyage 443 → 289 postes, des lignes très proches subsistent (enrobé à 95 000, 98 000 et **35 000 FCFA/t** ; latérite 40 000 en deux unités) — risque de choisir la mauvaise ligne dans un devis. La table `devis_fournisseurs` (conditions tarifaires) n'est utilisée par aucun écran.
+- **Constaté (test ingénieur)** : après le nettoyage 443 → 289 postes, des lignes très proches subsistent (enrobé à 95 000, 98 000 et **35 000 FCFA/t** ; latérite 40 000 en deux unités) — risque de choisir la mauvaise ligne dans un devis. *(Les conditions tarifaires fournisseurs font l'objet de TODO-LOGIC-013.)*
+- **État mesuré directement en base** (`bpu_postes`, 289 lignes) — la liste de travail exacte :
+  1. **Enrobé : 35 000 vs 95 000 FCFA/t** — `MAT-008` « Enrobé à chaud » 35 000/**tonne** marqué **valide** ; `BIT-02` et `ENR-01` à 95 000/**t** marqués « à vérifier ». **63 % d'écart sur le poste le plus cher de la route**, et c'est la ligne « valide » qui est la moins crédible.
+  2. **Vrai doublon** : `MAT-001` « Ciment CPJ 42,5 - sac 50kg » 4 500/**sac** (valide) et `MB-02` « Ciment CPJ 42,5 (sac 50 kg) » 4 800/**sac 50 kg** (à vérifier) — même produit, 300 FCFA d'écart.
+  3. **Quasi-doublons à prix identiques** : latérite `LTR-01` 40 000 et `MB-06` 40 000 ; enrobé `BIT-02` 95 000 et `ENR-01` 95 000 (« Enrobé » / « Enrobe »).
+  4. **Unités non normalisées** pour un même produit : « tonne » vs « t », « m3 » (95 postes) vs « m³ », « m2 » vs « m² », « sac » vs « sac 50 kg » → le devis prend « le premier poste correspondant » : une unité mal écrite fait manquer le bon prix ou choisir le mauvais.
+  5. **131 postes « à vérifier »** sur 289, avec une source générique « Marché ivoirien 2026 (estimation) – à vérifier ».
 - **À faire**
-  1. Finir le dédoublonnage (même désignation + même unité) ; sauvegarde JSON avant toute suppression ; vérifier les prix aberrants (enrobé 35 000 FCFA/t).
-  2. Rendre `devis_fournisseurs` exploitable par la logique (lecture des conditions, comparaison FOU-03 / FOU-04).
-  3. Script de vérification (`scripts/verifier-devis-bpu.mjs`).
-- **Priorité** : moyenne.
+  1. Fusionner les doublons en conservant la ligne la plus complète (source + date + statut), l'autre passant en « inactif » ou supprimée **après sauvegarde JSON** (outil existant : `scripts/nettoyer-doublons-bpu.mjs`, lecture seule par défaut).
+  2. Arbitrer le prix de l'enrobé (35 000 contre 95 000) : obtenir une source datée ou repasser le poste en « à vérifier » — **ne pas trancher seul**.
+  3. Normaliser les unités (`t`, `m3`, `m2`, `sac 50 kg`) avec une table de correspondance si besoin.
+  4. Fournir une liste de travail des 131 postes « à vérifier ».
+  5. Étendre `scripts/verifier-devis-bpu.mjs` : plus aucun devis ne doit trouver deux prix concurrents pour un même poste.
+- **Attention** : aucune suppression sans sauvegarde et sans accord de l'utilisateur.
+- **Suite** : écran **T-UI-27** (colonne « Date de source »).
+- **Priorité** : **haute** (un devis d'enrobé sous-précé de 63 % n'est pas défendable).
 
 ---
 
@@ -204,10 +214,12 @@ décrites avec le détail.
 ## TODO-LOGIC-012 — Base de prix : date de source obligatoire + lien avec le Référentiel (T-LOG-42)
 
 - **Zone** : base + logique (référentiel de prix). Amélioration issue de l'audit métier du 19/10/2026.
-- **Constaté (test ingénieur)** : 289 postes, dont **158 « valides » et 131 « à vérifier »** ; **aucune date de source** (ni colonne, ni champ à la saisie) alors que l'exigence REF-04 impose « source **et date** » ; et la page **Référentiel de prix est vide (0 prix)** alors que la base de prix en compte 289 → deux bases distinctes, historique REF-03 et import/export REF-05 inopérants, « Exporter CSV (0) » sans contenu.
+- **État mesuré directement en base (précis, 19/10/2026)** :
+  - Les colonnes **`date_source` et `date_validite` existent déjà** dans `bpu_postes` et sont **renseignées sur les 289 lignes** (14/10, 15/10, 16/10/2026). **Aucune migration n'est donc nécessaire** : le correctif porte sur l'**affichage** (colonne « Date de source ») et sur la **saisie** (champ date obligatoire dans le formulaire d'ajout, comme le refus d'un prix sans date dans l'import REF-05).
+  - **`referentiel_prix` = 0 ligne** et **`historique_prix` = 0 ligne** : les 289 prix ne vivent que dans `bpu_postes`. Le Référentiel (historique REF-03, import/export REF-05) n'a jamais été alimenté → « Exporter CSV (0) » est normal.
 - **À faire**
-  1. Rendre la **date de source obligatoire** à l'enregistrement et à la lecture (un prix sans date est refusé, comme dans l'import REF-05).
-  2. Aligner la base de prix sur le **Référentiel** (une seule source de vérité) — ou les brancher explicitement (propagation des prix + historique).
+  1. Afficher la date de source dans la base de prix et la rendre **obligatoire à la saisie** (un prix sans date est refusé) — REF-04.
+  2. Alimenter le **Référentiel** à partir des 289 prix (ou faire de la base de prix l'unique source de vérité, avec historique) — pour débloquer REF-03 et REF-05.
   3. Fournir une liste de travail des **131 postes « à vérifier »** (tri par importance).
   4. Tests automatiques (refus d'un prix sans date, propagation, historique REF-03).
 - **Suite** : écran **T-UI-27** (Session 1).
