@@ -14,6 +14,13 @@
 | 🟢 **Faible** | Middleware d'authentification partiel | ✅ **Non modifié** - Fonctionne correctement tel quel |
 | 🟢 **Faible** | Stockage photos/documents sans isolation utilisateur | ℹ️ **Non modifié** - données de référence partagées par conception |
 
+> **Contrôle complémentaire (19/10/2026) :** après l'application de l'isolation, un
+> contrôle automatisé a parcouru les **34 tables** du projet avec la clé publique (le
+> niveau d'un visiteur non connecté) : **aucune ligne n'est lisible** sans être connecté.
+> Le RLS est actif partout et rien ne fuit. Complément : le test à deux comptes
+> (`scripts/verifier-isolation.mjs`) confirme qu'une fois connecté, un compte ne voit
+> que ses propres chantiers.
+
 ---
 
 ## Constats détaillés
@@ -299,6 +306,27 @@ if (type && !estTypeDetailValide(type, typeDetail) && typeDetail !== "") {
 ### 🟢 C8 - Stockage photos/documents sans isolation utilisateur ℹ️ **NON MODIFIÉ**
 
 **Description** : Identique à l'audit initial. Les tables `referentiel_prix`, `historique_prix` et `bpu_postes` sont des données de référence partagées par conception de l'application. Leur accès ouvert est intentionnel et documenté.
+
+---
+
+---
+
+### ✅ C9 - Contrôle de non-fuite des données (RLS actif partout) ✅ **VÉRIFIÉ**
+
+**Description** :
+Après l'application de l'isolation, un contrôle automatisé parcourt toutes les tables
+du projet avec la clé publique — c'est-à-dire exactement le niveau d'accès d'un
+visiteur non connecté — et vérifie qu'aucune ne renvoie la moindre ligne.
+
+**Résultat (19/10/2026)** : 34 tables parcourues, **aucune ligne lisible** sans être
+connecté (chantiers, devis et lignes de devis, journaux, postes du DQE, BPU,
+référentiel des prix, profils, fournisseurs, seuils de stock, points d'avancement…).
+Le RLS est donc actif partout et l'isolation ne laisse rien fuir.
+
+**Complément** : le test d'isolation à deux comptes (`scripts/verifier-isolation.mjs`)
+confirme qu'une fois connecté, un compte ne voit que ses propres chantiers (le compte B
+ne voit pas le chantier du compte A) ; la migration `0021` est appliquée en base
+(insertion avec retour de ligne acceptée : HTTP 201).
 
 ---
 
