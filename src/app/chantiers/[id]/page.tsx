@@ -367,9 +367,9 @@ export default function ChantierDetailPage() {
               id: chantier.id,
               nom: chantier.nom,
               type: chantier.type,
-              longueur: chantier.longueur || 20,
-              largeur: chantier.largeur || 10,
-              hauteur: chantier.hauteur || 5,
+              longueur: chantier.longueur,
+              largeur: chantier.largeur,
+              hauteur: chantier.hauteur,
             }}
             sections={sections}
           />
