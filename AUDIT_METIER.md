@@ -518,6 +518,29 @@ Depuis la fiche journal, le bouton « **Imprimer le PV** » ouvre `/chantiers/<i
 
 ---
 
+# Partie 21 — Nouveautés du 19/10 : planning, référentiel, sécurité (HSE)
+
+## 39. Planning : retards par tâche et avancement physique (PLA-03 / PLA-04) — ✅ **NOUVEAU, VÉRIFIÉ**
+
+- Le tableau PERT a deux nouvelles colonnes : **« Retard »** et **« Avancement »**, et un indicateur **« TÂCHES EN RETARD »** en tête de page.
+- Le formulaire de tâche propose désormais un **« Poste du DQE suivi »** (« l'avancement de la tâche se calcule sur les quantités saisies ») — l'avancement physique d'une tâche se rattache donc à un poste du DQE, avec la liste des postes et leurs quantités (Décapage et préparation 8 400 m²…).
+
+## 40. Référentiel : filtres complets, prix par zone, péremption (REF-07 / REF-08 / REF-09) — ✅ **NOUVEAU, VÉRIFIÉ**
+
+La page Référentiel propose des filtres par **catégorie**, par **fournisseur** (les sources réelles sont listées : BTP-PRIX, Carrière Anyama, Enrobé CI, Entreprise, Fournisseur Abidjan) et par **ville / zone**, avec la **validité** du prix ; l'export CSV porte toujours sur 289 lignes.
+
+## 41. Sécurité (HSE) : déclaration d'incident et indicateurs — 🟡 livré, **migration à appliquer**
+
+Le module HSE, absent de l'application, est livré : page `/chantiers/<id>/securite` avec les indicateurs **jours sans accident**, **taux de fréquence pour 1 000 000 h travaillées**, **accidents avec arrêt**, **presqu'accidents**, et un formulaire de déclaration complet (date, lieu, description des faits, personnes concernées, durée d'arrêt, presqu'accident, action immédiate engagée, responsable, photos).
+
+**Réserve à traiter** : la table `hse_incidents` n'existe pas encore en base — la **migration `0025_phase4_hse_declarations.sql` doit être appliquée** (les migrations 0023, 0024 et 0026 sont bien appliquées). Tant qu'elle ne l'est pas, la déclaration d'accident est **enregistrée en erreur** ; l'application le signale (« Une erreur est survenue… ») mais le détail technique reste **en anglais** (« Could not find the table 'public.hse_incidents' in the schema cache ») — à traduire, comme les autres messages de la fonction `traduireErreur`.
+
+## 42. Rappel : l'alerte « chantier en retard » reste non corrigée
+
+Le test de la partie 19 refait le 19/10 au soir : la requête `chantiers?select=…,avancement_pct,…` échoue toujours en **400** et un chantier à la fin dépassée n'apparaît toujours pas dans la catégorie « Retards ». La tâche **T-LOG-47** est donc toujours ouverte.
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
