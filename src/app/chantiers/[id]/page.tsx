@@ -207,24 +207,38 @@ export default function ChantierDetailPage() {
                   {libelleTypeDetail(chantier.type_detail)}
                 </span>
               ) : null}
-              <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold backdrop-blur">
-                {langue === "fr" ? s.fr : s.en}
-              </span>
-              <select
-                value={statut}
-                onChange={(e) => {
-                  setStatut(e.target.value);
-                  const supabase = createClient();
-                  supabase.auth.getUser().then(({ data: { user } }) => {
-                    supabase.from("chantiers").update({ statut: e.target.value }).eq("id", chantierId).eq("proprietaire_id", user?.id ?? "");
-                  });
-                }}
-                className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white backdrop-blur outline-none transition-all focus:border-action"
-              >
-                {Object.entries(STATUT_LABELS).map(([key, label]) => (
-                  <option key={key} value={key} className="text-foreground">{langue === "fr" ? label.fr : label.en}</option>
-                ))}
-              </select>
+              {/* Un seul affichage du statut (T-UI-21) : la pastille sert
+                  aussi de menu de changement. */}
+              <label className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold backdrop-blur">
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    s.color === "emerald"
+                      ? "bg-emerald-300"
+                      : s.color === "amber"
+                        ? "bg-amber-300"
+                        : s.color === "rose"
+                          ? "bg-rose-300"
+                          : "bg-sky-300"
+                  }`}
+                  aria-hidden
+                />
+                <select
+                  value={statut}
+                  onChange={(e) => {
+                    setStatut(e.target.value);
+                    const supabase = createClient();
+                    supabase.auth.getUser().then(({ data: { user } }) => {
+                      supabase.from("chantiers").update({ statut: e.target.value }).eq("id", chantierId).eq("proprietaire_id", user?.id ?? "");
+                    });
+                  }}
+                  aria-label={langue === "fr" ? "Statut du chantier" : "Site status"}
+                  className="cursor-pointer appearance-none bg-transparent text-xs font-semibold text-white outline-none"
+                >
+                  {Object.entries(STATUT_LABELS).map(([key, label]) => (
+                    <option key={key} value={key} className="text-foreground">{langue === "fr" ? label.fr : label.en}</option>
+                  ))}
+                </select>
+              </label>
             </div>
           </div>
 
