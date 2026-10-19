@@ -30,7 +30,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 | TODO-UI-024 | Calculateur de murs : prix du sac de ciment appliqué à des kilos + total avec décimales (T-UI-26) | ✅ FAIT (19/10/2026) — quantités converties dans l'unité du prix, total en FCFA sans décimale, format français |
 | TODO-UI-025 | Base de prix : date de source + postes « à vérifier » (T-UI-27) | ✅ FAIT (19/10/2026) — date de source affichée et obligatoire, recherche rétablie, filtre « À vérifier » + liste de travail, synchronisation vers le Référentiel |
 | TODO-UI-026 | Fournisseurs : écran « Conditions tarifaires » (T-UI-28) | ✅ FAIT (19/10/2026) — saisie des offres, comparaison par poste, choix motivé, report du prix dans la base de prix |
-| TODO-UI-027 | Livraisons : choisir le matériau dans une liste (BPU / DQE) (T-UI-29) | 🔜 À FAIRE |
+| TODO-UI-027 | Livraisons : choisir le matériau dans une liste (BPU / DQE) (T-UI-29) | ✅ FAIT (19/10/2026) — liste de matériaux, stocks regroupés par identité, seuils alignés, fusion des doublons |
 
 ---
 
@@ -393,6 +393,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 - **Constaté (test ingénieur du 19/10/2026)** : la saisie fonctionne (livraison enregistrée, écart commandé/livré, stock théorique 120 − 60 = 60, seuil paramétrable) mais le **matériau est un champ texte libre** → « Laterite », « Latérite » ou « LAT-01 » créent des stocks différents.
 - **À faire** : choisir le matériau dans une liste (BPU ou postes du DQE du chantier) avec recherche, et signaler les doublons de saisie — branchement de **T-LOG-44** (Session 2).
 - **Priorité** : moyenne.
+- **✅ Corrigé (19/10/2026)** : le champ « Matériau » propose maintenant une **liste** (base de prix + postes du DQE du chantier + matériaux déjà livrés) avec recherche — un autre nom reste saisissable ; les stocks sont **regroupés par identité de matériau** (« Latérite » et « laterite » ne font plus deux stocks) ; les **seuils d'alerte** suivent la même identité ; un encart signale les doublons d'écriture et propose de les **regrouper** (aucune livraison n'est supprimée). Logique testée (7 tests).
 - **Référence** : `AUDIT_METIER.md` partie 2 §11 ; exigences APP-04, RG-07.
 
 ---

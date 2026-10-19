@@ -23,7 +23,7 @@ décrites avec le détail.
 | TODO-LOGIC-011 | Calculateur de murs : prix dans la bonne unité + montants sans décimale (T-LOG-41) | ✅ CORRIGÉ (19/10) |
 | TODO-LOGIC-012 | Base de prix : date de source obligatoire + lien avec le Référentiel (T-LOG-42) | ✅ CORRIGÉ (19/10) — date obligatoire à la saisie, référentiel alimenté (289 prix), historique REF-03, liste de travail des 131 postes « à vérifier ». |
 | TODO-LOGIC-013 | Fournisseurs : conditions tarifaires (T-LOG-43) | ✅ CORRIGÉ (19/10) — module `src/lib/fournisseurs/conditions.ts` (11 tests) + écran « Conditions tarifaires » (migration `0024` à appliquer). |
-| TODO-LOGIC-014 | Livraisons : matériau rattaché au BPU / DQE (T-LOG-44)            | 🔜 À FAIRE |
+| TODO-LOGIC-014 | Livraisons : matériau rattaché au BPU / DQE (T-LOG-44) | ✅ CORRIGÉ (19/10) — identité canonique du matériau, liste de saisie (BPU + DQE), seuils sur la même identité, regroupement des doublons (7 tests). |
 
 ---
 
@@ -275,12 +275,23 @@ décrites avec le détail.
 
 - **Zone** : logique + base (stocks). Amélioration issue de l'audit métier du 19/10/2026.
 - **Constaté (test ingénieur)** : le module livraisons fonctionne (comparaison commandé / livré / mis en œuvre, stock théorique = entrées − sorties, seuil d'alerte paramétrable par chantier et par matériau) mais le **matériau est saisi en texte libre** (« Laterite ») → une faute de frappe (« Latérite », « LAT-01 ») crée une deuxième ligne de stock et un seuil d'alerte qui ne s'applique plus.
-- **À faire**
-  1. Liste des matériaux alimentée par le **BPU** et/ou les **postes du DQE** du chantier (désignation + unité, recherche).
-  2. Seuils d'alerte rattachés au même identifiant matériau (et non à une chaîne libre).
-  3. Reprise des livraisons existantes (chaîne libre → identifiant matériau) sans perte de données.
-  4. Tests automatiques (stock théorique, écart, surconsommation, seuil).
-- **Suite** : écran **T-UI-29** (Session 1).
+- **État** : CORRIGÉ — module pur testé `src/lib/stock/materiaux.ts` (7
+  tests), branché sur l'écran `/chantiers/[id]/livraisons`.
+  1. ✅ **Identité canonique du matériau** (`cleMateriau`) : « Latérite »,
+     « laterite » et « LATÉRITE » désignent le même matériau ; le libellé
+     affiché reste l'écriture la plus utilisée.
+  2. ✅ **Liste de saisie** alimentée par le **BPU**, les **postes du DQE du
+     chantier** et les matériaux déjà livrés (champ avec liste déroulante
+     et recherche ; un autre nom reste saisissable).
+  3. ✅ **Seuils d'alerte rattachés à la même identité** (clé canonique) : un
+     seuil ne se dédouble plus ; les anciennes lignes écrites avec le
+     libellé brut sont nettoyées à la première modification.
+  4. ✅ **Reprise des livraisons existantes sans perte de données** : les
+     livraisons ne sont jamais supprimées ; un encart signale les doublons
+     d'écriture et propose de les **regrouper** (réécriture du matériau).
+  5. ✅ Tests automatiques (clé canonique, réconciliation, suggestions,
+     plan de fusion).
+- **Suite** : écran **T-UI-29** → fait.
 - **Priorité** : moyenne.
 
 ---

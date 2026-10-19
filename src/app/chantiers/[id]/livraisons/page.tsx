@@ -12,6 +12,13 @@ import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getLangue, traduireErreur } from "@/lib/i18n";
 import { verifierStockBas, materiauxEnAlerte } from "@/lib/stock/stock";
+import {
+  cleMateriau,
+  planifierFusion,
+  reconcilierMateriaux,
+  suggestionsMateriaux,
+  type SuggestionMateriau,
+} from "@/lib/stock/materiaux";
 
 type Livraison = {
   id: string;
@@ -71,6 +78,9 @@ export default function LivraisonsPage() {
   const [messageOk, setMessageOk] = useState(false);
   const [seuils, setSeuils] = useState<Record<string, number>>({});
   const [seuilsLocaux, setSeuilsLocaux] = useState(false);
+  // Materiaux proposés a la saisie : catalogue BPU, postes du DQE du chantier
+  // et materiaux deja livres (APP-03).
+  const [materiauxDisponibles, setMateriauxDisponibles] = useState<SuggestionMateriau[]>([]);
 
   useEffect(() => {
     if (chantierId) load();
@@ -82,7 +92,7 @@ export default function LivraisonsPage() {
     if (!user) { router.replace("/login"); return; }
     const { data: chantier } = await supabase.from("chantiers").select("id").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle();
     if (!chantier) { router.replace("/chantiers"); return; }
-    const [livRes, seuilsRes] = await Promise.all([
+    const [livRes, seuilsRes, bpuRes, postesRes] = await Promise.all([
       supabase
         .from("livraisons")
         .select("*")
@@ -92,9 +102,22 @@ export default function LivraisonsPage() {
         .from("seuils_stock_chantier")
         .select("materiau,seuil")
         .eq("chantier_id", chantierId),
+      supabase.from("bpu_postes").select("designation").limit(500),
+      supabase.from("postes_dqe").select("designation").eq("chantier_id", chantierId),
     ]);
     if (livRes.error) return;
-    setItems((livRes.data ?? []) as Livraison[]);
+    const livraisons = (livRes.data ?? []) as Livraison[];
+    setItems(livraisons);
+
+    // Suggestions de saisie : BPU + postes du chantier + materiaux deja livres.
+    setMateriauxDisponibles(
+      suggestionsMateriaux({
+        bpu: ((bpuRes.data ?? []) as { designation: string }[]).map((p) => p.designation),
+        postes: ((postesRes.data ?? []) as { designation: string }[]).map((p) => p.designation),
+        livraisons: livraisons.map((l) => l.materiau),
+      }),
+    );
+
     if (seuilsRes.error) {
       // Table de seuils pas encore creee en base : repli sur ce navigateur
       setSeuils(lireSeuilsLocaux(chantierId));
@@ -102,7 +125,8 @@ export default function LivraisonsPage() {
     } else {
       const map: Record<string, number> = {};
       for (const s of (seuilsRes.data ?? []) as { materiau: string; seuil: number }[]) {
-        map[s.materiau] = Number(s.seuil) || 0;
+        // Le seuil est identifie par la cle canonique du materiau.
+        map[cleMateriau(s.materiau)] = Number(s.seuil) || 0;
       }
       setSeuils(map);
       setSeuilsLocaux(false);
@@ -172,9 +196,9 @@ export default function LivraisonsPage() {
     load();
   }
 
-  async function changerSeuil(materiau: string, valeur: string) {
+  async function changerSeuil(cle: string, valeur: string) {
     const seuil = Math.max(0, Number(valeur) || 0);
-    const nouveaux = { ...seuils, [materiau]: seuil };
+    const nouveaux = { ...seuils, [cle]: seuil };
     setSeuils(nouveaux);
     if (seuilsLocaux) {
       ecrireSeuilsLocaux(chantierId, nouveaux);
@@ -183,27 +207,107 @@ export default function LivraisonsPage() {
     const supabase = createClient();
     const { error } = await supabase
       .from("seuils_stock_chantier")
-      .upsert({ chantier_id: chantierId, materiau, seuil }, { onConflict: "chantier_id,materiau" });
+      .upsert({ chantier_id: chantierId, materiau: cle, seuil }, { onConflict: "chantier_id,materiau" });
     if (error) {
       // Repli : enregistrer au moins sur cet appareil
       setSeuilsLocaux(true);
       ecrireSeuilsLocaux(chantierId, nouveaux);
+      return;
+    }
+    // Nettoyage : un seuil ecrit precedemment avec le libelle brut
+    // (« Latérite ») ferait double emploi avec la cle canonique.
+    const { data: lignes } = await supabase
+      .from("seuils_stock_chantier")
+      .select("materiau")
+      .eq("chantier_id", chantierId);
+    for (const l of (lignes ?? []) as { materiau: string }[]) {
+      if (l.materiau !== cle && cleMateriau(l.materiau) === cle) {
+        await supabase
+          .from("seuils_stock_chantier")
+          .delete()
+          .eq("chantier_id", chantierId)
+          .eq("materiau", l.materiau);
+      }
     }
   }
 
-  const recap: Record<string, RecapEntry> = {};
-  for (const it of items) {
-    if (!recap[it.materiau]) recap[it.materiau] = { commandee: 0, livree: 0, miseEnOeuvre: 0 };
-    recap[it.materiau].commandee += Number(it.quantite_commandee) || 0;
-    recap[it.materiau].livree += Number(it.quantite) || 0;
-    recap[it.materiau].miseEnOeuvre += Number(it.quantite_mise_en_oeuvre) || 0;
+  /**
+   * Fusionne les differentes ecritures d'un meme materiau (« Laterite »,
+   * « Latérite ») : les livraisons concernees sont reecrites avec le libelle
+   * retenu. Aucune livraison n'est supprimee.
+   */
+  async function fusionnerMateriau(cle: string, libelle: string) {
+    const plan = planifierFusion(
+      items.map((l) => ({ id: l.id, materiau: l.materiau })),
+      cle,
+      libelle,
+    );
+    if (plan.length === 0) return;
+    const supabase = createClient();
+    for (const ligne of plan) {
+      const { error } = await supabase
+        .from("livraisons")
+        .update({ materiau: ligne.nouveau })
+        .eq("id", ligne.id);
+      if (error) {
+        setMessage(traduireErreur(error));
+        setMessageOk(false);
+        return;
+      }
+    }
+    setMessage(
+      langue === "fr"
+        ? `${plan.length} livraison(s) regroupee(s) sous « ${libelle} ».`
+        : `${plan.length} delivery(ies) merged under "${libelle}".`,
+    );
+    setMessageOk(true);
+    load();
   }
 
+  // Recap par materiau : les differentes ecritures d'un meme materiau sont
+  // regroupees (cle canonique), le libelle affiche est le plus utilise.
+  const groupes = reconcilierMateriaux(items);
+  const recap: Record<string, RecapEntry> = {};
+  for (const groupe of groupes) {
+    recap[groupe.cle] = { commandee: 0, livree: 0, miseEnOeuvre: 0 };
+  }
+  for (const it of items) {
+    const cle = cleMateriau(it.materiau);
+    if (!recap[cle]) continue;
+    recap[cle].commandee += Number(it.quantite_commandee) || 0;
+    recap[cle].livree += Number(it.quantite) || 0;
+    recap[cle].miseEnOeuvre += Number(it.quantite_mise_en_oeuvre) || 0;
+  }
+  const doublons = groupes.filter((g) => g.variantes.length > 1);
+
   // APP-03 / APP-04 : stock theorique (entrees - sorties) et alertes de stock bas
-  const alertes = Object.entries(recap).map(([mat, q]) =>
-    verifierStockBas(mat, q.livree, q.miseEnOeuvre, seuils[mat] ?? 0),
+  const alertes = groupes.map((groupe) =>
+    verifierStockBas(
+      groupe.libelle,
+      recap[groupe.cle]?.livree ?? 0,
+      recap[groupe.cle]?.miseEnOeuvre ?? 0,
+      seuils[groupe.cle] ?? 0,
+    ),
   );
   const enAlerte = materiauxEnAlerte(alertes);
+
+  // Lignes du tableau des stocks (regroupees par materiau).
+  const lignesStock = groupes.map((groupe) => {
+    const q = recap[groupe.cle] ?? { commandee: 0, livree: 0, miseEnOeuvre: 0 };
+    const stockTheorique = q.livree - q.miseEnOeuvre;
+    const seuil = seuils[groupe.cle] ?? 0;
+    return {
+      cle: groupe.cle,
+      libelle: groupe.libelle,
+      variantes: groupe.variantes,
+      commandee: q.commandee,
+      livree: q.livree,
+      miseEnOeuvre: q.miseEnOeuvre,
+      stockTheorique,
+      seuil,
+      enAlerte: stockTheorique <= seuil,
+    };
+  });
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
@@ -237,11 +341,25 @@ export default function LivraisonsPage() {
             <label htmlFor="materiau" className="mb-1 block text-sm font-medium text-foreground">Matériau *</label>
             <input
               id="materiau"
+              list="materiaux-disponibles"
+              autoComplete="off"
               className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
               value={materiau}
               onChange={(e) => setMateriau(e.target.value)}
               required
             />
+            {/* Liste proposee : catalogue BPU, postes du DQE du chantier et
+                materiaux deja livres (on peut aussi saisir un autre nom). */}
+            <datalist id="materiaux-disponibles">
+              {materiauxDisponibles.map((m) => (
+                <option key={m.cle} value={m.libelle} />
+              ))}
+            </datalist>
+            <p className="mt-1 text-xs text-muted">
+              {langue === "fr"
+                ? `${materiauxDisponibles.length} matériaux proposés (base de prix et postes du chantier).`
+                : `${materiauxDisponibles.length} materials suggested (price base and site items).`}
+            </p>
           </div>
           <div>
             <label htmlFor="fournisseur" className="mb-1 block text-sm font-medium text-foreground">Fournisseur</label>
@@ -400,6 +518,31 @@ export default function LivraisonsPage() {
           </div>
         )}
 
+        {doublons.length > 0 && (
+          <div className="mb-4 rounded-xl border border-amber-400/40 bg-amber-500/10 p-3 text-sm text-foreground">
+            <p className="mb-2 font-medium">
+              {langue === "fr"
+                ? `${doublons.length} matériau(x) saisi(s) de plusieurs façons : le stock est regroupé, mais les seuils peuvent être doubles.`
+                : `${doublons.length} material(s) written in several ways: the stock is merged, but thresholds may be duplicated.`}
+            </p>
+            <ul className="space-y-1">
+              {doublons.map((groupe) => (
+                <li key={groupe.cle} className="flex flex-wrap items-center gap-2 text-xs">
+                  <span className="font-medium text-foreground">{groupe.libelle}</span>
+                  <span className="text-muted">({groupe.variantes.join(", ")})</span>
+                  <button
+                    type="button"
+                    onClick={() => fusionnerMateriau(groupe.cle, groupe.libelle)}
+                    className="font-semibold text-primary hover:underline"
+                  >
+                    {langue === "fr" ? "Regrouper sous un seul nom" : "Merge under one name"}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <Card padding="none">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -414,31 +557,31 @@ export default function LivraisonsPage() {
                 </tr>
               </thead>
               <tbody>
-                {alertes.map((a) => {
-                  const surconsommation = a.stockTheorique < 0;
-                  const niveau: "danger" | "warning" | "success" = surconsommation ? "danger" : a.enAlerte ? "warning" : "success";
+                {lignesStock.map((ligne) => {
+                  const surconsommation = ligne.stockTheorique < 0;
+                  const niveau: "danger" | "warning" | "success" = surconsommation ? "danger" : ligne.enAlerte ? "warning" : "success";
                   const libelle = surconsommation
                     ? (langue === "fr" ? "Surconsommation" : "Overconsumption")
-                    : a.enAlerte
+                    : ligne.enAlerte
                       ? (langue === "fr" ? "Stock bas" : "Low stock")
                       : "OK";
                   return (
-                    <tr key={a.materiau} className="border-b border-border/60 transition last:border-0 hover:bg-surface-2/70">
-                      <td className="px-4 py-3 font-medium text-foreground">{a.materiau}</td>
-                      <td className="px-4 py-3 text-right tabular-nums text-muted">{recap[a.materiau].livree.toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right tabular-nums text-muted">{recap[a.materiau].miseEnOeuvre.toFixed(2)}</td>
-                      <td className={`px-4 py-3 text-right font-semibold tabular-nums ${a.enAlerte ? "text-danger" : "text-success"}`}>
-                        {a.stockTheorique.toFixed(2)}
+                    <tr key={ligne.cle} className="border-b border-border/60 transition last:border-0 hover:bg-surface-2/70">
+                      <td className="px-4 py-3 font-medium text-foreground">{ligne.libelle}</td>
+                      <td className="px-4 py-3 text-right tabular-nums text-muted">{ligne.livree.toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right tabular-nums text-muted">{ligne.miseEnOeuvre.toFixed(2)}</td>
+                      <td className={`px-4 py-3 text-right font-semibold tabular-nums ${ligne.enAlerte ? "text-danger" : "text-success"}`}>
+                        {ligne.stockTheorique.toFixed(2)}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <input
                           type="number"
                           step="0.01"
                           min="0"
-                          value={seuils[a.materiau] ?? 0}
-                          onChange={(e) => changerSeuil(a.materiau, e.target.value)}
+                          value={seuils[ligne.cle] ?? 0}
+                          onChange={(e) => changerSeuil(ligne.cle, e.target.value)}
                           className="w-24 rounded-lg border border-border/80 bg-surface px-2 py-1 text-right text-sm tabular-nums text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
-                          aria-label={`${langue === "fr" ? "Seuil d'alerte" : "Alert threshold"} ${a.materiau}`}
+                          aria-label={`${langue === "fr" ? "Seuil d'alerte" : "Alert threshold"} ${ligne.libelle}`}
                         />
                       </td>
                       <td className="px-4 py-3 text-center">
