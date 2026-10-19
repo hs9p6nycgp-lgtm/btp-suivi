@@ -66,13 +66,25 @@ function trierParDate(dateA: string, dateB: string) {
   return dateA < dateB ? -1 : dateA > dateB ? 1 : 0;
 }
 
+// Dates compactes des mini-courbes (règle du projet : JJ/MM, jamais d'ISO brut)
+function dateCourte(iso: string) {
+  const [annee, mois, jour] = (iso || "").split("-");
+  return annee && mois && jour ? `${jour}/${mois}` : iso;
+}
+
+// Mois compact d'une clé « AAAA-MM » → « MM/AA »
+function moisCourt(cle: string) {
+  const [annee, mois] = (cle || "").split("-");
+  return annee && mois ? `${mois}/${annee.slice(2)}` : cle;
+}
+
 // Mini-courbe 1 : activité, nombre cumulé de chantiers créés dans le temps
 function activiteParCreation(chantiers: Chantier[]): PointeMini[] {
   const tries = chantiers.slice().sort((a, b) => trierParDate(a.created_at, b.created_at));
   let cumul = 0;
   return tries.map((chantier, index) => {
     cumul += 1;
-    return { x: chantier.created_at.slice(0, 10), y: cumul };
+    return { x: dateCourte(chantier.created_at), y: cumul };
   });
 }
 
@@ -84,7 +96,7 @@ function montantEnCours(chantiers: Chantier[]): PointeMini[] {
   let cumul = 0;
   return enCours.map((chantier) => {
     cumul += Number(chantier.montant_marche || 0);
-    return { x: chantier.created_at.slice(0, 10), y: cumul };
+    return { x: dateCourte(chantier.created_at), y: cumul };
   });
 }
 
@@ -96,7 +108,7 @@ function montantClotures(chantiers: Chantier[]): PointeMini[] {
   let cumul = 0;
   return clotures.map((chantier) => {
     cumul += Number(chantier.montant_marche || 0);
-    return { x: chantier.created_at.slice(0, 10), y: cumul };
+    return { x: dateCourte(chantier.created_at), y: cumul };
   });
 }
 
@@ -111,7 +123,7 @@ function montantParMois(chantiers: Chantier[]): PointeMini[] {
   let cumul = 0;
   return mois.map((cle) => {
     cumul += parMois.get(cle) ?? 0;
-    return { x: cle, y: cumul };
+    return { x: moisCourt(cle), y: cumul };
   });
 }
 
@@ -123,7 +135,7 @@ function chantiersEnPreparation(chantiers: Chantier[]): PointeMini[] {
   let cumul = 0;
   return enPreparation.map((chantier) => {
     cumul += 1;
-    return { x: chantier.created_at.slice(0, 10), y: cumul };
+    return { x: dateCourte(chantier.created_at), y: cumul };
   });
 }
 
@@ -362,7 +374,14 @@ export default function Home() {
               {langue === "fr" ? "Saisie du jour" : "Daily entry"}
             </Link>
             <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold backdrop-blur">
-              {chantiers.length} {langue === "fr" ? "chantiers" : "sites"}
+              {chantiers.length}{" "}
+              {langue === "fr"
+                ? chantiers.length === 1
+                  ? "chantier"
+                  : "chantiers"
+                : chantiers.length === 1
+                  ? "site"
+                  : "sites"}
             </span>
             <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold backdrop-blur">
               {enCours} {langue === "fr" ? "en cours" : "in progress"}

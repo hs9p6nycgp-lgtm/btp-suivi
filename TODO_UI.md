@@ -17,8 +17,8 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 | TODO-UI-011 | Accueil : détail d'alerte lisible (« Valeur / Seuil » bruts) | ✅ FAIT (18/10/2026) |
 | TODO-UI-012 | Création de chantier : formulaire par étapes, position GPS automatique, page « Modifier le chantier » | ✅ FAIT (18/10/2026) |
 | TODO-UI-013 | Fiche chantier : écran planté à l'ouverture (« This page couldn't load ») — couleur de statut inconnue du composant StatCard | ✅ CORRIGÉ (18/10/2026, Session 2 — accord utilisateur) |
-| TODO-UI-014 | Liste des chantiers : badge « En préparation » qui dépasse de sa carte (86 px) | 🔴 À CORRIGER |
-| TODO-UI-015 | Accueil : « 1 chantiers » (pluriel) + dates des mini-courbes coupées | 🔴 À CORRIGER |
+| TODO-UI-014 | Liste des chantiers : badge « En préparation » qui dépasse de sa carte (86 px) | ✅ CORRIGÉ (`min-w-0` présent — vérifié le 19/10) |
+| TODO-UI-015 | Accueil : « 1 chantiers » (pluriel) + dates des mini-courbes coupées | ✅ CORRIGÉ (19/10/2026) |
 | TODO-UI-016 | Connexion : la coquille (barres latérale/haut/bas) s'affiche avant connexion | ✅ CORRIGÉ (18/10/2026, Session 1 — commit `45ee2b8`) |
 | TODO-UI-017 | Accueil : détail d'alerte lisible + finitions (pluriel « 1 chantier », dates des graphiques) | ✅ CORRIGÉ (18/10/2026, Session 2) |
 
@@ -253,22 +253,24 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 
 ---
 
-## TODO-UI-014 — 🔴 Liste des chantiers : badge « En préparation » hors de sa carte (BUG-017)
+## TODO-UI-014 — ✅ CORRIGÉ : Liste des chantiers : badge « En préparation » hors de sa carte (BUG-017)
 
 - **Écran** : liste des chantiers (`/chantiers`) — `src/app/chantiers/page.tsx`, badge ligne 252, carte ligne 233.
 - **Signalé** : badge mesuré **86 px en dehors de sa carte** (capture `pc-r1-liste-chantiers.png`).
 - **Piste** : dans la carte, le conteneur `flex items-start justify-between gap-3` a un bloc de gauche (`div.flex items-center gap-3`) qui ne peut pas se réduire, donc le badge est poussé hors de la carte au lieu que le texte se coupe. Correctif : ajouter `min-w-0` à ce bloc de gauche (les `truncate` du nom/maître d'ouvrage fonctionneront alors).
 - **Priorité** : haute (visible partout).
+- **✅ Vérifié (19/10/2026)** : l'astuce `min-w-0` est bien en place dans la carte (ligne ~244) — le badge ne déborde plus.
 
 ---
 
-## TODO-UI-015 — 🔴 Accueil : « 1 chantiers » et dates des mini-courbes coupées (BUG-019)
+## TODO-UI-015 — ✅ CORRIGÉ : Accueil : « 1 chantiers » et dates des mini-courbes coupées (BUG-019)
 
 - **Écran** : Accueil (`src/app/page.tsx`) — captures `pc-v2-dashboard-bas.png`, `pc-v3-dashboard-fond.png`.
 - **Détail** :
   1. Ligne 365 : `{chantiers.length} {langue === "fr" ? "chantiers" : "sites"}` → affiche « 1 chantiers ». Correctif : singulier quand il n'y en a qu'un → `chantiers.length === 1 ? "chantier" : "chantiers"` (idem « site » / « sites » en anglais).
   2. Mini-courbes : les étiquettes portent les dates **au format ISO brut** (`x: chantier.created_at.slice(0, 10)` → « 2026-10-18 » ; `slice(0, 7)` → « 2026-10 »). Deux soucis : coupées en bas des cartes (graphique trop court : `h-16` dans `StatCard`) et format non conforme à la règle du projet (JJ/MM/AAAA). Correctifs suggérés : formater les x à la construction des points (date → « 18/10 », mois → « 10/26 ») ; agrandir la zone du graphique dans `StatCard` (`h-16` → `h-20`) ; ajouter une petite marge à droite (`margin={{ right: 6 }}`) pour que la dernière étiquette (« 2026-10 » sur la carte « Montant total ») ne soit plus rognée.
 - **Priorité** : moyenne (finitions).
+- **✅ Corrigé (19/10/2026, Session 1)** : pluriel accordé (« 1 chantier » / « 1 site ») ; étiquettes en JJ/MM (`dateCourte`) et MM/AA (`moisCourt`) ; graphique agrandi (`h-20`) et marge à droite (6) pour ne plus rogner la dernière étiquette.
 
 ---
 
