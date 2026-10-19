@@ -35,9 +35,12 @@ décrites avec le détail.
   3. ✅ `avancementFinancier` (5.3) affiché en carte stat globale.
   4. ✅ `ecartBudgetaire` (5.5) utilisé dans la page coûts.
   5. ✅ `joursEcartDelai` (5.4) affiché dans la page planning (carte stat).
-- **Restant (priorité S)** : 5.6 `rendementEngin`, 5.7 `tauxDisponiteEngin`,
-  5.10 `indicePerformanceCoût`, 5.11 `indicePerformanceDelai` — disponibles
-  dans `metre.ts` pour intégration ultérieure.
+  6. ✅ 5.6 `rendementEngin` et 5.7 `tauxDisponiteEngin` affichés dans la
+     liste des engins du journal (avec les heures de marche, la quantité
+     produite et les heures prévues saisissables).
+  7. ✅ 5.10 `indicePerformanceCoût` (CPI) et 5.11 `indicePerformanceDelai`
+     (SPI) : la page coûts les affiche et `calculValeurAcquise` appelle
+     désormais ces deux formules de référence.
 - **Priorité** : haute (exigence M).
 
 ---
@@ -45,11 +48,18 @@ décrites avec le détail.
 ## TODO-LOGIC-002 — validerBasePrix jamais appelée lors de l’import (BUG-006)
 
 - **Zone** : logique (import / validation des données).
-- **À corriger**
-  1. Appeler `validerBasePrix` (`src/lib/import/basePrix.ts`, ligne 163)
-     avant d’insérer chaque ligne du Base de prix.
-  2. Bloquer (ou signaler) les lignes sans source ou sans date de source,
-     conformément à l’exigence REF-04.
+- **État** : CORRIGÉ — la règle REF-04 passe maintenant par un point de repère
+  unique, `validerBasePrix` (`src/lib/import/regles.ts`, réexporté par
+  `src/lib/import/basePrix.ts`).
+  1. ✅ L’import Excel / CSV du référentiel (`analyserImportReferentiel`,
+     `src/lib/referentiel/prix.ts`) appelle `validerBasePrix` : une ligne sans
+     source ou sans date de source est rejetée, avec le message de la règle
+     (« la ligne est sans source » / « la ligne est sans date de source »).
+  2. ✅ Test automatique dans `src/lib/referentiel/__tests__/prix.test.ts`
+     (le motif du rejet vient bien de `validerBasePrix`).
+  3. ✅ La règle vit dans un module sans dépendance (`regles.ts`) : elle est
+     utilisable par tous les chemins d’import, sans charger la bibliothèque
+     Excel.
 - **Priorité** : moyenne (import des données déjà fonctionnel, mais les
   prix sans source doivent être identifiés).
 
@@ -160,6 +170,62 @@ décrites avec le détail.
   1. Finir le dédoublonnage (même désignation + même unité) ; sauvegarde JSON avant toute suppression ; vérifier les prix aberrants (enrobé 35 000 FCFA/t).
   2. Rendre `devis_fournisseurs` exploitable par la logique (lecture des conditions, comparaison FOU-03 / FOU-04).
   3. Script de vérification (`scripts/verifier-devis-bpu.mjs`).
+- **Priorité** : moyenne.
+
+---
+
+## TODO-LOGIC-011 — Calculateur de murs : prix dans la bonne unité + montants sans décimale (T-LOG-41)
+
+- **Zone** : logique (calculateurs de métré). Amélioration issue de l'audit métier du 19/10/2026.
+- **Constaté (test ingénieur)** : les **volumes sont exacts** (mur 20 × 3 m, ép. 0,20 → 60 m² brut, 57 m² net, 11,4 m³, 1 497 blocs, mortier 0,382 m³, ciment 107 kg, sable 0,306 m³) mais le **prix du sac de ciment est appliqué à des kilos** : 107 kg × 4 800 = **513 516 FCFA** affichés au lieu de 2,14 sacs × 4 800 = **10 272 FCFA** (soit **×50** ; sur le mur de 400 m² : 3 472 896 au lieu de 69 458). Le total est aussi affiché **avec des décimales** (« 9 662 799,56 FCFA ») alors que RG-06 impose des montants en FCFA **sans décimale**, et les volumes utilisent le point décimal anglais (« 4.750 m³ »).
+- **À faire**
+  1. Convertir la quantité dans l'unité du prix du BPU avant de multiplier (ciment : kg → sacs de 50 kg ; même règle pour tout poste dont l'unité diffère).
+  2. Arrondir chaque poste et le total à l'entier (FCFA sans décimale).
+  3. Format français : virgule décimale, unité « m³ ».
+  4. Tests automatiques avec les cas de recette (mur 20 × 3 × 0,20 et 10 × 2,5 × 0,20) + un test « unité de prix ≠ unité de quantité ».
+- **Suite** : écran **T-UI-26** (Session 1).
+- **Priorité** : **haute** (un devis de mur part avec un total faux).
+
+---
+
+## TODO-LOGIC-012 — Base de prix : date de source obligatoire + lien avec le Référentiel (T-LOG-42)
+
+- **Zone** : base + logique (référentiel de prix). Amélioration issue de l'audit métier du 19/10/2026.
+- **Constaté (test ingénieur)** : 289 postes, dont **158 « valides » et 131 « à vérifier »** ; **aucune date de source** (ni colonne, ni champ à la saisie) alors que l'exigence REF-04 impose « source **et date** » ; et la page **Référentiel de prix est vide (0 prix)** alors que la base de prix en compte 289 → deux bases distinctes, historique REF-03 et import/export REF-05 inopérants, « Exporter CSV (0) » sans contenu.
+- **À faire**
+  1. Rendre la **date de source obligatoire** à l'enregistrement et à la lecture (un prix sans date est refusé, comme dans l'import REF-05).
+  2. Aligner la base de prix sur le **Référentiel** (une seule source de vérité) — ou les brancher explicitement (propagation des prix + historique).
+  3. Fournir une liste de travail des **131 postes « à vérifier »** (tri par importance).
+  4. Tests automatiques (refus d'un prix sans date, propagation, historique REF-03).
+- **Suite** : écran **T-UI-27** (Session 1).
+- **Priorité** : **haute** (traçabilité des prix — exigence M).
+
+---
+
+## TODO-LOGIC-013 — Fournisseurs : conditions tarifaires (T-LOG-43)
+
+- **Zone** : logique + base (fournisseurs). Amélioration issue de l'audit métier du 19/10/2026.
+- **Constaté (test ingénieur)** : le module fournisseurs fonctionne (liste, filtres par type, formulaire complet) mais **aucune section « conditions tarifaires »** : la table `devis_fournisseurs` n'est utilisée par aucun écran → impossible de saisir une offre, de comparer deux offres sur un même poste ou de tracer le choix motivé (FOU-03, FOU-04).
+- **À faire**
+  1. Fonctions d'enregistrement / lecture des conditions tarifaires (fournisseur, poste, prix unitaire, unité, date de validité, référence du devis).
+  2. Comparaison de plusieurs offres pour un même poste, avec **choix motivé et trace de la décision** (FOU-04).
+  3. Propagation du prix retenu vers la base de prix / le devis (comme le référentiel).
+  4. Tests automatiques (comparaison, tri par prix, traçabilité du choix).
+- **Suite** : écran **T-UI-28** (Session 1).
+- **Priorité** : moyenne.
+
+---
+
+## TODO-LOGIC-014 — Livraisons : matériau rattaché au BPU / DQE (T-LOG-44)
+
+- **Zone** : logique + base (stocks). Amélioration issue de l'audit métier du 19/10/2026.
+- **Constaté (test ingénieur)** : le module livraisons fonctionne (comparaison commandé / livré / mis en œuvre, stock théorique = entrées − sorties, seuil d'alerte paramétrable par chantier et par matériau) mais le **matériau est saisi en texte libre** (« Laterite ») → une faute de frappe (« Latérite », « LAT-01 ») crée une deuxième ligne de stock et un seuil d'alerte qui ne s'applique plus.
+- **À faire**
+  1. Liste des matériaux alimentée par le **BPU** et/ou les **postes du DQE** du chantier (désignation + unité, recherche).
+  2. Seuils d'alerte rattachés au même identifiant matériau (et non à une chaîne libre).
+  3. Reprise des livraisons existantes (chaîne libre → identifiant matériau) sans perte de données.
+  4. Tests automatiques (stock théorique, écart, surconsommation, seuil).
+- **Suite** : écran **T-UI-29** (Session 1).
 - **Priorité** : moyenne.
 
 ---

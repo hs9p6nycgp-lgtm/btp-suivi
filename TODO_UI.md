@@ -21,6 +21,16 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 | TODO-UI-015 | Accueil : « 1 chantiers » (pluriel) + dates des mini-courbes coupées | ✅ CORRIGÉ (19/10/2026) |
 | TODO-UI-016 | Connexion : la coquille (barres latérale/haut/bas) s'affiche avant connexion | ✅ CORRIGÉ (18/10/2026, Session 1 — commit `45ee2b8`) |
 | TODO-UI-017 | Accueil : détail d'alerte lisible + finitions (pluriel « 1 chantier », dates des graphiques) | ✅ CORRIGÉ (18/10/2026, Session 2) |
+| TODO-UI-018 | Qualité : créer les plans de contrôle (T-UI-22) — bloquant, fiches NC automatiques inaccessibles | 🔜 À FAIRE |
+| TODO-UI-019 | Devis : enregistrer, nommer, exporter (T-UI-23) — le devis disparaît à la fermeture | 🔜 À FAIRE |
+| TODO-UI-020 | Planning : liens entre tâches + modifier / supprimer une tâche (T-UI-24) | 🔜 À FAIRE |
+| TODO-UI-021 | Rapports : sections détaillées + libellés « Valorisation travaux / Dépenses réelles » (T-UI-25) | 🔜 À FAIRE |
+| TODO-UI-022 | Export Excel : feuilles manquantes + valeurs traduites et dates JJ/MM/AAAA (T-UI-20) | 🔜 À FAIRE |
+| TODO-UI-023 | Fiche chantier : un seul affichage du statut (T-UI-21) | 🔜 À FAIRE |
+| TODO-UI-024 | Calculateur de murs : prix du sac de ciment appliqué à des kilos + total avec décimales (T-UI-26) | 🔜 À FAIRE |
+| TODO-UI-025 | Base de prix : date de source + postes « à vérifier » (T-UI-27) | 🔜 À FAIRE |
+| TODO-UI-026 | Fournisseurs : écran « Conditions tarifaires » (T-UI-28) | 🔜 À FAIRE |
+| TODO-UI-027 | Livraisons : choisir le matériau dans une liste (BPU / DQE) (T-UI-29) | 🔜 À FAIRE |
 
 ---
 
@@ -285,7 +295,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 
 ---
 
-## TODO-UI-017 — Qualité : créer les plans de contrôle (T-UI-22)
+## TODO-UI-018 — Qualité : créer les plans de contrôle (T-UI-22)
 
 - **Écran** : Qualité du chantier (`/chantiers/[id]/qualite`) — `src/app/chantiers/[id]/qualite/page.tsx`.
 - **Constaté (test ingénieur du 19/10/2026)** : le menu « Sélectionner un paramètre » est **vide** ; aucun écran ne permet de créer un plan de contrôle (paramètre, valeur exigée, tolérances +/−, unité). Sans plan, impossible de saisir un essai (QUA-02) ni de déclencher la **fiche de non-conformité automatique** (RG-04) — le code existe mais reste inatteignable.
@@ -295,7 +305,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 
 ---
 
-## TODO-UI-018 — Devis : enregistrer, nommer, exporter (T-UI-23)
+## TODO-UI-019 — Devis : enregistrer, nommer, exporter (T-UI-23)
 
 - **Écran** : Calcul de devis (`/calculateurs/devis`) — `src/app/calculateurs/devis/page.tsx`.
 - **Constaté (test ingénieur du 19/10/2026)** : les calculs sont exacts (total **230 120 800 FCFA** vérifié au franc près) mais **aucun bouton Enregistrer / Exporter / Imprimer** : le devis disparaît en quittant la page ; ni client, ni numéro, ni date, ni rattachement au chantier.
@@ -305,7 +315,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 
 ---
 
-## TODO-UI-019 — Planning : liens entre tâches + modifier / supprimer (T-UI-24)
+## TODO-UI-020 — Planning : liens entre tâches + modifier / supprimer (T-UI-24)
 
 - **Écran** : Planning du chantier (`/chantiers/[id]/planning`) — `src/app/chantiers/[id]/planning/page.tsx`.
 - **Constaté (test ingénieur du 19/10/2026)** : aucun moyen de créer un lien entre tâches. Toutes démarrent à J0 ; le chemin critique affiché est faux (la plus longue tâche seulement — « Revêtement », 20 j). Impossible aussi de **modifier / supprimer** une tâche (seulement ajouter et cocher « terminé »).
@@ -315,7 +325,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 
 ---
 
-## TODO-UI-020 — Rapports : sections détaillées + libellés (T-UI-25)
+## TODO-UI-021 — Rapports : sections détaillées + libellés (T-UI-25)
 
 - **Écran** : Rapports (`/rapports`) — `src/app/rapports/page.tsx`.
 - **Constaté (test ingénieur du 19/10/2026)** : le rapport ne contient que **8 chiffres** — ni journaux (météo, effectifs, engins, incidents), ni photos, ni détail des postes, ni non-conformités, ni dépenses par catégorie. « Coût réalisé » et « Dépenses » sont deux notions différentes aux noms trop proches.
@@ -325,7 +335,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 
 ---
 
-## TODO-UI-021 — Export Excel : feuilles manquantes + lisibilité (T-UI-20)
+## TODO-UI-022 — Export Excel : feuilles manquantes + lisibilité (T-UI-20)
 
 - **Écran** : Export (`/export`) — `src/app/export/page.tsx`.
 - **Constaté (test ingénieur du 19/10/2026)** : le fichier `.xlsx` fonctionne (feuilles Postes DQE, Dépenses, Planning ; chiffres exacts) mais **feuilles manquantes** : journaux (effectifs, engins, incidents), livraisons, non-conformités, photos. Valeurs **brutes** : statut `a_faire`, catégorie `materiaux`, dates `2026-10-19`, cellules `null`.
@@ -335,12 +345,52 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 
 ---
 
-## TODO-UI-022 — Fiche chantier : un seul affichage du statut (T-UI-21)
+## TODO-UI-023 — Fiche chantier : un seul affichage du statut (T-UI-21)
 
 - **Écran** : fiche chantier (`/chantiers/[id]`) — `src/app/chantiers/[id]/page.tsx`.
 - **Constaté (test ingénieur du 19/10/2026)** : le statut apparaît **deux fois** côte à côte (pastille « En préparation » + menu déroulant « En préparation »). Fusionner en un seul élément cliquable.
 - **Priorité** : basse (finition).
 - **Référence** : `AUDIT_METIER.md` §1 ; exigence CHA-04.
+
+---
+
+## TODO-UI-024 — Calculateur de murs : prix affichés et total (T-UI-26)
+
+- **Écran** : Calculateur de murs (`/calculateurs/mur`) — `src/app/calculateurs/mur/page.tsx`.
+- **Constaté (test ingénieur du 19/10/2026)** : les quantités sont exactes, mais le **prix du sac de ciment est appliqué à des kilos** : 107 kg × 4 800 FCFA = **513 516 FCFA** affichés au lieu de **10 272 FCFA** (soit ×50). L'écran se contente d'écrire « Ajustez si le prix est par sac/m3 » tout en affichant un **total faux**. Le total est aussi affiché **avec des décimales** (« 9 662 799,56 FCFA ») — la règle RG-06 impose des montants en FCFA **sans décimale** — et les volumes utilisent le point décimal anglais (« 4.750 m³ ») au lieu de la virgule française.
+- **À faire** : total matériaux en FCFA **sans décimale** ; message clair quand l'unité du prix BPU ne correspond pas à l'unité de la quantité (« prix au sac de 50 kg — conversion appliquée ») ; virgule décimale française ; unité « m³ » — branchement de la logique **T-LOG-41** (Session 2).
+- **Priorité** : **haute** (c'est le prix présenté au client).
+- **Référence** : `AUDIT_METIER.md` partie 2 §10 ; exigences MET-03, RG-06.
+
+---
+
+## TODO-UI-025 — Base de prix : date de source et postes « à vérifier » (T-UI-27)
+
+- **Écran** : Base de prix (`/bpu`) — `src/app/bpu/page.tsx`.
+- **Constaté (test ingénieur du 19/10/2026)** : 289 postes dont **158 « valides » et 131 « à vérifier »** ; **aucune date de source** ni dans la table ni dans le formulaire d'ajout (exigence REF-04). Les doublons restent bien visibles (enrobé 95 000 ×2 + **35 000** ; latérite 40 000 ×2).
+- **À faire** : colonne « Date de source » + champ date obligatoire à l'ajout ; filtre / tri sur les postes « à vérifier » ; lien vers le Référentiel (page aujourd'hui vide) — branchement de **T-LOG-42** (Session 2).
+- **Priorité** : moyenne.
+- **Référence** : `AUDIT_METIER.md` partie 2 §12 ; exigence REF-04.
+
+---
+
+## TODO-UI-026 — Fournisseurs : écran « Conditions tarifaires » (T-UI-28)
+
+- **Écran** : Fournisseurs (`/fournisseurs`) — `src/app/fournisseurs/page.tsx`.
+- **Constaté (test ingénieur du 19/10/2026)** : le module fonctionne (liste, filtres par type, formulaire complet : raison sociale, type, adresse, ville, contact, téléphone, e-mail, NIF, RCCM) mais **aucune section « conditions tarifaires »** : la table `devis_fournisseurs` reste inutilisée → impossible de saisir une offre fournisseur ou de comparer deux offres (FOU-03, FOU-04).
+- **À faire** : section « Conditions tarifaires » par fournisseur (poste, prix unitaire, unité, date de validité, référence du devis), comparaison de deux offres sur un même poste et affichage du **choix motivé** — branchement de **T-LOG-43** (Session 2).
+- **Priorité** : moyenne.
+- **Référence** : `AUDIT_METIER.md` partie 2 §14 ; exigences FOU-03, FOU-04.
+
+---
+
+## TODO-UI-027 — Livraisons : choisir le matériau dans une liste (T-UI-29)
+
+- **Écran** : Livraisons (`/chantiers/[id]/livraisons`) — `src/app/chantiers/[id]/livraisons/page.tsx`.
+- **Constaté (test ingénieur du 19/10/2026)** : la saisie fonctionne (livraison enregistrée, écart commandé/livré, stock théorique 120 − 60 = 60, seuil paramétrable) mais le **matériau est un champ texte libre** → « Laterite », « Latérite » ou « LAT-01 » créent des stocks différents.
+- **À faire** : choisir le matériau dans une liste (BPU ou postes du DQE du chantier) avec recherche, et signaler les doublons de saisie — branchement de **T-LOG-44** (Session 2).
+- **Priorité** : moyenne.
+- **Référence** : `AUDIT_METIER.md` partie 2 §11 ; exigences APP-04, RG-07.
 
 ---
 

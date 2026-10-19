@@ -129,13 +129,84 @@ Vue 3D affichée, planning suggéré cohérent (décapage 11 j, base 17 j, compa
 | **6 — cohérence** | 2 | **T-LOG-40** — BPU : finir le dédoublonnage (même désignation + unité) et corriger le prix enrobé à 35 000 FCFA/t ; brancher `devis_fournisseurs` (conditions tarifaires) | `scripts/nettoyer-doublons-bpu.mjs`, BPU, `fournisseurs` |
 | **7 — finitions** | 1 | **T-UI-21** — Fiche chantier : un seul affichage du statut (pastille cliquable) | `src/app/chantiers/[id]/page.tsx` |
 
-> **Répartition en tâches (19/10/2026)** : chaque correction est découpée en **logique** (Session 2) et **écran** (Session 1), règle « un seul propriétaire par tâche » — voir `TACHES.md` (**T-LOG-36 à T-LOG-40**, **T-UI-20 à T-UI-25**) et les dépôts détaillés dans `TODO_LOGIQUE.md` (TODO-LOGIC-006 à 010) et `TODO_UI.md` (TODO-UI-017 à 022).
+> **Répartition en tâches (19/10/2026)** : chaque correction est découpée en **logique** (Session 2) et **écran** (Session 1), règle « un seul propriétaire par tâche » — voir `TACHES.md` (**T-LOG-36 à T-LOG-40**, **T-UI-20 à T-UI-25**) et les dépôts détaillés dans `TODO_LOGIQUE.md` (TODO-LOGIC-006 à 010) et `TODO_UI.md` (TODO-UI-018 à 027).
+
+---
+
+# Partie 2 — Modules annexes (suite du test du même jour)
+
+**Écrans testés :** Fournisseurs · Livraisons & stocks · Référentiel de prix · Base de prix (BPU) · Métré & DQE · Calculateur de murs · Fiche imprimable (A4) · Modélisation 3D · Bloc « Avancement dans le temps » · page Aide.
+
+**Résultat global :** **aucun écran ne plante** (0 exception console sur 10 écrans, 0 page d'erreur). Les modules **Livraisons & stocks**, **Métré**, **Fiche imprimable** et **3D** sont fonctionnels et exacts. Trois points à corriger : un **prix faux** dans le calculateur de murs, la **base de prix sans date de source**, et les **conditions tarifaires fournisseurs sans écran**.
+
+## 9. Métré & DQE — ✅ calculs exacts
+
+Longueur 1 200 m, largeur 7 m, épaisseur 0,25 m → volume en place **2 100 m³**, volume foisonné (×1,2) **2 520 m³**, **168 bennes** (capacité 15 m³), surface **8 400 m²**. Tout est conforme à la section 5 du cahier des charges, arrondi au supérieur compris. Les calculateurs « Béton : ratio d'acier » et « Béton simple » sont présents.
+
+## 10. Calculateur de murs — 🟠 volumes exacts, **prix faux**
+
+**Volumes : corrects.** Mur 20 m × 3 m, épaisseur 0,20 m → surface brute 60 m², nette 57 m², **volume 11,4 m³**, 1 497 blocs, mortier 0,382 m³, ciment 107 kg, sable 0,306 m³. Mur 10 m × 2,5 m → 25 m² / 23,75 m² / **4,75 m³**. Rien à corriger sur les quantités.
+
+**Deux défauts sur les prix :**
+1. **Le prix du sac de ciment est appliqué à des kilos** → total ciment **50 fois trop élevé**. Exemple mesuré : 107 kg × 4 800 FCFA (le prix du *sac* de 50 kg) = **513 516 FCFA** affichés, au lieu de 2,14 sacs × 4 800 = **10 272 FCFA**. Sur le mur de 400 m², c'est **3 472 896 FCFA** au lieu de 69 458 FCFA. L'écran le signale à moitié (« Ajustez si le prix est par sac/m3 ») mais **laisse afficher un total faux**.
+2. **Le total est affiché avec des décimales** : « 9 662 799,**56** FCFA » — la règle RG-06 impose des montants en FCFA **sans décimale**. Les volumes, eux, utilisent le point décimal anglais (« 4.750 m³ ») alors que le reste de l'application utilise la virgule.
+
+## 11. Livraisons & stocks — ✅ en place et exact
+
+Bon de livraison saisi (matériau, quantité 120, commandée 150, mise en œuvre 60, n° de bon, date, photo) → « Livraison enregistrée ». Comparaison **commandé 150 / livré 120 / mis en œuvre 60 / écart −30**, stock théorique **120 − 60 = 60**, état « OK », liste des livraisons avec date en JJ/MM/AAAA. Le seuil d'alerte est paramétrable par chantier et par matériau (RG-07).
+
+**Réserve :** le **matériau est saisi en texte libre** (« Laterite ») — pas de choix dans le BPU ni dans les postes du DQE. Une faute de frappe (« Latérite », « LAT-01 ») crée une deuxième ligne de stock et un seuil d'alerte qui ne s'applique plus. C'est le seul point à améliorer sur ce module.
+
+## 12. Base de prix (BPU) — 🟠 doublons toujours visibles, **pas de date de source**
+
+289 postes, dont **158 « valides » et 131 « à vérifier »** (source « Marché ivoirien 2026 (estimation) – à vérifier »).
+
+**Les doublons sont bien visibles à l'écran** (confirmation du constat de la partie 1) :
+- Enrobé : `BIT-02` 95 000 FCFA/t **et** `ENR-01` 95 000 FCFA/t (quasi doublon) **et** `MAT-008` **35 000 FCFA/t** (prix aberrant, marqué « Valide ») ;
+- Latérite : `LTR-01` 40 000 FCFA/m³ **et** `MB-06` 40 000 FCFA/m³, plus `BIT-05` 28 000 FCFA/m³ pour la latérite améliorée.
+
+**Point nouveau :** la table n'a **aucune date de source** (ni colonne, ni champ dans le formulaire d'ajout) alors que l'exigence REF-04 impose « source **et date** » pour chaque prix. Un prix peut donc être enregistré sans date — la règle n'est pas appliquée là où les devis vont le chercher.
+
+## 13. Référentiel de prix — ❌ vide
+
+La page affiche **0 prix** (« Exporter CSV (0) », liste vide) alors que la base de prix en compte 289. Les deux écrans sont deux bases distinctes : le **Référentiel** (avec source, date de source, date de validité, historique REF-03, import/export REF-05) est vide, et la **base de prix** utilisée par les devis ne suit pas les règles REF. Concrètement : l'historique des prix et l'import/export ne peuvent pas fonctionner ; et le « Export CSV » ne produit rien.
+
+## 14. Fournisseurs — 🟠 module présent, **conditions tarifaires absentes**
+
+Le module existe et fonctionne : liste, filtres par type (Matériaux, Loueur d'engins, Transporteur, Sous-traitant, Laboratoire), formulaire complet (raison sociale, type, adresse, ville, contact, téléphone, e-mail, NIF, RCCM). **Mais aucune section « conditions tarifaires »** : la table `devis_fournisseurs` (FOU-03, FOU-04) n'est utilisée par aucun écran — impossible de saisir une offre fournisseur, de comparer deux offres sur un même poste ou de tracer le choix motivé.
+
+## 15. Fiche imprimable, 3D, bloc avancement, aide — ✅ en place
+
+- **Fiche imprimable** : structure complète (marché, exécution, description de l'ouvrage, découpage et avancement par partie, intervenants, documents, zone de signatures) et **aucun débordement en A4** (largeur 794 px exactement, 0 élément hors page) — l'impression est exploitable.
+- **Modélisation 3D** : la scène se charge (canvas 660 × 598), boutons « Ajouter l'élément » et « Recentrer ».
+- **Bloc « Avancement dans le temps »** : présent sur la fiche chantier (courbe de progression, cadence, fin estimée) avec le formulaire « Nouveau point d'avancement » — aucun point enregistré sur le chantier de test.
+- **Page Aide** : s'affiche correctement (démarrage rapide, modules, mode hors connexion).
+- *Remarque* : la fiche imprimable affiche « Avancement : — » et « Aucune partie découpée » car le chantier de test a été créé **avant** la fonctionnalité automatique du découpage par PK (livrée le 19/10). À revérifier sur un chantier créé depuis.
+
+## 16. HSE — à prévoir plus tard
+
+Les indicateurs HSE existent en logique (taux de fréquence, jours sans accident) mais **aucun écran HSE** n'est accessible. Les exigences concernées sont de priorité **S / C** (HSE-01 « déclaration d'incident ou d'accident avec photos » en S, HSE-02/03 en C) : à planifier, mais pas bloquant.
+
+---
+
+## Corrections proposées (partie 2), par session
+
+| Priorité | Session | Tâche proposée | Fichiers probables |
+|---|---|---|---|
+| **1 — prix faux** | 2 (logique) + 1 (écran) | **T-LOG-41 / T-UI-26** — Calculateur de murs : convertir la quantité de ciment en **sacs de 50 kg** avant d'appliquer le prix du BPU ; arrondir les montants en FCFA **sans décimale** (RG-06) ; virgule décimale française ; tests | `src/app/calculateurs/mur/page.tsx`, `src/lib/calculs/` |
+| **2 — traçabilité des prix** | 2 (logique) + 1 (écran) | **T-LOG-42 / T-UI-27** — Base de prix : **date de source obligatoire** (REF-04) à la saisie et à l'affichage ; brancher la base de prix sur le **Référentiel** (actuellement 0 prix) ; tri des 131 postes « à vérifier » | `src/app/bpu/page.tsx`, `src/lib/referentiel/`, `supabase/` |
+| **3 — conditions fournisseurs** | 2 (logique) + 1 (écran) | **T-LOG-43 / T-UI-28** — Fournisseurs : enregistrer / relire les **conditions tarifaires** (`devis_fournisseurs`), comparer deux offres sur un même poste, tracer le choix motivé (FOU-03, FOU-04) | `src/app/fournisseurs/page.tsx`, `src/lib/fournisseurs/` |
+| **4 — stock fiable** | 2 (logique) + 1 (écran) | **T-LOG-44 / T-UI-29** — Livraisons : choisir le **matériau dans une liste** (BPU ou postes du DQE) au lieu du texte libre ; seuil d'alerte rattaché au même matériau | `src/app/chantiers/[id]/livraisons/page.tsx`, `src/lib/stock/` |
+
+> Ces quatre corrections s'ajoutent aux sept de la partie 1 : **19 tâches au total** (11 pour la partie 1, 8 pour la partie 2), réparties dans `TACHES.md`, `TODO_LOGIQUE.md` et `TODO_UI.md`.
 
 ---
 
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
+
 - Chantier « TEST INGENIEUR — Voirie 1,2 km + assainissement » (`a1e814ea-8072-4882-9506-dafbd743a6aa`), 6 tâches de planning.
 - Journal `dac73e20-010a-4f74-ba0b-558926b5fa6c` (validé) + 2 000 m² de décapage.
 - Import DQE 3 postes, 1 dépense 170 000 FCFA, exports Excel de test.
+- **Livraison** (partie 2) : Laterite 120, commandée 150, mise en œuvre 60, bon `TEST-BL-2026-01`, du 19/10/2026.
 - Compte de test : `test-pc-20261018@example.com`.
