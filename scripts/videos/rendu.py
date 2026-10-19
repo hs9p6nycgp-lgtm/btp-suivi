@@ -293,3 +293,30 @@ def ecrire_gif(chemin: str, images: list[Image.Image], duree_ms: int = 100) -> N
 def images_de_la_scene(scene, duree: int = DUREE_SECONDES, fps: int = FPS) -> list[Image.Image]:
     """Génère les images d'une scène (une fonction du temps → canevas)."""
     return [scene(t / fps).capture() for t in range(duree * fps)]
+
+
+def construire_video(
+    scene,
+    coupures: list[float],
+    duree: int = DUREE_SECONDES,
+    fps: int = FPS,
+    duree_fondu: float = 0.5,
+) -> list[Image.Image]:
+    """Génère les images d'une vidéo, avec un fondu enchaîné aux coupures.
+
+    Sans ce fondu, le passage d'un écran à l'autre est brutal ; avec lui, la
+    vidéo respire comme un vrai montage.
+    """
+    images: list[Image.Image] = []
+    for index in range(duree * fps):
+        t = index / fps
+        image = scene(t).capture()
+        for coupure in coupures:
+            debut = coupure - duree_fondu / 2
+            if debut <= t < debut + duree_fondu:
+                avant = scene(max(0.0, t - duree_fondu)).capture()
+                avance = (t - debut) / duree_fondu
+                image = Image.blend(avant, image, avance)
+                break
+        images.append(image)
+    return images

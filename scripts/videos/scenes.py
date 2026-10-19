@@ -462,3 +462,249 @@ def scene_3(t: float) -> Canevas:
     c = Canevas()
     c.sur_titre("Le suivi se justifie", "Chaque alerte traitée, chaque procès-verbal signé")
     return c
+
+
+# --- Scénario 4 : le chiffrage -------------------------------------------------
+
+
+def ecran_devis(t: float) -> Canevas:
+    c = Canevas()
+    c.barre_laterale(NAVIGATION, "Chantiers")
+    c.barre_haut("Calcul de devis", ["Rechercher", "Alertes", "Thème"])
+    c.texte(232, 86, "Devis — Route de Yopougon", 22, True, ENCRE)
+    c.texte(232, 114, "12 postes · base de prix SOTRA LOG", 12, False, MUTED)
+
+    c.ombre_carte(232, 140, 936, 400)
+    entetes = ["Désignation", "Qté", "P.U. (FCFA)", "Total (FCFA)"]
+    positions = [252, 560, 640, 780]
+    for texte, x in zip(entetes, positions):
+        c.texte(x, 162, texte, 11, True, MUTED)
+    c.ligne(252, 180, 916, 180, BORDER)
+
+    lignes = [
+        ("Déblais en terrassement général", "2 400", "3 200", "7 680 000"),
+        ("Remblais compactés", "1 150", "4 850", "5 577 500"),
+        ("Fourniture de latérite", "1 800", "2 700", "4 860 000"),
+        ("Évacuation des excédants", "900", "1 900", "1 710 000"),
+    ]
+    y = 190
+    for designation, quantite, pu, total in lignes:
+        c.texte(252, y + 14, designation, 12, False, ENCRE, anchor="lm")
+        c.texte(560, y + 14, quantite, 12, False, ENCRE, anchor="lm")
+        c.texte(640, y + 14, pu, 12, False, ENCRE, anchor="lm")
+        c.texte(780, y + 14, total, 12, True, ENCRE, anchor="lm")
+        c.ligne(252, y + 30, 916, y + 30, BORDER)
+        y += 38
+
+    c.rect(560, 352, 916, 388, 8, "#eef2f7")
+    c.texte(576, 370, "Total du devis : 19 827 500 FCFA", 13, True, ENCRE, anchor="lm")
+
+    avance = progression(0, 1, t, 1.0, 2.5)
+    c.vignette(244, 182, 520, 226, ACTION, 8)
+    c.curseur(melange(320, 460, avance), melange(260, 204, avance), presse=avance > 0.9)
+    c.legende("Le devis se lit ligne par ligne : quantités, prix unitaires et total.")
+    return c
+
+
+def ecran_bpu(t: float) -> Canevas:
+    c = Canevas()
+    c.barre_laterale(NAVIGATION, "BPU")
+    c.barre_haut("Base de prix (BPU)", ["Rechercher", "Alertes", "Thème"])
+    c.texte(232, 86, "Base de prix", 22, True, ENCRE)
+    c.rect(232, 112, 560, 146, 10, SURFACE_2, BORDER)
+    c.texte(248, 129, "Rechercher un prix…", 12, False, MUTED, anchor="lm")
+    c.pastille(580, 116, "Importer (Excel)", PRIMARY, "#e8eef6")
+    c.pastille(700, 116, "Exporter", MUTED, "#eef2f7")
+
+    c.ombre_carte(232, 164, 936, 470)
+    entetes = [("Code", 252), ("Désignation", 320), ("Unité", 620), ("Prix (FCFA)", 700)]
+    for texte, x in entetes:
+        c.texte(x, 186, texte, 11, True, MUTED)
+    c.ligne(252, 204, 916, 204, BORDER)
+
+    lignes = [
+        ("TR-01", "Déblais en terrassement général", "m³", "3 200"),
+        ("RB-02", "Remblais compactés à 95 %", "m³", "4 850"),
+        ("LA-01", "Fourniture de latérite (route)", "m³", "2 700"),
+        ("EV-01", "Évacuation excédants (10 km)", "m³", "1 900"),
+        ("GC-01", "Grave 0/31,5 concassée", "m³", "8 400"),
+    ]
+    y = 216
+    for code, designation, unite, prix in lignes:
+        c.texte(252, y + 16, code, 11, True, PRIMARY_CLAIR, anchor="lm")
+        c.texte(320, y + 16, designation, 12, False, ENCRE, anchor="lm")
+        c.texte(620, y + 16, unite, 12, False, MUTED, anchor="lm")
+        c.texte(700, y + 16, prix, 12, True, ENCRE, anchor="lm")
+        c.ligne(252, y + 34, 916, y + 34, BORDER)
+        y += 42
+
+    avance = progression(0, 1, t, 1.0, 2.5)
+    c.vignette(244, 208, 560, 250, ACTION, 8)
+    c.curseur(melange(300, 430, avance), melange(280, 232, avance), presse=avance > 0.9)
+    c.legende("Votre base de prix : chaque prix a sa source et sa date.")
+    return c
+
+
+def ecran_mur(t: float) -> Canevas:
+    """Calculateur de mur : la réponse chiffrée en direct."""
+    c = Canevas()
+    c.barre_laterale(NAVIGATION, "Chantiers")
+    c.barre_haut("Calcul de murs", ["Rechercher", "Alertes", "Thème"])
+    c.texte(232, 86, "Calcul de murs", 22, True, ENCRE)
+
+    c.ombre_carte(232, 116, 560, 470)
+    c.texte(252, 138, "Dimensions", 13, True, ENCRE)
+    champs = [("Longueur", "12,00 m"), ("Hauteur", "3,00 m"), ("Épaisseur", "0,20 m"), ("Ouvertures", "2")]
+    y = 168
+    for libelle, valeur in champs:
+        c.texte(252, y, libelle, 11, True, MUTED)
+        c.rect(252, y + 16, 520, y + 46, 8, SURFACE_2, BORDER)
+        c.texte(266, y + 31, valeur, 13, False, ENCRE, anchor="lm")
+        y += 58
+
+    c.ombre_carte(580, 116, 936, 470)
+    c.texte(600, 138, "Résultat", 13, True, ENCRE)
+    resultats = [
+        ("Surface hors ouvertures", "33,6 m²"),
+        ("Volume de béton", "6,72 m³"),
+        ("Ciment (CPJ 42,5)", "10 270 kg"),
+        ("Coût du mur", "69 458 FCFA"),
+    ]
+    y = 168
+    for libelle, valeur in resultats:
+        c.texte(600, y, libelle, 11, True, MUTED)
+        c.texte(916, y, valeur, 14, True, ENCRE, anchor="ra")
+        c.ligne(600, y + 24, 916, y + 24, BORDER)
+        y += 44
+    c.rect(600, 352, 916, 396, 10, "#fff7ed", ACTION)
+    c.texte(616, 374, "Chiffrage instantané, sans ressaisie", 12, True, ACTION_FORT, anchor="lm")
+
+    avance = progression(0, 1, t, 1.0, 2.5)
+    c.vignette(596, 340, 920, 400, ACTION, 8)
+    c.curseur(melange(700, 780, avance), melange(300, 374, avance), avance > 0.9)
+    c.legende("Le métré donne le volume, les matériaux et le coût, en direct.")
+    return c
+
+
+def scene_4(t: float) -> Canevas:
+    if t < 4:
+        c = Canevas()
+        c.sur_titre("Chiffrer vite, chiffrer juste", "Devis, base de prix et métré reliés entre eux")
+        return c
+    if t < 13:
+        return ecran_devis(t - 4)
+    if t < 21:
+        return ecran_bpu(t - 13)
+    if t < 27:
+        return ecran_mur(t - 21)
+    c = Canevas()
+    c.sur_titre("Du devis au marché, sans ressaisie", "Les prix, les quantités et les coûts restent cohérents")
+    return c
+
+
+# --- Scénario 5 : la qualité et le planning ----------------------------------
+
+
+def ecran_qualite(t: float) -> Canevas:
+    c = Canevas()
+    c.barre_laterale(NAVIGATION, "Chantiers")
+    c.barre_haut("Qualité & contrôle", ["Rechercher", "Alertes", "Thème"])
+    c.texte(232, 86, "Qualité & contrôle", 22, True, ENCRE)
+    c.pastille(232, 116, "Essais conformes (14)", SUCCESS, "#dcfce7")
+    c.pastille(380, 116, "Non-conformités (2)", DANGER, "#fee2e2")
+
+    c.ombre_carte(232, 160, 936, 320)
+    c.texte(252, 182, "Essai de béton — poutre P12", 14, True, ENCRE)
+    c.texte(252, 206, "Prélèvement du 19/10/2026 · route de Yopougon", 11, False, MUTED)
+    entetes = [("Essai", 252), ("Résultat", 430), ("Seuil", 620), ("Verdict", 760)]
+    for texte, x in entetes:
+        c.texte(x, 236, texte, 11, True, MUTED)
+    c.ligne(252, 254, 916, 254, BORDER)
+    resultats = [
+        ("Compression 28 j", "32,4 MPa", "≥ 30 MPa", "CONFORME"),
+        ("Essai d'écrasement (béton)", "slump 8 cm", "5 – 10 cm", "CONFORME"),
+        ("Analyse granulométrique", "Fuseau respecté", "NF P 11-30", "CONFORME"),
+    ]
+    y = 262
+    for essai, resultat, seuil, verdict in resultats:
+        c.texte(252, y + 16, essai, 12, False, ENCRE, anchor="lm")
+        c.texte(430, y + 16, resultat, 12, False, ENCRE, anchor="lm")
+        c.texte(620, y + 16, seuil, 12, False, MUTED, anchor="lm")
+        c.pastille(760, y + 4, verdict, SUCCESS, "#f0fdf4")
+        c.ligne(252, y + 34, 916, y + 34, BORDER)
+        y += 42
+
+    c.ombre_carte(232, 336, 936, 470)
+    c.texte(252, 358, "Non-conformité à traiter", 13, True, ENCRE)
+    c.rect(252, 382, 916, 420, 10, "#fef2f2")
+    c.texte(268, 401, "Fondation villa Cocody · échéance dépassée le 12/10", 12, True, DANGER, anchor="lm")
+    c.rect(252, 428, 916, 458, 10, SURFACE_2)
+    c.texte(268, 443, "Action corrective : reprise du béton de propreté · à valider", 12, False, MUTED, anchor="lm")
+
+    avance = progression(0, 1, t, 1.0, 2.5)
+    c.vignette(596, 344, 920, 412, ACTION, 8)
+    c.curseur(melange(700, 800, avance), melange(300, 372, avance), avance > 0.9)
+    c.legende("Chaque essai est daté, mesuré et archivé : la conformité se prouve.")
+    return c
+
+
+def ecran_planning(t: float) -> Canevas:
+    c = Canevas()
+    c.barre_laterale(NAVIGATION, "Chantiers")
+    c.barre_haut("Planning", ["Rechercher", "Alertes", "Thème"])
+    c.texte(232, 86, "Planning des travaux", 22, True, ENCRE)
+    c.pastille(232, 116, "Chemin critique : 42 j", WARNING, "#fef3c7")
+    c.pastille(400, 116, "3 tâches en retard", DANGER, "#fee2e2")
+
+    c.ombre_carte(232, 156, 936, 470)
+    debut_x = 470
+    for semaine in range(6):
+        x = debut_x + semaine * 72
+        c.ligne(x, 178, x, 440, "#eef2f7")
+        c.texte(x + 36, 180, f"S{semaine + 1}", 10, True, MUTED, anchor="mm")
+    c.ligne(debut_x + 6 * 72, 178, debut_x + 6 * 72, 440, "#eef2f7")
+
+    taches = [
+        ("Terrassement général", 0, 3, SUCCESS),
+        ("Drainage longitudinal", 1, 2, WARNING),
+        ("Couche de fondation", 2, 3, SUCCESS),
+        ("Revêtement (chemin critique)", 4, 2, DANGER),
+    ]
+    y = 200
+    for libelle, debut, duree, couleur in taches:
+        c.texte(252, y + 14, libelle, 12, False, ENCRE, anchor="lm")
+        c.rect(debut_x + debut * 72 + 4, y + 4, debut_x + (debut + duree) * 72 - 4, y + 26, 6, couleur)
+        y += 52
+
+    avance = progression(0, 1, t, 1.0, 2.5)
+    c.vignette(debut_x + 4, 356, debut_x + 6 * 72 - 4, 392, ACTION, 8)
+    c.curseur(melange(300, 640, avance), melange(420, 374, avance), avance > 0.9)
+    c.legende("Le planning montre la tâche qui bloque tout le reste.")
+    return c
+
+
+def scene_5(t: float) -> Canevas:
+    if t < 4:
+        c = Canevas()
+        c.sur_titre("La conformité se prouve", "Essais, non-conformités et planning : la trace reste")
+        return c
+    if t < 14:
+        return ecran_qualite(t - 4)
+    if t < 22:
+        return ecran_planning(t - 14)
+    if t < 27:
+        c = Canevas()
+        c.rect(0, 0, 960, 540, 0, "#0b1b2c")
+        # Maquette 3D de l'ouvrage
+        c.dessin.polygon([(300, 380), (520, 300), (740, 380), (520, 460)], fill="#1e3a5f")
+        c.dessin.polygon([(300, 380), (300, 240), (520, 160), (520, 460)], fill="#2b4a70")
+        c.dessin.polygon([(300, 240), (520, 160), (740, 240), (520, 320)], fill="#3b6ea5")
+        c.dessin.polygon([(360, 300), (430, 265), (430, 360), (360, 395)], fill="#0b1b2c")
+        c.dessin.polygon([(590, 335), (660, 300), (660, 395), (590, 430)], fill="#0b1b2c")
+        c.texte(60, 80, "Modélisation 3D", 26, True, "#ffffff")
+        c.texte(60, 122, "L'ouvrage tel qu'il sera construit, à partir des sections saisies.", 14, False, "#a9bed6")
+        c.legende("L'ouvrage en trois dimensions, à partir des données du chantier.")
+        return c
+    c = Canevas()
+    c.sur_titre("Chaque ouvrage, tracé et vérifié", "De la donnée du chantier à la preuve de conformité")
+    return c

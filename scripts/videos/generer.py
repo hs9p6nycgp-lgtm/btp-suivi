@@ -20,16 +20,19 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from PIL import Image  # noqa: E402
 
 import scenes  # noqa: E402
-from rendu import DUREE_SECONDES, FPS, ecrire_gif  # noqa: E402
+from rendu import DUREE_SECONDES, FPS, construire_video, ecrire_gif  # noqa: E402
 
 RACINE = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 DOSSIER_SORTIE = os.path.join(RACINE, "public", "videos")
 DOSSIER_DOC = os.path.join(RACINE, "docs", "videos")
 
+# (numéro, nom du fichier, scène, titre, instants de coupure)
 VIDEOS = [
-    (1, "tableau-de-bord", scenes.scene_1, "Le tableau de bord"),
-    (2, "saisie-sur-le-chantier", scenes.scene_2, "La saisie sur le terrain, sans réseau"),
-    (3, "alertes-et-proces-verbal", scenes.scene_3, "Les alertes et le procès-verbal"),
+    (1, "tableau-de-bord", scenes.scene_1, "Le tableau de bord", [4, 13, 21, 27]),
+    (2, "saisie-sur-le-chantier", scenes.scene_2, "La saisie sur le terrain, sans réseau", [4, 12, 18, 24]),
+    (3, "alertes-et-proces-verbal", scenes.scene_3, "Les alertes et le procès-verbal", [4, 12, 20, 26]),
+    (4, "chiffrage", scenes.scene_4, "Le chiffrage : devis, base de prix et métré", [4, 13, 21, 27]),
+    (5, "qualite-et-planning", scenes.scene_5, "La conformité : essais, non-conformités, planning", [4, 14, 22, 27]),
 ]
 
 # Voix off : repères de temps et texte à dire (une phrase par repère).
@@ -56,6 +59,20 @@ VIDÉO 3 — Les alertes et le procès-verbal (30 s)
   20-26 s « Un procès-verbal A4 prêt à signer, sorti en un clic depuis le journal. »
   26-30 s « Le suivi se justifie : chaque alerte traitée, chaque procès-verbal signé. »
 
+VIDÉO 4 — Le chiffrage : devis, base de prix et métré (30 s)
+  0-4 s   « Chiffrer vite, chiffrer juste : devis, base de prix et métré reliés entre eux. »
+  4-13 s  « Le devis se lit ligne par ligne : quantités, prix unitaires et total. »
+  13-21 s « Votre base de prix : chaque prix a sa source et sa date. »
+  21-27 s « Le métré donne le volume, les matériaux et le coût, en direct. »
+  27-30 s « Du devis au marché, sans ressaisie. »
+
+VIDÉO 5 — La conformité : essais, non-conformités, planning (30 s)
+  0-4 s   « La conformité se prouve : essais, non-conformités et planning, la trace reste. »
+  4-14 s  « Chaque essai est daté, mesuré et archivé : la conformité se prouve. »
+  14-22 s « Le planning montre la tâche qui bloque tout le reste. »
+  22-27 s « L'ouvrage en trois dimensions, à partir des données du chantier. »
+  27-30 s « Chaque ouvrage, tracé et vérifié. »
+
 CONSEILS DE PRÉSENTATION
   - Les vidéos se lisent dans n'importe quel navigateur (format GIF animé).
   - Pour une soutenance : enchaîner les trois, puis montrer l'application en direct.
@@ -63,24 +80,16 @@ CONSEILS DE PRÉSENTATION
 """
 
 
-def construire_video(scene) -> list[Image.Image]:
-    """Construit les images d'une vidéo (30 s à 10 images/s)."""
-    images = []
-    for index in range(DUREE_SECONDES * FPS):
-        images.append(scene(index / FPS).capture())
-    return images
-
-
 def main() -> None:
     selection = sys.argv[1:] if len(sys.argv) > 1 else None
     os.makedirs(DOSSIER_SORTIE, exist_ok=True)
     os.makedirs(DOSSIER_DOC, exist_ok=True)
 
-    for numero, nom, scene, titre in VIDEOS:
+    for numero, nom, scene, titre, coupures in VIDEOS:
         if selection and str(numero) not in selection:
             continue
         debut = time.time()
-        images = construire_video(scene)
+        images = construire_video(scene, coupures)
         chemin = os.path.join(DOSSIER_SORTIE, f"{numero}-{nom}.gif")
         ecrire_gif(chemin, images, duree_ms=int(1000 / FPS))
         taille = os.path.getsize(chemin) / (1024 * 1024)

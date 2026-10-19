@@ -52,6 +52,32 @@ const VIDEOS = [
       ["26-30 s", "Le suivi se justifie : chaque alerte traitée, chaque procès-verbal signé."],
     ],
   },
+  {
+    fichier: "/videos/4-chiffrage.gif",
+    titre: "Le chiffrage : devis, base de prix et métré",
+    resume:
+      "Le devis se lit ligne par ligne, la base de prix alimente les prix unitaires, le métré donne le coût.",
+    voixOff: [
+      ["0-4 s", "Chiffrer vite, chiffrer juste : devis, base de prix et métré reliés entre eux."],
+      ["4-13 s", "Le devis se lit ligne par ligne : quantités, prix unitaires et total."],
+      ["13-21 s", "Votre base de prix : chaque prix a sa source et sa date."],
+      ["21-27 s", "Le métré donne le volume, les matériaux et le coût, en direct."],
+      ["27-30 s", "Du devis au marché, sans ressaisie."],
+    ],
+  },
+  {
+    fichier: "/videos/5-qualite-et-planning.gif",
+    titre: "La conformité : essais, non-conformités, planning",
+    resume:
+      "Les essais sont datés et archivés, les non-conformités suivies jusqu'à l'action corrective, le planning lu par le chemin critique.",
+    voixOff: [
+      ["0-4 s", "La conformité se prouve : essais, non-conformités et planning, la trace reste."],
+      ["4-14 s", "Chaque essai est daté, mesuré et archivé : la conformité se prouve."],
+      ["14-22 s", "Le planning montre la tâche qui bloque tout le reste."],
+      ["22-27 s", "L'ouvrage en trois dimensions, à partir des données du chantier."],
+      ["27-30 s", "Chaque ouvrage, tracé et vérifié."],
+    ],
+  },
 ];
 
 export default function DemoPage() {
@@ -60,7 +86,7 @@ export default function DemoPage() {
       <PageHeader
         eyebrow="Présentation"
         title="Démo en 30 secondes"
-        description="Trois séquences courtes pour présenter l'application en réunion ou en soutenance."
+        description="Cinq séquences courtes pour présenter l'application en réunion ou en soutenance."
         icon={<Film className="h-5 w-5" />}
       />
 
@@ -73,6 +99,7 @@ export default function DemoPage() {
                 <img
                   src={video.fichier}
                   alt={`Démonstration : ${video.titre}`}
+                  loading="lazy"
                   className="w-full rounded-xl border border-border/70 bg-surface-2"
                 />
                 <div className="mt-3 flex flex-wrap items-center gap-2">
