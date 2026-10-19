@@ -21,6 +21,7 @@ type Chantier = {
 const ROUTES: ItemRoute[] = [
   { href: "/", cle: "home.titre" },
   { href: "/chantiers", cle: "chantiers.titre" },
+  { href: "/alertes", cle: "nav.alertes" },
   { href: "/bpu", cle: "nav.bpu" },
   { href: "/fournisseurs", cle: "nav.fournisseurs" },
   { href: "/referentiel", cle: "nav.referentiel" },

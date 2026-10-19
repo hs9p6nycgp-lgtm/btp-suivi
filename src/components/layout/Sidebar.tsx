@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+  Bell,
   BookOpen,
   Building2,
   CalendarRange,
@@ -36,6 +37,7 @@ type ItemNav = {
 const NAV_TOP_LEVEL: ItemNav[] = [
   { href: "/", cle: "home.titre", icon: <LayoutDashboard className="h-5 w-5" /> },
   { href: "/chantiers", cle: "chantiers.titre", icon: <Building2 className="h-5 w-5" /> },
+  { href: "/alertes", cle: "nav.alertes", icon: <Bell className="h-5 w-5" /> },
   { href: "/bpu", cle: "nav.bpu", icon: <BookOpen className="h-5 w-5" /> },
   { href: "/referentiel", cle: "nav.referentiel", icon: <BookOpen className="h-5 w-5" /> },
   { href: "/fournisseurs", cle: "nav.fournisseurs", icon: <Users className="h-5 w-5" /> },
