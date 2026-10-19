@@ -328,3 +328,35 @@ décrites avec le détail.
   4. Tests automatiques : deux reprises concurrentes sur une file d'une seule opération → **une seule ligne** créée ; rejeu d'une opération en double → une seule ligne.
 - **Suite** : écran **T-UI-30** (Session 1).
 - **Priorité** : **haute** (données dupliquées en terrain, et RG-02 bafouillée).
+
+---
+
+## TODO-LOGIC-015 — Centre d'alertes : les chantiers en retard ne sont jamais signalés (T-LOG-47)
+
+- **Zone** : logique (notifications). Défaut trouvé pendant l'audit métier du 19/10/2026.
+- **Constaté (test ingénieur)** : `src/lib/notificationsSource.ts` (l. 62-63) interroge la table `chantiers` avec la colonne **`avancement_pct`**, **qui n'existe pas** en base (l'avancement est stocké dans `sections_chantier` et `avancements_chantier`). La requête échoue donc en **400 « column chantiers.avancement_pct does not exist »** à chaque appel (6 fois observées d'affilée).
+- **Preuve de l'impact** : un chantier de test dont la fin prévue (30/09/2026) était dépassée et le statut « en cours » **n'apparaît pas** dans la catégorie « Retards » du centre d'alertes ; ni le centre d'alertes ni la pastille de la barre haute ne le signalent. Chantier de test supprimé après le contrôle.
+- **À faire**
+  1. Corriger la requête : ne plus demander une colonne inexistante — calculer l'avancement à partir de `sections_chantier` / `avancements_chantier`, ou ajouter la colonne par une **migration idempotente** (à faire appliquer par l'utilisateur).
+  2. Vérifier que `estEnRetard()` (`src/lib/notifications.ts`) reçoit bien la date de fin et l'avancement.
+  3. Test automatique : un chantier à la fin dépassée doit produire une notification de catégorie « retard » (et la pastille doit l'afficher).
+  4. Vérifier que l'erreur n'est plus silencieuse : si une requête du centre d'alertes échoue, le signaler à l'utilisateur plutôt que d'afficher un centre vide.
+- **Priorité** : **haute** (une alerte de retard qui n'existe pas, c'est un chantier qui dérape sans prévenir).
+
+---
+
+## TODO-LOGIC-016 — Alertes : mise à jour au lieu d'un doublon, et poste DQE renseigné (T-LOG-48)
+
+- **Zone** : logique + base (alertes). Défaut trouvé pendant l'audit métier du 19/10/2026.
+- **Constaté (base)** : l'alerte « écart de quantité » existe en **deux lignes ouvertes et identiques** pour le chantier de test — `type = quantite`, `valeur = −76,19`, `seuil = 10`, **`poste_dqe_id = null`** — créées à 11:34 et 14:43 le même jour. Le centre d'alertes affiche donc deux lignes rigoureusement identiques, sans dire de quel poste du DQE il s'agit.
+- **À faire**
+  1. **Mettre à jour** l'alerte existante au lieu d'insérer une nouvelle ligne (upsert sur `chantier_id` + `type` + `poste_dqe_id`).
+  2. Renseigner `poste_dqe_id` (et le nom du poste dans le libellé lisible) pour que l'utilisateur sache ce qui est concerné.
+  3. Nettoyer les doublons déjà présents en base (avec sauvegarde préalable) — à faire sur accord de l'utilisateur.
+  4. Test automatique : recalculer deux fois les alertes d'un même poste → une seule ligne, avec la bonne date de mise à jour.
+- **Suite** : écran **T-UI-31** (afficher le poste DQE dans la ligne d'alerte).
+- **Priorité** : moyenne.
+
+---
+
+*Fin de TODO_LOGIQUE.md.*

@@ -408,4 +408,14 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 
 ---
 
+## TODO-UI-029 — Centre d'alertes : montrer le poste DQE concerné (T-UI-31)
+
+- **Écran** : Centre d'alertes (`/alertes`) — `src/app/alertes/page.tsx`.
+- **Constaté (test ingénieur du 19/10/2026)** : l'alerte « écart de quantité » s'affiche **deux fois à l'identique** (« Écart : −76,2 % · seuil : 10 % ») sans dire de quel poste du DQE il s'agit (la base confirme `poste_dqe_id = null` et deux lignes ouvertes identiques).
+- **À faire** : afficher le **poste DQE concerné** dans la ligne d'alerte, et ne pas laisser deux lignes visuellement identiques (distinguer ou regrouper) — la correction de fond est côté logique : **T-LOG-48**.
+- **Priorité** : basse (lisibilité), sauf si plusieurs postes sont en écart : la correction devient alors importante.
+- **Référence** : `AUDIT_METIER.md` partie 19 §37 ; exigence APP-04.
+
+---
+
 *Fin de TODO_UI.md.*

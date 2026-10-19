@@ -483,6 +483,28 @@ La Session 2 a produit un **rapport de qualité de la base de prix en lecture se
 
 ---
 
+# Partie 19 — Deux défauts trouvés dans le centre d'alertes
+
+## 36. Les chantiers en retard ne sont jamais signalés — ⚠️ **DÉFAUT CONFIRMÉ**
+
+**Constat** : `src/lib/notificationsSource.ts` (ligne 62-63) interroge la table `chantiers` avec la colonne **`avancement_pct`** — **colonne qui n'existe pas** (l'avancement est stocké dans `sections_chantier` et `avancements_chantier`). La base répond systématiquement **400 « column chantiers.avancement_pct does not exist »** (observé 6 fois de suite pendant un test, sur le centre d'alertes et sur la pastille de la barre haute).
+
+**Test décisif** : j'ai créé un chantier de test dont la date de fin prévue (30/09/2026) était **dépassée** et le statut « en cours ». Le centre d'alertes affiche **« Retards (0) »** : le chantier en retard **n'est jamais signalé**. Le chantier de test a été supprimé immédiatement après.
+
+**Conséquence** : ni le chef de chantier ni le conducteur de travaux ne sont prévenus d'un chantier en retard — alors que c'est l'alerte la plus importante d'un pilotage de chantiers. (Les alertes de stock et de non-conformité fonctionnent, car elles ne dépendent pas de cette requête.)
+
+**Correctif** : ne pas demander une colonne inexistante ; soit calculer l'avancement à partir des sections / points d'avancement, soit ajouter la colonne par une migration idempotente. À tester : un chantier à la date de fin dépassée doit apparaître dans la catégorie « Retards ».
+
+## 37. La même alerte est insérée plusieurs fois et ne dit pas quel poste est concerné — ⚠️ **DÉFAUT CONFIRMÉ**
+
+**Constat en base** : l'alerte « écart de quantité » existe en **deux lignes ouvertes et identiques** pour le chantier de test — `type = quantite`, `valeur = −76,19`, `seuil = 10`, `poste_dqe_id = null` — créées à 11:34 et à 14:43 le même jour. Le centre d'alertes affiche donc **deux lignes rigoureusement identiques**, sans dire de quel poste du DQE il s'agit.
+
+**Cause** : le recalcul des alertes **insère** une nouvelle ligne à chaque passage au lieu de **mettre à jour** l'alerte existante, et `poste_dqe_id` n'est pas renseigné (le poste concerné est perdu).
+
+**Correctif** : mettre à jour l'alerte existante au lieu d'en créer une seconde (upsert sur chantier + type + poste), renseigner `poste_dqe_id`, et afficher le poste DQE concerné dans la ligne d'alerte (sinon deux lignes identiques restent indistinguables pour l'utilisateur).
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
