@@ -15,6 +15,7 @@ import {
   depensesParCategorie,
   formaterMontant,
   formaterPourcentage,
+  periodeParDefaut,
   totalDepenses,
   totalValorisation,
   valorisationPostes,
@@ -66,8 +67,9 @@ export default function RapportsPage() {
     const supabase = createClient();
 
     const chantier = chantiers.find((c) => c.id === selectedChantier);
-    const debut = dateDebut || new Date().toISOString().slice(0, 10);
-    const fin = dateFin || new Date().toISOString().slice(0, 10);
+    const defauts = periodeParDefaut(periode);
+    const debut = dateDebut || defauts.debut;
+    const fin = dateFin || defauts.fin;
 
     const [postesRes, qtesRes, depensesRes, journauxRes, essaisRes, ncRes, detailRes, dernierRes] = await Promise.all([
       supabase.from("postes_dqe").select("*").eq("chantier_id", selectedChantier),
@@ -239,11 +241,29 @@ export default function RapportsPage() {
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">Période</label>
-            <select value={periode} onChange={(e) => setPeriode(e.target.value as Periode)} className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10">
+            <select
+              value={periode}
+              onChange={(e) => {
+                const valeur = e.target.value as Periode;
+                setPeriode(valeur);
+                // La période commande réellement la fenêtre du rapport.
+                const bornes = periodeParDefaut(valeur);
+                setDateDebut(bornes.debut);
+                setDateFin(bornes.fin);
+              }}
+              className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+            >
               <option value="journalier">Journalier</option>
               <option value="hebdomadaire">Hebdomadaire</option>
               <option value="mensuel">Mensuel</option>
             </select>
+            <p className="mt-1 text-xs text-muted">
+              {periode === "journalier"
+                ? "La journée en cours."
+                : periode === "hebdomadaire"
+                  ? "Les sept derniers jours."
+                  : "Depuis le premier jour du mois."}
+            </p>
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">Date début</label>

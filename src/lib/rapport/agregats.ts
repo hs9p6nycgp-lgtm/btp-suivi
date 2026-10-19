@@ -93,6 +93,36 @@ export type ComparaisonDelai = {
   libelle: string;
 };
 
+export type PeriodeRapport = "journalier" | "hebdomadaire" | "mensuel";
+
+function isoLocal(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const j = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${j}`;
+}
+
+/**
+ * Bornes de la periode par defaut (audit metier du 19/10/2026, §5 : le
+ * selecteur de periode « ne changeait reellement pas le contenu »).
+ * - journalier : la journee en cours ;
+ * - hebdomadaire : les sept derniers jours ;
+ * - mensuel : depuis le premier jour du mois.
+ */
+export function periodeParDefaut(
+  periode: PeriodeRapport,
+  reference: Date = new Date(),
+): { debut: string; fin: string } {
+  const fin = new Date(reference.getTime());
+  const debut = new Date(reference.getTime());
+  if (periode === "hebdomadaire") {
+    debut.setDate(debut.getDate() - 6);
+  } else if (periode === "mensuel") {
+    debut.setDate(1);
+  }
+  return { debut: isoLocal(debut), fin: isoLocal(fin) };
+}
+
 const CATEGORIES_DEPENSE: Record<string, string> = {
   materiaux: "Matériaux",
   main_doeuvre: "Main-d'œuvre",

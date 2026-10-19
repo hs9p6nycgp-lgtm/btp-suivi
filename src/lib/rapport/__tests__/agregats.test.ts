@@ -9,6 +9,7 @@ import {
   formaterMontant,
   formaterPourcentage,
   libelleCategorieDepense,
+  periodeParDefaut,
   totalDepenses,
   totalValorisation,
   valorisationPostes,
@@ -139,5 +140,21 @@ describe("agrégats du rapport (REP-01, REP-02)", () => {
     assert.equal(formaterPourcentage(100), "100 %");
     assert.equal(formaterPourcentage(33.34), "33,3 %");
     assert.equal(formaterPourcentage(null), "—");
+  });
+
+  it("calcule les bornes de la période par défaut", () => {
+    const reference = new Date(2026, 9, 19); // 19/10/2026
+    assert.deepEqual(periodeParDefaut("journalier", reference), {
+      debut: "2026-10-19",
+      fin: "2026-10-19",
+    });
+    assert.deepEqual(periodeParDefaut("hebdomadaire", reference), {
+      debut: "2026-10-13",
+      fin: "2026-10-19",
+    });
+    assert.deepEqual(periodeParDefaut("mensuel", reference), {
+      debut: "2026-10-01",
+      fin: "2026-10-19",
+    });
   });
 });
