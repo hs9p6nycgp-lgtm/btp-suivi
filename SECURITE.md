@@ -355,4 +355,16 @@ Le script **`supabase/APPLIQUER_ISOLATION.sql`** contient tout ce qu'il faut pou
 
 Le script est **relançable** : on peut le ré-exécuter autant de fois que nécessaire, sans risque pour les données.
 
+**Après toute migration ou tout changement de politique**, lancer une seule commande :
+
+```bash
+node scripts/verifier-sante.mjs
+```
+
+Elle contrôle en un seul passage : le schéma de la base (toutes les migrations
+appliquées), l'absence de fuite de données (aucune ligne lisible sans être
+connecté), l'isolation à deux comptes (un compte ne voit pas les chantiers d'un
+autre) et la disponibilité des sites en ligne. Sortie `0` = tout va bien ; sinon
+le contrôle en échec est indiqué en clair.
+
 ⚠️ **Important** : Après avoir appliqué les migrations, tester la connexion avec deux comptes utilisateurs différents pour vous assurer que l'isolation fonctionne correctement avant de considérer que le système est sécurisé.
