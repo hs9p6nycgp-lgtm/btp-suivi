@@ -323,6 +323,12 @@ connecté (chantiers, devis et lignes de devis, journaux, postes du DQE, BPU,
 référentiel des prix, profils, fournisseurs, seuils de stock, points d'avancement…).
 Le RLS est donc actif partout et l'isolation ne laisse rien fuir.
 
+**Saisie terrain vérifiée (19/10/2026)** : le test couvre aussi les tables
+enfants — section, poste du DQE, tâche de planning, journal, effectifs, quantité
+réalisée, alerte, document, intervenant, point d'avancement : la base accepte
+les écritures (avec retour de ligne) et l'autre compte ne voit aucune de ces
+lignes ; le nettoyage est complet (aucune ligne de test ne subsiste).
+
 **Complément** : le test d'isolation à deux comptes (`scripts/verifier-isolation.mjs`)
 confirme qu'une fois connecté, un compte ne voit que ses propres chantiers (le compte B
 ne voit pas le chantier du compte A) ; la migration `0021` est appliquée en base

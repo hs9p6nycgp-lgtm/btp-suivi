@@ -315,6 +315,12 @@ listés dans `TODO_LOGIQUE.md`.
   - *Point de vigilance* : les identifiants des deux comptes de test sont
     inscrits dans le dépôt (`scripts/verifier-isolation.mjs`) — à supprimer
     depuis l'authentification Supabase quand les vérifications sont terminées.
+  - **Saisie terrain vérifiée (Session 3, 19/10)** : le test d'isolation
+    couvre aussi les tables enfants (section, poste du DQE, tâche de planning,
+    journal, effectifs, quantité réalisée, alerte, document, intervenant, point
+    d'avancement) : la base **accepte les écritures** (avec retour de ligne) et
+    l'autre compte ne voit **aucune** de ces lignes ; le chantier de test est
+    supprimé et aucune ligne de test ne subsiste.
 - **Référence de code** : requêtes dans `src/app/page.tsx`,
   `src/app/chantiers/page.tsx`, `src/app/chantiers/[id]/page.tsx`,
   `src/components/ChantierStatut.tsx` ;

@@ -5,7 +5,12 @@
 //   2. le compte A cree un chantier de test ;
 //   3. on verifie que A le voit et que le compte B ne le voit PAS ;
 //   4. on verifie qu'aucun chantier sans proprietaire n'est visible ;
-//   5. le compte A supprime le chantier de test.
+//   5. le compte A saisit des donnees dans les tables enfants (section, poste
+//      DQE, tache de planning, journal, effectifs, quantite, alerte, document,
+//      intervenant, point d'avancement) : la base doit accepter l'ecriture ;
+//   6. le compte B ne doit voir aucune de ces lignes ;
+//   7. le compte A supprime le chantier de test ; on verifie qu'il ne reste
+//      aucune ligne de test.
 //
 // Utilisation :
 //   node scripts/verifier-isolation.mjs
@@ -179,14 +184,116 @@ for (const [r, liste] of [[A, listeA], [B, listeB]]) {
   }
 }
 
+// --- Test des tables enfants (saisie terrain) ---------------------------------
+// Le compte A remplit son chantier ; la base doit accepter l'ecriture et le
+// compte B ne doit rien voir. C'est ce que fait l'application au quotidien.
+
+const idSection = creerId();
+const idPoste = creerId();
+const idTache = creerId();
+const idJournal = creerId();
+const aujourdhui = new Date().toISOString().slice(0, 10);
+
+const insertions = [
+  ["sections_chantier", { id: idSection, chantier_id: idTest, nom: "Section test" }],
+  ["postes_dqe", { id: idPoste, chantier_id: idTest, designation: "Poste test", unite: "u" }],
+  ["taches_planning", { id: idTache, chantier_id: idTest, nom: "Tache test" }],
+  ["journaux", { id: idJournal, chantier_id: idTest, date_journal: aujourdhui, statut: "brouillon" }],
+  ["journal_effectifs", { id: creerId(), journal_id: idJournal, corps_metier: "Test", nombre: 1 }],
+  ["quantites_realisees", { id: creerId(), chantier_id: idTest, poste_dqe_id: idPoste, quantite: 1 }],
+  ["alertes", { id: creerId(), chantier_id: idTest, poste_dqe_id: idPoste, valeur: 1, seuil: 2 }],
+  ["documents_chantier", { id: creerId(), chantier_id: idTest, nom: "Doc test", type: "plan", chemin: "/documents/test.pdf" }],
+  ["intervenants_chantier", { id: creerId(), chantier_id: idTest, nom: "Intervenant test" }],
+  ["avancements_chantier", { id: creerId(), chantier_id: idTest, section_id: idSection, date_point: aujourdhui, avancement_pct: 10 }],
+];
+
+// [table, colonne de rattachement, valeur attendue]
+const tablesAVerifier = [
+  ["sections_chantier", "chantier_id", idTest],
+  ["postes_dqe", "chantier_id", idTest],
+  ["taches_planning", "chantier_id", idTest],
+  ["journaux", "chantier_id", idTest],
+  ["journal_effectifs", "journal_id", idJournal],
+  ["quantites_realisees", "chantier_id", idTest],
+  ["alertes", "chantier_id", idTest],
+  ["documents_chantier", "chantier_id", idTest],
+  ["intervenants_chantier", "chantier_id", idTest],
+  ["avancements_chantier", "chantier_id", idTest],
+];
+
+console.log("\n=== TEST DES TABLES ENFANTS (saisie terrain) ===\n");
+
+const ecrituresKo = [];
+let erreurTest = false;
+for (const [table, ligne] of insertions) {
+  const r = await fetch(`${URL}/rest/v1/${table}`, {
+    method: "POST",
+    headers: { ...headers(A.token), Prefer: "return=representation" },
+    body: JSON.stringify(ligne),
+  });
+  if (r.ok) {
+    console.log(`Ecriture du compte A dans ${table.padEnd(23)} : OK`);
+  } else {
+    const d = await lireJson(r);
+    const detail = d?.message ? " : " + d.message : "";
+    ecrituresKo.push(`${table} (HTTP ${r.status}${detail})`);
+    console.log(`Ecriture du compte A dans ${table.padEnd(23)} : REFUSEE (HTTP ${r.status})${detail}`);
+  }
+}
+if (ecrituresKo.length > 0) {
+  // Un refus 401/403 vient de la politique de securite (anomalie reelle) ;
+  // toute autre erreur vient des donnees de test elles-memes (a completer).
+  const refusPolitique = ecrituresKo.filter((e) => e.includes("HTTP 403") || e.includes("HTTP 401"));
+  if (refusPolitique.length > 0) fuite = true;
+  else erreurTest = true;
+  console.log(
+    "\n" +
+      (refusPolitique.length > 0
+        ? "ANOMALIE (politique de securite)"
+        : "TEST INCOMPLET (donnees de test)") +
+      " : " +
+      ecrituresKo.join(" ; "),
+  );
+}
+
+console.log("");
+for (const [table, colonne, valeur] of tablesAVerifier) {
+  const r = await fetch(`${URL}/rest/v1/${table}?select=id&${colonne}=eq.${valeur}`, { headers: headers(B.token) });
+  const d = await lireJson(r);
+  const visible = Array.isArray(d) ? d.length : 0;
+  console.log(`Lecture par le compte B dans ${table.padEnd(23)} : ${visible === 0 ? "rien (OK)" : visible + " ligne(s) VISIBLE -> FUITE"}`);
+  if (visible > 0) fuite = true;
+}
+
 // --- Nettoyage ----------------------------------------------------------------
 
 const supprime = await supprimerChantier(A.token, idTest);
 console.log(`\nChantier de test ${supprime ? "supprime" : "NON SUPPRIME (a nettoyer manuellement)"} (${idTest}).`);
+
+// Aucune ligne de test ne doit subsister (les suppressions sont en cascade).
+let residu = 0;
+for (const [table, colonne, valeur] of tablesAVerifier) {
+  const r = await fetch(`${URL}/rest/v1/${table}?select=id&${colonne}=eq.${valeur}`, { headers: headers(A.token) });
+  const d = await lireJson(r);
+  if (Array.isArray(d) && d.length > 0) {
+    residu += d.length;
+    console.log(`RESIDU : ${d.length} ligne(s) encore presente(s) dans ${table}.`);
+  }
+}
+if (residu > 0) {
+  fuite = true;
+  console.log("ANOMALIE : des lignes de test subsistent dans la base.");
+} else {
+  console.log("Aucune ligne de test ne subsiste (nettoyage complet).");
+}
 
 console.log("\n=== RESULTAT ===");
 if (fuite) {
   console.log("Isolation NON fonctionnelle : reappliquer supabase/APPLIQUER_ISOLATION.sql dans Supabase.");
   process.exit(1);
 }
-console.log("Isolation VERIFIEE : chaque compte ne voit que ses propres chantiers.");
+if (erreurTest) {
+  console.log("Test incomplet : certaines donnees de test n'ont pas pu etre ecrites (voir ci-dessus) — aucune fuite detectee.");
+  process.exit(1);
+}
+console.log("Isolation VERIFIEE : chaque compte ne voit que ses propres chantiers (saisie terrain comprise).");
