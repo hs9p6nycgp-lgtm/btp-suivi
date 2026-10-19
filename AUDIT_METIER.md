@@ -690,6 +690,22 @@ La requête en 400 (`chantiers?select=…,avancement_pct,…`) est toujours pré
 
 ---
 
+# Partie 28 — Rapport de réception, réouverture tracée, dictée vocale
+
+## 56. Rapport de réception imprimable — ✅ **NOUVEAU, VÉRIFIÉ**
+
+Nouvelle page `/chantiers/<id>/reception` : un **rapport de réception** qui rassemble **bilan financier**, **bilan des quantités (DQE)**, **contrôles qualité et réserves**, **sécurité (HSE)**, **réserves à lever**, **observations** et un **procès-verbal de réception** (« Les parties soussignées reconnaissent la réception du chantier, sans réserve, ou avec les réserves mentionnées ci-dessus ») avec **quatre blocs de signature** : maître d'ouvrage, entreprise, conducteur de travaux, responsable qualité. L'impression tient dans la largeur A4 (794 px).
+
+## 57. Réouverture d'un journal validé : motif obligatoire et traçabilité (RG-02) — ✅
+
+La procédure est encadrée : le bouton « Rouvrir la saisie » ouvre un formulaire **« Motif de la correction (obligatoire) »** avec les actions « **Tracer et rouvrir** » et « Annuler » ; le contenu validé est **archivé dans l'historique des versions** avant que la saisie redevienne modifiable. Contrôle de non-régression : la fiche de test a été rouverte puis **revalidée** — elle est laissée « Journal validé et verrouillé ».
+
+## 58. Dictée vocale des observations (JOU-06) — 🟡 livrée, à valider sur un journal ouvert
+
+Le module `src/components/Dictation.tsx` est en place et **gère ses échecs** : « La dictée vocale n'est pas disponible sur cet appareil » (détection de la capacité), « La dictée n'a pas pu démarrer » (échec du micro) et un bouton « Arrêter la dictée » ; le texte dicté s'ajoute aux observations déjà saisies. Le bouton n'apparaît que sur une fiche **modifiable** : je n'ai pas pu le déclencher en automatisation sur le journal de test (validé), mais la logique et les messages d'erreur sont en place — **à confirmer sur un journal ouvert, au micro sur le terrain**.
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
