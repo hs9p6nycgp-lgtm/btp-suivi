@@ -5,9 +5,21 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { getLangue } from "@/lib/i18n";
-import { Download, Printer } from "lucide-react";
+import { Download, Mail, Printer } from "lucide-react";
 import * as XLSX from "xlsx";
+import {
+  corpsRapport,
+  erreurDestinataires,
+  htmlRapport,
+  lienMailto,
+  nomFichierRapport,
+  objetRapport,
+  parseDestinataires,
+  type DonneesRapportEmail,
+} from "@/lib/entreprise/parametres";
+import { useEntreprise } from "@/lib/entreprise/useEntreprise";
 import {
   agregatJournaux,
   agregatNonConformites,
@@ -48,8 +60,23 @@ export default function RapportsPage() {
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState<any>(null);
   const [generating, setGenerating] = useState(false);
+  // REP-04 : envoi du rapport par e-mail
+  const [destinatairesSaisie, setDestinatairesSaisie] = useState("");
+  const [envoiEnCours, setEnvoiEnCours] = useState(false);
+  const [messageOk, setMessageOk] = useState<string | null>(null);
+  const [messageErreur, setMessageErreur] = useState<string | null>(null);
+
+  // REP-05 : coordonnees et logo de l'entreprise
+  const { entreprise, logo } = useEntreprise();
 
   useEffect(() => { loadChantiers(); }, []);
+
+  // Destinataires par defaut (parametres de l'entreprise)
+  useEffect(() => {
+    if (destinatairesSaisie === "" && entreprise.destinataires.length > 0) {
+      setDestinatairesSaisie(entreprise.destinataires.join(", "));
+    }
+  }, [entreprise.destinataires, destinatairesSaisie]);
 
   async function loadChantiers() {
     setLoading(true);
@@ -155,6 +182,82 @@ export default function RapportsPage() {
     window.print();
   }
 
+  /**
+   * REP-04 : preparation de l'envoi du rapport par e-mail. Le rapport est
+   * produit en un fichier HTML autonome (logo integre) ; sur telephone, le
+   * partage natif ouvre la messagerie avec le fichier joint ; sur ordinateur,
+   * le fichier est telecharge et un message est prepare.
+   */
+  async function envoyerParEmail() {
+    if (!reportData) return;
+    const liste = parseDestinataires(destinatairesSaisie);
+    const erreur = erreurDestinataires(liste);
+    if (erreur) {
+      setMessageErreur(erreur);
+      return;
+    }
+    const donnees: DonneesRapportEmail = {
+      chantier: reportData.chantier,
+      debut: reportData.debut,
+      fin: reportData.fin,
+      avancement: Number(reportData.avancement) || 0,
+      montantMarche: Number(reportData.totalCoutPrevu) || 0,
+      valorisation: Number(reportData.totalCoutReal) || 0,
+      depenses: Number(reportData.totalDepenses) || 0,
+      marge: Number(reportData.marge) || 0,
+      nbJournaux: Number(reportData.nbJournaux) || 0,
+      nonConformitesOuvertes: Number(reportData.nonConformites?.ouvertes) || 0,
+      tauxConformite: Number(reportData.tauxConformite) || 0,
+      delai: reportData.delai?.libelle ?? "—",
+    };
+    const objet = objetRapport(donnees);
+    const corps = corpsRapport(donnees);
+    const html = htmlRapport(donnees, entreprise, logo.dataUrl, reportData.valorisation ?? []);
+    const nomFichier = nomFichierRapport(donnees);
+
+    setEnvoiEnCours(true);
+    try {
+      const fichier = new File([html], nomFichier, { type: "text/html" });
+      const partage = navigator as Navigator & {
+        canShare?: (data: { files?: File[] }) => boolean;
+        share?: (data: { files?: File[]; title?: string; text?: string }) => Promise<void>;
+      };
+      if (partage.canShare?.({ files: [fichier] }) && partage.share) {
+        await partage.share({ files: [fichier], title: objet, text: corps });
+        setMessageOk(
+          langue === "fr"
+            ? "Rapport prêt : choisissez la messagerie dans la fenêtre de partage."
+            : "Report ready: choose the mail app in the share sheet.",
+        );
+      } else {
+        // Ordinateur : on telecharge le rapport et on ouvre le message.
+        const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const lien = document.createElement("a");
+        lien.href = url;
+        lien.download = nomFichier;
+        document.body.appendChild(lien);
+        lien.click();
+        lien.remove();
+        URL.revokeObjectURL(url);
+        window.location.href = lienMailto(liste, objet, corps);
+        setMessageOk(
+          langue === "fr"
+            ? "Rapport téléchargé et message préparé dans votre messagerie."
+            : "Report downloaded and the message was prepared in your mail app.",
+        );
+      }
+    } catch (err) {
+      setMessageErreur(
+        langue === "fr"
+          ? "Envoi impossible depuis l'application : le rapport a été préparé, envoyez-le manuellement."
+          : "Sending from the app is not possible: the report was prepared, send it manually.",
+      );
+    } finally {
+      setEnvoiEnCours(false);
+    }
+  }
+
   function exporterExcel() {
     if (!reportData) return;
     const wb = XLSX.utils.book_new();
@@ -221,6 +324,12 @@ export default function RapportsPage() {
                 <Download className="h-4 w-4" />
                 Exporter en Excel
               </Button>
+              <Button variant="outline" onClick={envoyerParEmail} disabled={envoiEnCours}>
+                <Mail className="h-4 w-4" />
+                {envoiEnCours
+                  ? langue === "fr" ? "Préparation..." : "Preparing..."
+                  : langue === "fr" ? "Envoyer par e-mail" : "Send by email"}
+              </Button>
               <Button onClick={imprimer}>
                 <Printer className="h-4 w-4" />
                 Imprimer / PDF
@@ -230,11 +339,21 @@ export default function RapportsPage() {
         }
       />
 
+      {messageOk && (
+        <p className="mb-4 rounded-xl border border-success/40 bg-success/10 p-3 text-sm text-foreground">
+          {messageOk}
+        </p>
+      )}
+      {messageErreur && (
+        <p className="mb-4 rounded-xl border border-danger/40 bg-danger/10 p-3 text-sm text-foreground">
+          {messageErreur}
+        </p>
+      )}
+
       <Card className="mb-6 max-w-2xl">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium">Chantier</label>
-            <select value={selectedChantier} onChange={(e) => setSelectedChantier(e.target.value)} className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10">
+            <label className="mb-1 block text-sm font-medium">Chantier</label>            <select value={selectedChantier} onChange={(e) => setSelectedChantier(e.target.value)} className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10">
               <option value="">— Sélectionner —</option>
               {chantiers.map((c) => <option key={c.id} value={c.id}>{c.nom}</option>)}
             </select>
@@ -277,10 +396,52 @@ export default function RapportsPage() {
         <Button onClick={genererRapport} disabled={generating || !selectedChantier} className="mt-4">
           {generating ? "Génération..." : "Générer le rapport"}
         </Button>
+
+        {/* REP-04 : destinataires de l'envoi par e-mail */}
+        <div className="mt-4 border-t border-border/70 pt-4">
+          <label className="mb-1 block text-sm font-medium">
+            {langue === "fr" ? "Destinataires (e-mail)" : "Recipients (email)"}
+          </label>
+          <input
+            type="text"
+            className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+            placeholder="responsable@entreprise.ci, direction@entreprise.ci"
+            value={destinatairesSaisie}
+            onChange={(e) => setDestinatairesSaisie(e.target.value)}
+          />
+          <p className="mt-1 text-xs text-muted">
+            {langue === "fr"
+              ? "Pré-remplis avec vos destinataires enregistrés dans « Mon entreprise »."
+              : "Pre-filled with the recipients saved in “My company”."}
+          </p>
+        </div>
       </Card>
 
       {reportData && (
         <div className="space-y-6">
+          {/* REP-05 : en-tete de l'entreprise (logo + coordonnees) */}
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/80 bg-surface p-4 shadow-soft print:border-0 print:bg-transparent print:p-0 print:shadow-none">
+            <div className="flex items-center gap-3">
+              {logo.url && (
+                <img src={logo.url} alt="" className="h-12 w-auto max-w-40 object-contain" />
+              )}
+              <div>
+                <p className="text-sm font-bold text-foreground">{entreprise.nom || "BTP Suivi Pro"}</p>
+                <p className="text-xs text-muted">
+                  {[entreprise.sigle, entreprise.adresse, entreprise.ville, entreprise.telephone, entreprise.email]
+                    .filter(Boolean)
+                    .join(" · ") ||
+                    (langue === "fr"
+                      ? "Renseignez vos coordonnées dans « Mon entreprise »."
+                      : "Fill in your details in “My company”.")}
+                </p>
+              </div>
+            </div>
+            <Link href="/parametres" className="text-xs font-semibold text-primary hover:underline">
+              {langue === "fr" ? "Modifier l'en-tête" : "Edit the header"}
+            </Link>
+          </div>
+
           <Card padding="lg" className="print:shadow-none" id="rapport">
             <h2 className="mb-1 text-xl font-bold">Rapport de synthèse</h2>
             <p className="mb-4 text-sm text-muted">

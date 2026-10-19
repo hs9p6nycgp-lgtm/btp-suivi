@@ -47,6 +47,7 @@ const NAV_TOP_LEVEL: ItemNav[] = [
   { href: "/calculateurs/devis", cle: "nav.devis", icon: <Calculator className="h-5 w-5" /> },
   { href: "/calculateurs/mur", cle: "nav.mur", icon: <Ruler className="h-5 w-5" /> },
   { href: "/aide", cle: "nav.aide", icon: <CircleHelp className="h-5 w-5" /> },
+  { href: "/parametres", cle: "nav.parametres", icon: <Building2 className="h-5 w-5" /> },
 ];
 
 // Onglets d'un chantier (visibles quand un chantier est ouvert)

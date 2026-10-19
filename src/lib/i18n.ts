@@ -13,6 +13,7 @@ export const DICTIONNAIRE: Record<string, Record<Langue, string>> = {
   "nav.export": { fr: "Export Excel", en: "Excel Export" },
   "nav.rapports": { fr: "Rapports", en: "Reports" },
   "nav.aide": { fr: "Aide", en: "Help" },
+  "nav.parametres": { fr: "Mon entreprise", en: "My company" },
   "nav.alertes": { fr: "Alertes", en: "Alerts" },
   "nav.devis": { fr: "Calcul de devis", en: "Estimates" },
   "nav.mur": { fr: "Calcul de murs", en: "Wall calculator" },

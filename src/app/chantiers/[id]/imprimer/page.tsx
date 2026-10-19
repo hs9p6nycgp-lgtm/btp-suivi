@@ -11,6 +11,7 @@ import { avancementMoyenSections, etatEcheance, formaterMetres, formaterPK, jour
 import { resumerProgression, type PointAvancement } from "@/lib/chantiers/avancement";
 import { descriptionOuvrage, surfacesOuvrage } from "@/lib/chantiers/detailsOuvrage";
 import { libelleGraviteNC, libelleStatutNC, formaterDateNC } from "@/lib/qualite/nonConformites";
+import { useEntreprise } from "@/lib/entreprise/useEntreprise";
 
 // Feuille A4 imprimable : fiche de suivi complete d'un chantier.
 // La coquille de l'application est masquee sur cette page (voir AppShell).
@@ -126,6 +127,9 @@ export default function FicheImprimablePage() {
   const router = useRouter();
   const chantierId = String(params?.id ?? "");
 
+  // REP-05 : logo et coordonnees de l'entreprise en tete de la fiche
+  const { entreprise, logo } = useEntreprise();
+
   const [chantier, setChantier] = useState<Chantier | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
   const [intervenants, setIntervenants] = useState<Intervenant[]>([]);
@@ -212,6 +216,20 @@ export default function FicheImprimablePage() {
         {/* En-tête */}
         <div className="flex items-start justify-between gap-6 border-b-2 border-slate-900 pb-4">
           <div>
+            {/* REP-05 : logo et coordonnees de l'entreprise */}
+            {logo.url && (
+              <img src={logo.url} alt="" className="mb-2 h-12 w-auto max-w-40 object-contain" />
+            )}
+            {entreprise.nom && (
+              <p className="text-[12px] font-bold text-slate-800">{entreprise.nom}</p>
+            )}
+            {entreprise.nom && (
+              <p className="text-[10px] text-slate-500">
+                {[entreprise.sigle, entreprise.adresse, entreprise.ville, entreprise.telephone]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            )}
             <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Fiche de suivi de chantier</p>
             <h1 className="mt-1 text-2xl font-bold">{chantier.nom}</h1>
             <p className="mt-1 text-[12px] text-slate-600">
