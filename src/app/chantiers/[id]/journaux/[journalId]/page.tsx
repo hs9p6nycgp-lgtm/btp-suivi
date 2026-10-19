@@ -18,6 +18,7 @@ import { enregistrerPhotoEnAttente } from "@/lib/photos/attente";
 import { cheminPhoto, doitMettreEnFile } from "@/lib/photos/regles";
 import { BUCKET_PHOTOS, urlSignee, urlsSignees } from "@/lib/photos/urls";
 import { rendementEngin, tauxDisponiteEngin } from "@/lib/calculs/metre";
+import { etatPoste, messageEtatPoste } from "@/lib/journal/quantites";
 
 // JJ/MM/AAAA sans risque de décalage de fuseau (chaîne « AAAA-MM-JJ »)
 function formaterDate(dateIso: string | null | undefined): string {
@@ -94,6 +95,9 @@ export default function JournalDetailPage() {
   const [incidents, setIncidents] = useState<any[]>([]);
   const [photos, setPhotos] = useState<any[]>([]);
   const [quantites, setQuantites] = useState<any[]>([]);
+  // Cumul des quantités déjà saisies (tous journaux) et seuil d'écart du chantier
+  const [qteCumulParPoste, setQteCumulParPoste] = useState<Record<string, number>>({});
+  const [seuilEcart, setSeuilEcart] = useState(10);
 
   useEffect(() => {
     if (journalId) loadAll();
@@ -115,17 +119,21 @@ export default function JournalDetailPage() {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.replace("/login"); return; }
-    const { data: chantier } = await supabase.from("chantiers").select("id").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle();
+    const { data: chantier } = await supabase.from("chantiers").select("id,seuil_ecart_pct").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle();
     if (!chantier) { router.replace("/chantiers"); return; }
-    const [j, p, s, ef, en, inc, ph, qt] = await Promise.all([
+    setSeuilEcart(Number((chantier as { seuil_ecart_pct?: number }).seuil_ecart_pct ?? 10));
+    const [j, p, s, ef, en, inc, ph, qt, qtAll] = await Promise.all([
       supabase.from("journaux").select("*").eq("id", journalId).maybeSingle(),
-      supabase.from("postes_dqe").select("id,code,designation,unite").eq("chantier_id", chantierId).order("created_at"),
+      supabase.from("postes_dqe").select("id,code,designation,unite,quantite_marche").eq("chantier_id", chantierId).order("created_at"),
       supabase.from("sections_chantier").select("id,nom").eq("chantier_id", chantierId).order("created_at"),
       supabase.from("journal_effectifs").select("*").eq("journal_id", journalId),
       supabase.from("journal_engins").select("*").eq("journal_id", journalId),
       supabase.from("incidents_journal").select("*").eq("journal_id", journalId),
       supabase.from("photos_journal").select("*").eq("journal_id", journalId),
       supabase.from("quantites_realisees").select("*").eq("journal_id", journalId),
+      // Cumul de toutes les saisies du chantier : sert au « restant » affiché
+      // pendant la saisie.
+      supabase.from("quantites_realisees").select("poste_dqe_id,quantite").eq("chantier_id", chantierId),
     ]);
     if (j.data) {
       setJournal(j.data);
@@ -138,6 +146,13 @@ export default function JournalDetailPage() {
     if (en.data) setEngins(en.data);
     if (inc.data) setIncidents(inc.data);
     if (qt.data) setQuantites(qt.data);
+    if (qtAll.data) {
+      const cumul: Record<string, number> = {};
+      for (const q of qtAll.data as Array<{ poste_dqe_id: string; quantite: number }>) {
+        cumul[q.poste_dqe_id] = (cumul[q.poste_dqe_id] ?? 0) + (Number(q.quantite) || 0);
+      }
+      setQteCumulParPoste(cumul);
+    }
     // Colonne « heures_prevues » disponible en base ? (migration 0020)
     const testColonne = await supabase.from("journal_engins").select("heures_prevues").limit(1);
     setColonneHeuresPrevues(!testColonne.error);
@@ -153,6 +168,15 @@ export default function JournalDetailPage() {
   }
 
   const editable = journal?.statut !== "valide";
+
+  // Suivi du poste sélectionné pendant la saisie : cumul, restant, écart
+  const posteSelectionne = postes.find((p) => p.id === qtePoste);
+  const etatQuantite = etatPoste(
+    posteSelectionne?.quantite_marche,
+    qteCumulParPoste[qtePoste] ?? 0,
+    Number(qteValeur) || 0,
+    seuilEcart,
+  );
 
   async function saveEntete(e: React.FormEvent) {
     e.preventDefault();
@@ -548,6 +572,17 @@ export default function JournalDetailPage() {
               </select>
               <input className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10" type="number" step="0.01" placeholder="Quantité" value={qteValeur} onChange={(e) => setQteValeur(e.target.value)} required />
               <button type="submit" className="rounded-lg bg-gradient-to-br from-action to-action-strong px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:brightness-105 active:scale-[0.98]">Ajouter</button>
+              {posteSelectionne && (
+                <p
+                  className={`md:col-span-4 rounded-xl border p-3 text-xs ${
+                    etatQuantite.depasseSeuil
+                      ? "border-danger/40 bg-danger/10 text-foreground"
+                      : "border-border/70 bg-surface-2/60 text-muted"
+                  }`}
+                >
+                  {messageEtatPoste(etatQuantite, posteSelectionne.unite, seuilEcart)}
+                </p>
+              )}
             </form>
           )}
           <ul className="space-y-2">
