@@ -442,6 +442,29 @@ Cycle complet testé sur la fiche de non-conformité créée pendant ce test :
 
 ---
 
+# Partie 17 — Base de prix : l'outil de contrôle de la Session 2 et arbitrage à décider
+
+La Session 2 a produit un **rapport de qualité de la base de prix en lecture seule** (`scripts/rapport-qualite-bpu.mjs`, sur le module `src/lib/bpu/qualite.ts` et la normalisation d'unités `src/lib/unites.ts`). Je l'ai exécuté et contrôlé : aucune donnée n'est modifiée, l'arbitrage des prix revient à l'utilisateur.
+
+**Résultat du rapport sur les 289 postes : 1 doublon, 18 écarts à arbitrer, 45 postes concernés.** Détail des points que j'avais signalés :
+
+- **« Enrobé à chaud — écart 171,4 % (35 000 → 95 000 FCFA) »**
+  - `MAT-008` Enrobé à chaud — **35 000 FCFA/tonne** — statut *valide* — source « Enrobé CI » (2026-10-01)
+  - `BIT-02` Enrobé bitumineux à chaud (EB) — **95 000 FCFA/t** — *à vérifier* — source « Marché ivoirien 2026 (estimation) – à vérifier »
+  - `ENR-01` Enrobe bitumineux (t) — **95 000 FCFA/t** — *à vérifier* — idem
+- **Ambiguïté de devis confirmée** : pour le poste « Enrobé de roulement (tonnes) » d'un projet de voirie, l'outil liste **quatre prix concurrents** pour le même produit : 35 000, 95 000, 95 000 et 98 000 (asphalte).
+- **Doublon unique** : `MAT-001` Ciment CPJ 42,5 - sac 50kg (4 500/sac, *valide*, source « Fournisseur Abidjan » 2026-10-01) et `MB-02` Ciment CPJ 42,5 (sac 50 kg) (4 800/sac 50 kg, *à vérifier*) — l'outil recommande de **conserver MAT-001**.
+- **Quasi-doublons** : « Latérite (m³) » et « Laterite (m3) » à 40 000 FCFA/m³ (à fusionner) ; même situation sur le bitume 50/70 (450 000/tonne) et 60/70 vrac (420 000/t).
+- **Familles à vérifier** (même premier mot, écarts importants) : l'outil en liste 18, dont beaucoup de **faux positifs** (par exemple « Location … » qui rapproche une location de banche et une location de WC). C'est un signal d'alerte à traiter poste par poste, pas une liste de corrections automatiques.
+
+**Mon avis d'ingénieur (à valider par vous, l'arbitrage ne m'appartient pas)**
+1. **Enrobé** : conserver **95 000 FCFA/t** comme prix de référence (ordre de grandeur du bitume en Côte d'Ivoire) et repasser `MAT-008` à « à vérifier » plutôt que « valide » — un prix marqué « valide » à 35 000 est le piège le plus coûteux du fichier. Demander une facture fournisseur datée pour trancher.
+2. **Ciment** : conserver `MAT-001` (source « Fournisseur Abidjan », datée) et fusionner `MB-02` dedans.
+3. **Latérite** : conserver une seule ligne (même prix des deux côtés) et renommer l'autre.
+4. **Règle générale** : aucune suppression sans sauvegarde JSON — l'outil `scripts/nettoyer-doublons-bpu.mjs` reste en lecture seule par défaut.
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
