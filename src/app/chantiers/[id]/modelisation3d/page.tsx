@@ -2,14 +2,22 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, FormEvent } from "react";
+import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
 import { getLangue, traduireErreur } from "@/lib/i18n";
-import Modele3D from "@/components/visualisation/Modele3D";
 import { Box, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Skeleton } from "@/components/ui/Skeleton";
 import Link from "next/link";
+
+// three.js est lourd (≈ 600 Ko) : la vue 3D se charge à part, juste après
+// l'affichage de la page, avec un squelette animé en attendant.
+const Modele3D = dynamic(() => import("@/components/visualisation/Modele3D"), {
+  ssr: false,
+  loading: () => <Skeleton variant="rect" height="26rem" />,
+});
 
 type Chantier = {
   id: string;

@@ -1,9 +1,19 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 import { BarChart3 } from "lucide-react";
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis } from "recharts";
 import { Card } from "./Card";
+import { Skeleton } from "./Skeleton";
+
+// recharts (≈ 100 Ko) n'est téléchargé que si la mini-courbe est affichée.
+const StatCardCourbe = dynamic(() => import("./StatCardCourbe"), {
+  loading: () => (
+    <div className="mt-3">
+      <Skeleton variant="rect" height="5rem" />
+    </div>
+  ),
+});
 
 // Point d'une mini-courbe (seulement affichée, pas de règle de calcul)
 export type PointeMini = { x: string; y: number };
@@ -86,17 +96,7 @@ export function StatCard({
         </p>
       )}
       {/* Mini-courbe descriptive, purement visuelle */}
-      {miniPoints && miniPoints.length > 0 && (
-        <div className="mt-3 h-20 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={miniPoints} margin={{ top: 4, left: 0, right: 6, bottom: 0 }}>
-              <XAxis dataKey="x" tick={{ fontSize: 10 }} stroke="var(--border)" />
-              <YAxis hide domain={[0, "auto"]} />
-              <Line type="monotone" dataKey="y" stroke="var(--action)" strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      )}
+      {miniPoints && miniPoints.length > 0 && <StatCardCourbe points={miniPoints} />}
     </Card>
   );
 }

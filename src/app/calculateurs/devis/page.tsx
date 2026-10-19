@@ -8,10 +8,18 @@ import { modele3dDevis } from "@/lib/devis/model3d";
 import { templatePourTypeDeChantier } from "@/lib/devis/types-projets";
 import { groupesTypesDetailles } from "@/lib/chantiers/types";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
-import Modele3DGenerique from "@/components/visualisation/Modele3DGenerique";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { getLangue } from "@/lib/i18n";
+
+// three.js est lourd (≈ 600 Ko) : la vue 3D se charge à part, juste après
+// l'affichage de la page, avec un squelette animé en attendant.
+const Modele3DGenerique = dynamic(() => import("@/components/visualisation/Modele3DGenerique"), {
+  ssr: false,
+  loading: () => <Skeleton variant="rect" height="26rem" />,
+});
 
 type Bpu = { id: string; designation: string; unite: string; prix_unitaire: number };
 
