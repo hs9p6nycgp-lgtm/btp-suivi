@@ -29,11 +29,10 @@ create table if not exists bpu_postes (
   updated_at timestamptz not null default now()
 );
 
--- Securite RLS (V1 : acces authentifie total)
+-- Securite RLS (V3 : isolation par chantier)
 alter table parametres_metre enable row level security;
 alter table bpu_postes enable row level security;
 
-create policy "acces authentifie - parametres_metre"
-  on parametres_metre for all to authenticated using (true) with check (true);
-create policy "acces authentifie - bpu_postes"
-  on bpu_postes for all to authenticated using (true) with check (true);
+create policy "parametres_metre - acces"
+  on parametres_metre for all to authenticated
+  using (user_can_access_chantier(chantier_id));

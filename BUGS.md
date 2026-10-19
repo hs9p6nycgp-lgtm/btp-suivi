@@ -27,11 +27,11 @@ listés dans `TODO_LOGIQUE.md`.
 | BUG-013   | UI          | Journal : statut « brouillon (draft) » (mélange FR/EN, valeur brute) |
 | BUG-014   | UI          | Accueil : alertes en mots techniques (« quantite », « ouverte ») |
 | BUG-015   | UI          | Création de chantier : 14 champs d'un coup, GPS manuel, aucune correction après création |
-| BUG-016   | UI          | Fiche chantier : plantage à l'ouverture (couleur de statut inconnue du composant StatCard) |
-| BUG-017   | UI          | Liste des chantiers : badge « En préparation » qui dépasse de sa carte (86 px) |
-| BUG-018   | logique     | Navigation : clé de traduction brute « detail.quality » au lieu de « Qualité » |
-| BUG-019   | UI          | Accueil : « 1 chantiers » (pluriel) et dates des mini-courbes coupées |
-| BUG-020   | UI          | Connexion : la coquille (menus) s'affiche avant connexion |
+| BUG-016   | UI          | Fiche chantier : plantage à l'ouverture (couleur de statut inconnue du composant StatCard) | ✅ CORRIGÉ (Session 2, 18/10) — couleurs remappées, repli sécurisé, typo `receptionne_provisulement` → `receptionne_provisoirement`. |
+| BUG-017   | UI          | Liste des chantiers : badge « En préparation » qui dépasse de sa carte (86 px) | ✅ CORRIGÉ (Session 2, 18/10) — ajout `min-w-0` au conteneur gauche. |
+| BUG-018   | logique     | Navigation : clé de traduction brute « detail.quality » au lieu de « Qualité » | ✅ CORRIGÉ (Session 2, 18/10) — clé ajoutée au dictionnaire + test de cohérence. |
+| BUG-019   | UI          | Accueil : « 1 chantiers » (pluriel) et dates des mini-courbes coupées | ✅ CORRIGÉ (Session 2, 18/10) — accord `${chantiers.length === 1 ? "chantier" : "chantiers"}`, dates format `18/10`, marge droite résolue. |
+| BUG-020   | UI          | Connexion : la coquille (menus) s'affiche avant connexion | ✅ CORRIGÉ (Session 1, commit `45ee2b8`, AppShell + routeAuth) |
 
 ---
 

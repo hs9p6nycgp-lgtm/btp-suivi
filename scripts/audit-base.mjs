@@ -25,14 +25,17 @@ function chargerEnvLocal() {
 chargerEnvLocal();
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!URL || !KEY) {
-  console.error("Variables manquantes : NEXT_PUBLIC_SUPABASE_URL et/ou SUPABASE_SERVICE_ROLE_KEY.");
+  console.error("Variables manquantes : NEXT_PUBLIC_SUPABASE_URL et/ou NEXT_PUBLIC_SUPABASE_ANON_KEY.");
   console.error("Elles doivent etre dans .env.local (ou dans l'environnement).");
   process.exit(1);
 }
 
+// Utilisation de la clé anonyme avec RLS actif.
+// Note : certaines vérifications (notamment sur les tables sans policy RLS stricte)
+// peuvent être limitées par rapport à la clé service.
 const headers = { apikey: KEY, Authorization: `Bearer ${KEY}` };
 const dir = "supabase/migrations";
 const fichiers = fs.readdirSync(dir).filter((f) => f.endsWith(".sql")).sort();

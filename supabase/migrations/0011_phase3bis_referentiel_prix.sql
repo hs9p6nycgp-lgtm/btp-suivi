@@ -33,11 +33,11 @@ create table if not exists historique_prix (
   created_at timestamptz not null default now()
 );
 
--- Securite RLS (meme niveau que les autres tables du projet)
+-- Securite RLS (V3 : données de référence partagees avec controle d'acces)
 alter table referentiel_prix enable row level security;
 alter table historique_prix enable row level security;
 
-create policy "referentiel_prix - acces"
-  on referentiel_prix for all to authenticated using (true) with check (true);
-create policy "historique_prix - acces"
-  on historique_prix for all to authenticated using (true) with check (true);
+create policy "referentiel_prix - lecture"
+  on referentiel_prix for select to authenticated using (true);
+create policy "historique_prix - lecture"
+  on historique_prix for select to authenticated using (true);

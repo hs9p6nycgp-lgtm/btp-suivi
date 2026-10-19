@@ -83,7 +83,7 @@ create table if not exists epreuves_beton (
   unique (section_id, age_jours)
 );
 
--- Securite RLS
+-- Securite RLS (V3 : isolation multitenant par chantier)
 alter table plans_controle enable row level security;
 alter table essais_qualite enable row level security;
 alter table non_conformites enable row level security;
@@ -91,12 +91,17 @@ alter table photos_non_conformite enable row level security;
 alter table epreuves_beton enable row level security;
 
 create policy "plans_controle - acces"
-  on plans_controle for all to authenticated using (true) with check (true);
+  on plans_controle for all to authenticated
+  using (user_can_access_chantier(chantier_id));
 create policy "essais_qualite - acces"
-  on essais_qualite for all to authenticated using (true) with check (true);
+  on essais_qualite for all to authenticated
+  using (user_can_access_chantier(chantier_id));
 create policy "non_conformites - acces"
-  on non_conformites for all to authenticated using (true) with check (true);
+  on non_conformites for all to authenticated
+  using (user_can_access_chantier(chantier_id));
 create policy "photos_non_conformite - acces"
-  on photos_non_conformite for all to authenticated using (true) with check (true);
+  on photos_non_conformite for all to authenticated
+  using (exists (select 1 from non_conformites nc where nc.id = non_conformite_id and user_can_access_chantier(nc.chantier_id)));
 create policy "epreuves_beton - acces"
-  on epreuves_beton for all to authenticated using (true) with check (true);
+  on epreuves_beton for all to authenticated
+  using (user_can_access_chantier(chantier_id));

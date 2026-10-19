@@ -20,6 +20,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 | TODO-UI-014 | Liste des chantiers : badge « En préparation » qui dépasse de sa carte (86 px) | 🔴 À CORRIGER |
 | TODO-UI-015 | Accueil : « 1 chantiers » (pluriel) + dates des mini-courbes coupées | 🔴 À CORRIGER |
 | TODO-UI-016 | Connexion : la coquille (barres latérale/haut/bas) s'affiche avant connexion | ✅ CORRIGÉ (18/10/2026, Session 1 — commit `45ee2b8`) |
+| TODO-UI-017 | Accueil : détail d'alerte lisible + finitions (pluriel « 1 chantier », dates des graphiques) | ✅ CORRIGÉ (18/10/2026, Session 2) |
 
 ---
 

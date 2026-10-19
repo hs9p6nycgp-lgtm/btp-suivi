@@ -1,5 +1,9 @@
 // Nettoyage de chantiers de test (et de toutes leurs donnees liees) via l'API REST (cle service).
-//
+// ⚠️ ATTENTION : Cette commande utilise la SUPABASE_SERVICE_ROLE_KEY qui donne
+// un accès complet à la base de données, en contournant le RLS.
+// Assurez-vous que .env.local est dans .gitignore (déjà le cas) et ne la commite jamais.
+// Utilisez cette commande uniquement dans des environnements de confiance.
+//----------------------------------------------------------------------------
 // Utilisation (depuis la racine du projet) :
 //   node scripts/nettoyer-chantiers-test.mjs --id <uuid> [--id <uuid> ...]             -> analyse seule
 //   node scripts/nettoyer-chantiers-test.mjs --id <uuid> ... --supprimer               -> analyse + sauvegarde + suppression

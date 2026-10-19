@@ -56,20 +56,25 @@ alter table quantites_realisees
   add column if not exists journal_id uuid references journaux(id) on delete set null,
   add column if not exists section_id uuid references sections_chantier(id) on delete set null;
 
--- Securite RLS (V1 : acces authentifie total)
+-- Securite RLS (V3 : isolation multitenant par chantier)
 alter table journaux enable row level security;
 alter table journal_effectifs enable row level security;
 alter table journal_engins enable row level security;
 alter table incidents_journal enable row level security;
 alter table photos_journal enable row level security;
 
-create policy "acces authentifie - journaux"
-  on journaux for all to authenticated using (true) with check (true);
-create policy "acces authentifie - journal_effectifs"
-  on journal_effectifs for all to authenticated using (true) with check (true);
-create policy "acces authentifie - journal_engins"
-  on journal_engins for all to authenticated using (true) with check (true);
-create policy "acces authentifie - incidents_journal"
-  on incidents_journal for all to authenticated using (true) with check (true);
-create policy "acces authentifie - photos_journal"
-  on photos_journal for all to authenticated using (true) with check (true);
+create policy "journaux - acces"
+  on journaux for all to authenticated
+  using (user_can_access_chantier(chantier_id));
+create policy "journal_effectifs - acces"
+  on journal_effectifs for all to authenticated
+  using (user_can_access_journal(journal_id));
+create policy "journal_engins - acces"
+  on journal_engins for all to authenticated
+  using (user_can_access_journal(journal_id));
+create policy "incidents_journal - acces"
+  on incidents_journal for all to authenticated
+  using (user_can_access_journal(journal_id));
+create policy "photos_journal - acces"
+  on photos_journal for all to authenticated
+  using (user_can_access_journal(journal_id));

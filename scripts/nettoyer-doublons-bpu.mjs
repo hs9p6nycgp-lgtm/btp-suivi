@@ -1,4 +1,9 @@
 // Nettoyage des doublons de bpu_postes via l'API REST Supabase (cle service).
+// ⚠️ ATTENTION : Cette commande utilise la SUPABASE_SERVICE_ROLE_KEY qui donne
+// un accès complet à la base de données, en contournant le RLS.
+// Assurez-vous que .env.local est dans .gitignore (déjà le cas) et ne la commite jamais.
+// Utilisez cette commande uniquement dans des environnements de confiance.
+//----------------------------------------------------------------------------
 // Même règle que supabase/seed/nettoyer_doublons_bpu.sql :
 //   garder la ligne LA PLUS ANCIENNE de chaque groupe
 //   (designation, unite, prix_unitaire), ordre created_at asc puis id asc.

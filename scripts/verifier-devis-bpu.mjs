@@ -24,9 +24,9 @@ function chargerEnvLocal() {
 chargerEnvLocal();
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 if (!URL || !KEY) {
-  console.error("Variables manquantes : NEXT_PUBLIC_SUPABASE_URL et/ou SUPABASE_SERVICE_ROLE_KEY (dans .env.local).");
+  console.error("Variables manquantes : NEXT_PUBLIC_SUPABASE_URL et/ou NEXT_PUBLIC_SUPABASE_ANON_KEY (dans .env.local).");
   process.exit(1);
 }
 

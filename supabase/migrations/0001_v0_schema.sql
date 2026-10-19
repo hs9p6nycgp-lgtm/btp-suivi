@@ -52,17 +52,13 @@ create table if not exists alertes (
   date_alerte timestamptz not null default now()
 );
 
--- Securite (V0 : un seul admin, acces authentifie total)
+-- Securite (V0 : base - avant application de l'isolation multitenant V3)
+-- Note : ces policies sont remplacées par la migration 0007 Phase 3.
+-- Elles sont conservees ici pour reference historique mais ne doivent pas
+-- etre actives dans le projet Supabase si la migration 0007 a ete appliquee.
+
+-- Activation du RLS (les policies reelles sont definies dans la migration 0007)
 alter table chantiers enable row level security;
 alter table postes_dqe enable row level security;
 alter table quantites_realisees enable row level security;
 alter table alertes enable row level security;
-
-create policy "acces authentifie - chantiers"
-  on chantiers for all to authenticated using (true) with check (true);
-create policy "acces authentifie - postes_dqe"
-  on postes_dqe for all to authenticated using (true) with check (true);
-create policy "acces authentifie - quantites_realisees"
-  on quantites_realisees for all to authenticated using (true) with check (true);
-create policy "acces authentifie - alertes"
-  on alertes for all to authenticated using (true) with check (true);

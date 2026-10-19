@@ -122,3 +122,14 @@
 2. **La saisie du jour sur une seule page, pensées pour le pouce.** Date déjà remplie, météo en trois gros boutons (soleil / nuage / pluie), ouvriers et engins ajoutés en deux appuis, un seul bouton « Enregistrer » toujours visible qui confirme l'enregistrement, et la possibilité de rouvrir un journal validé si je me suis trompé.
 
 3. **Un tableau de bord qui sert sur le chantier, pas au bureau.** En haut : mes chantiers, leur avancement, leurs alertes que je peux ouvrir pour agir. Et le bouton « Saisie du jour » qui va directement au journal du chantier en cours, au lieu de me faire passer par la liste des chantiers.
+
+---
+
+### État des tests sur PC (19/10/2026)
+
+- **Connexion** : OK (bouton œil, mémorisation du mode).
+- **Création d'un chantier** → **fiche chantier** : plantage `StatCard` (couleur inconnue) — bug suivi sous T-UI-14, corrigé par Session 2 (code non encore dans l'environnement de test).
+- **Saisie du journal du jour** : OK (page unique, météo en boutons, observations sauvegardées, photo avec URL signée, validation + verrouillage).
+- **Tableau de bord** : « Mes chantiers », « Saisie du jour », galerie photos affichée (plus de carrés cassés).
+- **Tests unitaires** : 179/183 verts (4 échecs referentiel dus aux modifications parallèles des sessions, pas au code de test).
+- **Observations UI** : badge « En préparation » déborde de 86 px ; barre latérale affiche `detail.quality` au lieu de « Qualité » ; « 1 chantiers » au lieu de « 1 chantier », dates rognées sur les mini‑graphiques.

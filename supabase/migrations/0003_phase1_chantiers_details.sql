@@ -49,17 +49,24 @@ insert into storage.buckets (id, name, public)
 values ('chantiers-documents', 'chantiers-documents', false)
 on conflict (id) do nothing;
 
--- Securite RLS (V1 : acces authentifie total, comme en V0)
+-- Securite RLS (V3 : isolation multitenant par proprietaire + membres)
 alter table intervenants_chantier enable row level security;
 alter table sections_chantier enable row level security;
 alter table documents_chantier enable row level security;
 
-create policy "acces authentifie - intervenants_chantier"
-  on intervenants_chantier for all to authenticated using (true) with check (true);
-create policy "acces authentifie - sections_chantier"
-  on sections_chantier for all to authenticated using (true) with check (true);
-create policy "acces authentifie - documents_chantier"
-  on documents_chantier for all to authenticated using (true) with check (true);
+create policy "intervenants_chantier - acces"
+  on intervenants_chantier for all to authenticated
+  using (user_can_access_chantier(chantier_id));
+create policy "intervenants_chantier - gestion"
+  on intervenants_chantier for insert to authenticated
+  with check (user_can_manage_chantier(chantier_id));
+create policy "intervenants_chantier - modification"
+  on intervenants_chantier for update to authenticated
+  using (user_can_manage_chantier(chantier_id))
+  with check (user_can_manage_chantier(chantier_id));
+create policy "intervenants_chantier - suppression"
+  on intervenants_chantier for delete to authenticated
+  using (user_can_manage_chantier(chantier_id));
 
 -- Acces authentifie au bucket de documents
 create policy "acces authentifie - storage chantiers-documents"

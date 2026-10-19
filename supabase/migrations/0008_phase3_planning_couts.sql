@@ -52,17 +52,17 @@ create table if not exists depenses_reelles (
   created_at timestamptz not null default now()
 );
 
--- Securite RLS
+-- Securite RLS (V3 : isolation multitenant par chantier)
 alter table taches_planning enable row level security;
 alter table dependances_planning enable row level security;
 alter table depenses_reelles enable row level security;
 
 create policy "taches_planning - acces"
   on taches_planning for all to authenticated
-  using (true) with check (true);
+  using (user_can_access_chantier(chantier_id));
 create policy "dependances_planning - acces"
   on dependances_planning for all to authenticated
-  using (true) with check (true);
+  using (user_can_access_chantier(chantier_id));
 create policy "depenses_reelles - acces"
   on depenses_reelles for all to authenticated
-  using (true) with check (true);
+  using (user_can_access_chantier(chantier_id));

@@ -18,5 +18,6 @@ create table if not exists livraisons (
 
 alter table livraisons enable row level security;
 
-create policy "acces authentifie - livraisons"
-  on livraisons for all to authenticated using (true) with check (true);
+create policy "livraisons - acces"
+  on livraisons for all to authenticated
+  using (user_can_access_chantier(chantier_id));

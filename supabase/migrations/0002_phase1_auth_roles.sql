@@ -55,11 +55,17 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- Securite RLS (V1 : acces authentifie total, comme en V0)
+-- Securite RLS (V3 : isolation par compte et par chantier)
 alter table profils enable row level security;
 alter table chantier_utilisateurs enable row level security;
 
-create policy "acces authentifie - profils"
-  on profils for all to authenticated using (true) with check (true);
-create policy "acces authentifie - chantier_utilisateurs"
-  on chantier_utilisateurs for all to authenticated using (true) with check (true);
+create policy "profils - acces proprietaire"
+  on profils for all to authenticated
+  using (id = auth.uid());
+
+create policy "chantier_utilisateurs - lecture"
+  on chantier_utilisateurs for select to authenticated
+  using (user_can_access_chantier(chantier_id));
+create policy "chantier_utilisateurs - gestion"
+  on chantier_utilisateurs for all to authenticated
+  using (user_can_manage_chantier(chantier_id));
