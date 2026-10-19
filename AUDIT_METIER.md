@@ -228,5 +228,5 @@ Sur le formulaire de création d'une route : longueur du tracé **1 200 m**, lon
 - Journal `dac73e20-010a-4f74-ba0b-558926b5fa6c` (validé) + 2 000 m² de décapage.
 - Import DQE 3 postes, 1 dépense 170 000 FCFA, exports Excel de test.
 - **Livraison** (partie 2) : Laterite 120, commandée 150, mise en œuvre 60, bon `TEST-BL-2026-01`, du 19/10/2026.
-- **Chantiers de test** (partie 3) : « TEST INGENIEUR 2 — Route 1,2 km troncons 250 m », « TEST INGENIEUR 2 — Route 1,2 km », « TEST INGENIEUR 3 — controle message » (avec 5 sections), « TEST INGENIEUR 4 — sans sections ». À supprimer en même temps que le chantier principal.
-- Compte de test : `test-pc-20261018@example.com`.
+- **Chantiers de test de la partie 3** (« TEST INGENIEUR 2 », « 3 », « 4 ») : **supprimés le 19/10/2026 sur accord de l'utilisateur** (sauvegarde JSON préalable, cascade vérifiée, aucune donnée orpheline).
+- Compte de test : `test-pc-20261018@example.com` (conservé).
