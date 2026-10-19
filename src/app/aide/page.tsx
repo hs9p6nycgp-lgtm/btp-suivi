@@ -14,6 +14,7 @@ import {
   Printer,
   Ruler,
   Scale,
+  ShieldCheck,
   Truck,
   Users,
 } from "lucide-react";
@@ -60,6 +61,7 @@ const MODULES = [
   { href: "/chantiers", icon: <ClipboardCheck className="h-5 w-5" />, nom: "Qualité", desc: "Essais, éprouvettes, non-conformités" },
   { href: "/chantiers", icon: <Scale className="h-5 w-5" />, nom: "Métré", desc: "Calculs de quantités d'ouvrages" },
   { href: "/chantiers", icon: <Truck className="h-5 w-5" />, nom: "Livraisons", desc: "Stocks matériaux et seuils d'alerte" },
+  { href: "/chantiers", icon: <ShieldCheck className="h-5 w-5" />, nom: "Sécurité (HSE)", desc: "Incidents, accidents, indicateurs" },
   { href: "/chantiers", icon: <Box className="h-5 w-5" />, nom: "Modélisation 3D", desc: "L'ouvrage en trois dimensions" },
   { href: "/bpu", icon: <BookOpen className="h-5 w-5" />, nom: "Base de prix (BPU)", desc: "Prix unitaires de votre entreprise" },
   { href: "/referentiel", icon: <FileText className="h-5 w-5" />, nom: "Référentiel de prix", desc: "Base de prix de la Côte d'Ivoire" },
