@@ -11,12 +11,14 @@ import { cleMateriau } from "@/lib/stock/materiaux";
 import { alertesStock, type EntreeStock, type SeuilStock } from "@/lib/stock/stock";
 import {
   construireNotifications,
+  construireHistorique,
   formatDateFR,
   type AlerteRow,
   type ChantierRow,
   type NonConformiteRow,
   type Notification,
   type StockRow,
+  type Traitement,
 } from "@/lib/notifications";
 
 type LivraisonRow = {
@@ -103,8 +105,33 @@ export async function chargerNotifications(): Promise<Notification[]> {
   });
 }
 
-/** Titre lisible de la notification. */
-export function libelleNotification(notification: Notification, langue: LangueAlerte = "fr"): string {
+/**
+ * Historique des problèmes traités (non-conformités clôturées ou rejetées,
+ * alertes acquittées ou clôturées) : la mémoire de la démarche qualité.
+ */
+export async function chargerHistorique(): Promise<Traitement[]> {
+  const supabase = createClient();
+
+  const [nonConformites, alertes, chantiers] = await Promise.all([
+    supabase
+      .from("non_conformites")
+      .select("id, chantier_id, description, gravite, statut, action_corrective, date_cloture, created_at")
+      .in("statut", ["cloturee", "rejetee"]),
+    supabase
+      .from("alertes")
+      .select("id, chantier_id, type, valeur, seuil, statut, date_alerte")
+      .neq("statut", "ouverte"),
+    supabase.from("chantiers").select("id, nom"),
+  ]);
+
+  return construireHistorique({
+    nonConformites: (nonConformites.data ?? []) as NonConformiteRow[],
+    alertes: (alertes.data ?? []) as AlerteRow[],
+    chantiers: (chantiers.data ?? []) as ChantierRow[],
+  });
+}
+
+/** Titre lisible de la notification. */export function libelleNotification(notification: Notification, langue: LangueAlerte = "fr"): string {
   if (notification.categorie === "retard") {
     return langue === "fr" ? "Retard de planning" : "Schedule delay";
   }

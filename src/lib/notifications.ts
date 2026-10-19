@@ -10,6 +10,8 @@
 // aucune requête réseau et n'importe rien : les tests le vérifient directement
 // (comme les autres modules purs du projet).
 
+import { libelleTypeAlerte } from "./alertes.ts";
+
 export type Gravite = "critique" | "attention" | "info";
 
 export type CategorieNotification = "alerte" | "non_conformite" | "retard" | "stock";
@@ -248,4 +250,69 @@ export function compteParGravite(liste: Notification[]): Record<Gravite, number>
     attention: liste.filter((notification) => notification.gravite === "attention").length,
     info: liste.filter((notification) => notification.gravite === "info").length,
   };
+}
+
+// --- Traçabilité : ce qui a été traité ---------------------------------------
+
+export type Traitement = {
+  id: string;
+  categorie: "non_conformite" | "alerte";
+  /** Libellé du traitement (« Non-conformité clôturée »…). */
+  titre: string;
+  detail: string;
+  chantierId: string;
+  chantierNom: string;
+  /** Date de clôture (ou date de l'alerte traitée). */
+  date: string;
+  lien: string;
+};
+
+/**
+ * Historique des problèmes traités : non-conformités clôturées ou rejetées et
+ * alertes acquittées ou clôturées. C'est la mémoire de la démarche qualité :
+ * ce qui a été traité, quand, et par quelle action corrective.
+ */
+export function construireHistorique(donnees: {
+  nonConformites: (NonConformiteRow & {
+    action_corrective?: string | null;
+    date_cloture?: string | null;
+  })[];
+  alertes: AlerteRow[];
+  chantiers: ChantierRow[];
+}): Traitement[] {
+  const noms = new Map(donnees.chantiers.map((chantier) => [chantier.id, chantier.nom]));
+  const liste: Traitement[] = [];
+
+  for (const nonConformite of donnees.nonConformites) {
+    if (nonConformite.statut !== "cloturee" && nonConformite.statut !== "rejetee") continue;
+    const cloturee = nonConformite.statut === "cloturee";
+    liste.push({
+      id: `hist-nc-${nonConformite.id}`,
+      categorie: "non_conformite",
+      titre: cloturee ? "Non-conformité clôturée" : "Non-conformité rejetée",
+      detail:
+        nonConformite.action_corrective ||
+        (cloturee ? "Traitement terminé" : "Sans suite : non applicable sur le chantier"),
+      chantierId: nonConformite.chantier_id,
+      chantierNom: noms.get(nonConformite.chantier_id) ?? "Chantier",
+      date: nonConformite.date_cloture || nonConformite.created_at || "",
+      lien: `/chantiers/${nonConformite.chantier_id}/qualite`,
+    });
+  }
+
+  for (const alerte of donnees.alertes) {
+    if (alerte.statut === "ouverte") continue;
+    liste.push({
+      id: `hist-alerte-${alerte.id}`,
+      categorie: "alerte",
+      titre: alerte.statut === "acquittee" ? "Alerte acquittée" : "Alerte clôturée",
+      detail: libelleTypeAlerte(alerte.type),
+      chantierId: alerte.chantier_id,
+      chantierNom: noms.get(alerte.chantier_id) ?? "Chantier",
+      date: alerte.date_alerte ?? "",
+      lien: lienAlerte(alerte.type, alerte.chantier_id),
+    });
+  }
+
+  return [...liste].sort((a, b) => (a.date === b.date ? 0 : a.date < b.date ? 1 : -1));
 }
