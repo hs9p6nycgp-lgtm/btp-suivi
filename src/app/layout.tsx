@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import AppShell from "@/components/layout/AppShell";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import NetworkStatus from "@/components/NetworkStatus";
+import MiseAJourAppli from "@/components/MiseAJourAppli";
 import { Toaster } from "@/components/ui/toast";
 import "./globals.css";
 
@@ -73,6 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="light">
           <ServiceWorkerRegister />
           <NetworkStatus />
+          <MiseAJourAppli />
           <Toaster />
           {/* La coquille masque la navigation sur les pages de connexion (voir AppShell) */}
           <AppShell>{children}</AppShell>
