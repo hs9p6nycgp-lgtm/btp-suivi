@@ -6,13 +6,16 @@
 
 import { estErreurReseau } from "../offline/erreurs.ts";
 
-/** Chemin de stockage d'une photo de journal. */
-export function cheminPhoto(journalId: string, nomFichier: string, horodatage: number): string {
+/**
+ * Chemin de stockage d'une photo.
+ * Le dossier depend de l'ecran : « journaux/<id> », « livraisons/<id> »…
+ */
+export function cheminPhoto(dossier: string, nomFichier: string, horodatage: number): string {
   const nom = nomFichier
     .replace(/[^\w.\-]+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^[-.]+|-+$/g, "");
-  return `journaux/${journalId}/${horodatage}-${nom || "photo.jpg"}`;
+  return `${dossier}/${horodatage}-${nom || "photo.jpg"}`;
 }
 
 /**

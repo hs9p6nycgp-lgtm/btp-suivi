@@ -7,18 +7,28 @@ import { cheminPhoto, doitMettreEnFile } from "../regles.ts";
 
 describe("cheminPhoto", () => {
   it("range la photo dans le dossier du journal", () => {
-    assert.equal(cheminPhoto("abc", "IMG_1234.jpg", 1720000000000), "journaux/abc/1720000000000-IMG_1234.jpg");
+    assert.equal(
+      cheminPhoto("journaux/abc", "IMG_1234.jpg", 1720000000000),
+      "journaux/abc/1720000000000-IMG_1234.jpg",
+    );
+  });
+
+  it("fonctionne pour un autre dossier (livraisons)", () => {
+    assert.equal(
+      cheminPhoto("livraisons/xyz", "bon.jpg", 1720000000000),
+      "livraisons/xyz/1720000000000-bon.jpg",
+    );
   });
 
   it("nettoie les noms de fichiers complexes", () => {
-    const chemin = cheminPhoto("abc", "photo chantier (1).jpg", 1720000000000);
+    const chemin = cheminPhoto("journaux/abc", "photo chantier (1).jpg", 1720000000000);
     assert.equal(chemin, "journaux/abc/1720000000000-photo-chantier-1-.jpg");
     assert.equal(chemin.includes(" "), false);
     assert.equal(chemin.includes("("), false);
   });
 
   it("ne produit jamais de chemin vide", () => {
-    assert.equal(cheminPhoto("abc", "???", 1720000000000), "journaux/abc/1720000000000-photo.jpg");
+    assert.equal(cheminPhoto("journaux/abc", "???", 1720000000000), "journaux/abc/1720000000000-photo.jpg");
   });
 });
 

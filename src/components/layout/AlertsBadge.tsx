@@ -8,6 +8,7 @@ import {
   CalendarClock,
   ChevronRight,
   Info,
+  Package,
   ShieldAlert,
   X,
 } from "lucide-react";
@@ -32,6 +33,7 @@ const COULEURS: Record<Gravite, string> = {
 function iconeNotification(notification: Notification) {
   if (notification.categorie === "non_conformite") return <ShieldAlert className="h-4 w-4" />;
   if (notification.categorie === "retard") return <CalendarClock className="h-4 w-4" />;
+  if (notification.categorie === "stock") return <Package className="h-4 w-4" />;
   if (notification.gravite === "info") return <Info className="h-4 w-4" />;
   return <AlertTriangle className="h-4 w-4" />;
 }

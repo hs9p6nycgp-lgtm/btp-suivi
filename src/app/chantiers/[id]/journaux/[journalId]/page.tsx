@@ -265,7 +265,7 @@ export default function JournalDetailPage() {
     const supabase = createClient();
     // Photo compressée avant l'envoi (max 1600 px) : indispensable sur réseau faible
     const fichierEnvoye = await compresserImage(photoFile);
-    const path = cheminPhoto(journalId, fichierEnvoye.name, Date.now());
+    const path = cheminPhoto(`journaux/${journalId}`, fichierEnvoye.name, Date.now());
 
     // Position GPS relevée avant l'envoi : une photo prise hors connexion garde
     // ainsi ses coordonnées.

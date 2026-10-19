@@ -11,6 +11,8 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getLangue, traduireErreur } from "@/lib/i18n";
+import { enregistrerPhotoEnAttente } from "@/lib/photos/attente";
+import { cheminPhoto, doitMettreEnFile } from "@/lib/photos/regles";
 import { verifierStockBas, materiauxEnAlerte } from "@/lib/stock/stock";
 import {
   cleMateriau,
@@ -139,18 +141,25 @@ export default function LivraisonsPage() {
     setMessage(null);
     const supabase = createClient();
     let photoPath: string | null = null;
+    let photoEnAttente = false;
     if (file) {
-      photoPath = `livraisons/${chantierId}/${Date.now()}-${file.name}`;
+      photoPath = cheminPhoto(`livraisons/${chantierId}`, file.name, Date.now());
       const { error: upErr } = await supabase.storage.from("chantiers-documents").upload(photoPath, file);
       if (upErr) {
-        setLoading(false);
-        setMessage(traduireErreur(upErr));
-        setMessageOk(false);
-        return;
+        // Hors connexion : le bon de livraison est conserve sur l'appareil et la
+        // photo partira automatiquement au retour du reseau.
+        if (!doitMettreEnFile(upErr, navigator.onLine)) {
+          setLoading(false);
+          setMessage(traduireErreur(upErr));
+          setMessageOk(false);
+          return;
+        }
+        photoEnAttente = true;
+        await enregistrerPhotoEnAttente(photoPath, file);
       }
     }
 
-    const { error } = await supabase.from("livraisons").insert({
+    const { error } = await offlineInsert("livraisons", {
       chantier_id: chantierId,
       materiau,
       fournisseur: fournisseur || null,
@@ -178,7 +187,15 @@ export default function LivraisonsPage() {
     setCamion("");
     setFile(null);
     setMessageOk(true);
-    setMessage(langue === "fr" ? "Livraison enregistrée." : "Delivery recorded.");
+    setMessage(
+      photoEnAttente
+        ? langue === "fr"
+          ? "Livraison enregistrée hors connexion : la photo du bon partira automatiquement."
+          : "Delivery saved offline: the photo will be sent automatically."
+        : langue === "fr"
+          ? "Livraison enregistrée."
+          : "Delivery recorded.",
+    );
     load();
   }
 

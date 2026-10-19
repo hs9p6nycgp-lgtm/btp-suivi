@@ -8,6 +8,7 @@ import {
   CalendarClock,
   ChevronRight,
   Info,
+  Package,
   ShieldAlert,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
@@ -54,11 +55,13 @@ const FILTRES: Array<{ cle: Filtre; libelle: string }> = [
   { cle: "alerte", libelle: "Alertes" },
   { cle: "non_conformite", libelle: "Non-conformités" },
   { cle: "retard", libelle: "Retards" },
+  { cle: "stock", libelle: "Stocks" },
 ];
 
 function iconeNotification(notification: Notification) {
   if (notification.categorie === "non_conformite") return <ShieldAlert className="h-4 w-4" />;
   if (notification.categorie === "retard") return <CalendarClock className="h-4 w-4" />;
+  if (notification.categorie === "stock") return <Package className="h-4 w-4" />;
   if (notification.gravite === "info") return <Info className="h-4 w-4" />;
   return <AlertTriangle className="h-4 w-4" />;
 }

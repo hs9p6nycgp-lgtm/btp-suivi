@@ -12,7 +12,7 @@
 
 export type Gravite = "critique" | "attention" | "info";
 
-export type CategorieNotification = "alerte" | "non_conformite" | "retard";
+export type CategorieNotification = "alerte" | "non_conformite" | "retard" | "stock";
 
 export type AlerteRow = {
   id: string;
@@ -42,6 +42,15 @@ export type ChantierRow = {
   statut?: string | null;
 };
 
+/** Matériau dont le stock est au seuil ou en dessous. */
+export type StockRow = {
+  chantier_id: string;
+  cle: string;
+  libelle: string;
+  stock: number;
+  seuil: number;
+};
+
 export type Notification = {
   id: string;
   categorie: CategorieNotification;
@@ -68,7 +77,7 @@ const GRAVITE_PAR_TYPE: Record<string, Gravite> = {
   ecart_quantite: "attention",
   delai: "attention",
   qualite: "attention",
-  stock: "info",
+  stock: "attention",
   eprouvette: "info",
   prix: "info",
 };
@@ -145,6 +154,7 @@ export function construireNotifications(donnees: {
   nonConformites: NonConformiteRow[];
   chantiers: ChantierRow[];
   aujourdHui: string;
+  stocks?: StockRow[];
 }): Notification[] {
   const noms = new Map(donnees.chantiers.map((chantier) => [chantier.id, chantier.nom]));
   const liste: Notification[] = [];
@@ -195,6 +205,23 @@ export function construireNotifications(donnees: {
       date: chantier.date_fin_prevue ?? "",
       avancementPct: Number(chantier.avancement_pct ?? 0),
       dateFinPrevue: chantier.date_fin_prevue ?? "",
+    });
+  }
+
+  // Stock bas : un matériau sous son seuil d'alerte doit être recommandaé.
+  for (const stock of donnees.stocks ?? []) {
+    liste.push({
+      id: `stock-${stock.chantier_id}-${stock.cle}`,
+      categorie: "stock",
+      type: "stock",
+      gravite: "attention",
+      chantierId: stock.chantier_id,
+      chantierNom: noms.get(stock.chantier_id) ?? "Chantier",
+      lien: lienAlerte("stock", stock.chantier_id),
+      date: "",
+      description: stock.libelle,
+      valeur: stock.stock,
+      seuil: stock.seuil,
     });
   }
 

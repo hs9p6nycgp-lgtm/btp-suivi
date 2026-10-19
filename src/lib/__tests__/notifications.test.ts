@@ -44,10 +44,10 @@ const nonConformite: NonConformiteRow = {
 };
 
 describe("gravité", () => {
-  it("classe les alertes HSE en critique et les stocks en information", () => {
+  it("classe les alertes HSE en critique et le stock bas à traiter", () => {
     assert.equal(graviteAlerte("hse"), "critique");
     assert.equal(graviteAlerte("budget"), "attention");
-    assert.equal(graviteAlerte("stock"), "info");
+    assert.equal(graviteAlerte("stock"), "attention");
     assert.equal(graviteAlerte("type_inconnu"), "info");
   });
 
@@ -152,6 +152,27 @@ describe("construireNotifications", () => {
     assert.equal(liste[0].gravite, "critique");
   });
 
+  it("ajoute les stocks bas au centre d'alertes", () => {
+    const liste = construireNotifications({
+      alertes: [],
+      nonConformites: [],
+      chantiers: [chantier],
+      aujourdHui: "2026-10-19",
+      stocks: [
+        { chantier_id: "c1", cle: "laterite", libelle: "Latérite", stock: 12, seuil: 20 },
+      ],
+    });
+    assert.equal(liste.length, 1);
+    assert.equal(liste[0].categorie, "stock");
+    assert.equal(liste[0].type, "stock");
+    assert.equal(liste[0].gravite, "attention");
+    assert.equal(liste[0].lien, "/chantiers/c1/livraisons");
+    assert.equal(liste[0].chantierNom, "Route de Yopougon");
+    assert.equal(liste[0].description, "Latérite");
+    assert.equal(liste[0].valeur, 12);
+    assert.equal(liste[0].seuil, 20);
+  });
+
   it("trie les plus récents d'abord à gravité égale", () => {
     const liste = construireNotifications({
       alertes: [
@@ -168,8 +189,7 @@ describe("construireNotifications", () => {
     );
   });
 
-  it("compte les problèmes par gravité", () => {
-    const compte = compteParGravite([
+  it("compte les problèmes par gravité", () => {    const compte = compteParGravite([
       { id: "1", categorie: "alerte", type: "hse", gravite: "critique", chantierId: "c1", chantierNom: "C", lien: "/", date: "" },
       { id: "2", categorie: "alerte", type: "budget", gravite: "attention", chantierId: "c1", chantierNom: "C", lien: "/", date: "" },
       { id: "3", categorie: "alerte", type: "stock", gravite: "info", chantierId: "c1", chantierNom: "C", lien: "/", date: "" },
