@@ -1,10 +1,10 @@
 // Audit de la base distante : verifie que toutes les tables et colonnes
 // prevues par les migrations existent reellement dans le projet Supabase.
-// Lecture seule (utilise la cle service, aucun ecrit).
+// Lecture seule (utilise la cle publique, aucun ecrit).
 //
 // Utilisation :
 //   node scripts/audit-base.mjs
-// (les variables NEXT_PUBLIC_SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY
+// (les variables NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY
 //  sont lues depuis .env.local, ou depuis l'environnement)
 
 import fs from "node:fs";

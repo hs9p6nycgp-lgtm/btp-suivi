@@ -4,7 +4,9 @@
 //
 // Utilisation :
 //   node scripts/verifier-devis-bpu.mjs
-// (lit NEXT_PUBLIC_SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY dans .env.local)
+// (lit NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY dans .env.local ;
+//  le BPU etant protege par l'isolation (RLS), ce controle n'est concluant
+//  qu'avec une cle d'administration — sinon il s'arrete avec un message clair)
 
 import fs from "node:fs";
 import path from "node:path";
@@ -38,6 +40,13 @@ if (!r.ok) {
   process.exit(1);
 }
 const bpu = await r.json();
+if (bpu.length === 0) {
+  console.error("BPU illisible avec la cle publique (0 poste visible) : c'est normal,");
+  console.error("la table bpu_postes est protegee par l'isolation (RLS).");
+  console.error("Ce controle n'est pas concluant ainsi ; il necessite une cle");
+  console.error("d'administration (SUPABASE_SERVICE_ROLE_KEY) dans .env.local.");
+  process.exit(2);
+}
 const designations = bpu.map((p) => (p.designation ?? "").toLowerCase());
 
 let erreurs = 0;
