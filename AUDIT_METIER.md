@@ -638,6 +638,20 @@ Les cinq fichiers sont idempotents : ils peuvent être relancés sans risque.
 
 ---
 
+# Partie 26 — Carnet de chantier (nouveauté du 19/10)
+
+## 50. Carnet de chantier imprimable — ✅ **NOUVEAU, VÉRIFIÉ**
+
+Depuis la fiche chantier, le lien « **Imprimer le carnet** » ouvre `/chantiers/<id>/carnet` : un **carnet de chantier** qui compile le journal quotidien jour par jour.
+
+- Contenu vérifié : en-tête « BTP SUIVI PRO — CARNET DE CHANTIER » avec l'identité (maître d'ouvrage, entreprise, n° de marché), la **période couverte** (« 01/10/2026 → 19/10/2026 — 19 jour(s) couverte(s) »), les indicateurs cumulés (**journaux, personnes·jours, heures de marche, incidents, photos, quantités**) puis le **détail de chaque journée** (date en toutes lettres, météo, statut, observations).
+- **Période** : pré-remplie (début du mois courant → aujourd'hui) et modifiable par les champs « Du / au ».
+- **Impression** : la page tient exactement dans la largeur A4 (**794 px**, aucun débordement).
+
+*Remarque mineure* : les paramètres `debut`/`fin` passés dans l'URL ne sont pas pris en compte (la période vient de l'état interne) — un lien partagé avec une période ne serait pas rejoué tel quel. Sans gravité : la période reste réglable à l'écran.
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
