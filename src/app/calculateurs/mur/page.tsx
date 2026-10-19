@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { getLangue } from "@/lib/i18n";
+import { calculerDevisMur, normaliserUnite } from "@/lib/calculs/mur";
 
 type Bpu = { id: string; designation: string; unite: string; prix_unitaire: number };
 
@@ -49,43 +50,59 @@ export default function MurCalculatorPage() {
   const L = Number(l) || 0;
   const H = Number(h) || 0;
   const E = Number(e) || 0;
-  const surfaceBrute = L * H;
-  const surfaceOuv = surfaceBrute * ((Number(ouvertures) || 0) / 100);
-  const surfaceNette = Math.max(surfaceBrute - surfaceOuv, 0);
-
-  const blocSurface = 0.2 * 0.2;
-  const coeffPertes = 1 + (Number(pertes) || 0) / 100;
-  const nbBlocs = Math.ceil((surfaceNette / blocSurface) * coeffPertes);
-
-  const volumeMur = surfaceNette * E;
-  const volumeBloc = nbBlocs * blocSurface * E;
-  const volumeMortier = Math.max(volumeMur - volumeBloc * 0.92, 0); // marge de pose
-
-  const cimentKg = volumeMortier * 280;
-  const sableM3 = volumeMortier * 0.8;
 
   const agglo = bpu.find((b) => b.id === aggloId) ?? null;
   const ciment = bpu.find((b) => b.id === cimentId) ?? null;
   const sable = bpu.find((b) => b.id === sableId) ?? null;
   const enduit = bpu.find((b) => b.id === enduitId) ?? null;
 
-  const coutAgglo = agglo ? nbBlocs * agglo.prix_unitaire : null;
-  const coutCiment = ciment ? cimentKg * ciment.prix_unitaire : null;
-  const coutSable = sable ? sableM3 * sable.prix_unitaire : null;
-  const coutEnduit = enduit ? surfaceNette * enduit.prix_unitaire : null;
-  const totalMateriaux =
-    (coutAgglo ?? 0) + (coutCiment ?? 0) + (coutSable ?? 0) + (coutEnduit ?? 0);
+  // Calcul complet : quantités exactes, conversion dans l'unité du prix
+  // du BPU avant de multiplier, montants en FCFA sans décimale (RG-06).
+  const devis = calculerDevisMur({
+    longueur: L,
+    hauteur: H,
+    epaisseur: E,
+    ouverturesPct: Number(ouvertures) || 0,
+    pertesPct: Number(pertes) || 0,
+    prix: {
+      agglos: agglo?.prix_unitaire ?? null,
+      ciment: ciment?.prix_unitaire ?? null,
+      sable: sable?.prix_unitaire ?? null,
+      enduit: enduit?.prix_unitaire ?? null,
+    },
+    unites: {
+      agglos: agglo?.unite ?? null,
+      ciment: ciment?.unite ?? null,
+      sable: sable?.unite ?? null,
+      enduit: enduit?.unite ?? null,
+    },
+  });
 
-  const taches = [
-    { nom: "Implantation et fondations", jours: 1 },
-    { nom: "Montage mur en agglos", jours: Math.max(1, Math.ceil(surfaceNette / 8)) },
-    { nom: "Pose mortier / reglage", jours: Math.max(1, Math.ceil(volumeMortier / 0.5)) },
-    { nom: "Enduit", jours: Math.max(1, Math.ceil(surfaceNette / 15)) },
-    { nom: "Finition et cure", jours: Math.max(1, Math.ceil(surfaceNette / 25)) },
-  ];
+  const { surfaceBrute, surfaceNette, volumeMur, nbBlocs, volumeMortier, cimentKg, sableM3 } = devis;
+  const totalMateriaux = devis.totalMateriaux;
+  const taches = devis.taches;
 
-  const fcfa = (montant: number) =>
-    montant.toLocaleString(langue === "fr" ? "fr-FR" : "en-US");
+  // Format français : virgule décimale, espace insécable pour les milliers.
+  const fr = langue === "fr" ? "fr-FR" : "en-US";
+  const nombre = (valeur: number, decimales = 2) =>
+    valeur.toLocaleString(fr, { minimumFractionDigits: decimales, maximumFractionDigits: decimales });
+  const fcfa = (montant: number) => Math.round(montant).toLocaleString(fr);
+  const uniteLisible = (unite: string | null | undefined) => {
+    const u = normaliserUnite(unite);
+    if (u === "m3") return "m³";
+    if (u === "m2") return "m²";
+    if (u === "t") return "t";
+    if (u === "sac") return "sac";
+    if (u === "u") return "u";
+    return unite ?? "";
+  };
+
+  const designations: Record<string, string | null> = {
+    agglos: agglo?.designation ?? null,
+    ciment: ciment?.designation ?? null,
+    sable: sable?.designation ?? null,
+    enduit: enduit?.designation ?? null,
+  };
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8">
@@ -214,13 +231,13 @@ export default function MurCalculatorPage() {
         <Card padding="lg">
           <h2 className="mb-4 text-lg font-bold text-foreground">Quantités estimées</h2>
           <div className="grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
-            <p>Surface brute : {surfaceBrute.toFixed(2)} m²</p>
-            <p>Surface nette : {surfaceNette.toFixed(2)} m²</p>
-            <p>Volume du mur : {volumeMur.toFixed(3)} m³</p>
+            <p>Surface brute : {nombre(surfaceBrute, 2)} m²</p>
+            <p>Surface nette : {nombre(surfaceNette, 2)} m²</p>
+            <p>Volume du mur : {nombre(volumeMur, 3)} m³</p>
             <p>Blocs agglos : {nbBlocs} u</p>
-            <p>Volume mortier : {volumeMortier.toFixed(3)} m³</p>
-            <p>Ciment : {cimentKg.toFixed(0)} kg</p>
-            <p>Sable : {sableM3.toFixed(3)} m³</p>
+            <p>Volume mortier : {nombre(volumeMortier, 3)} m³</p>
+            <p>Ciment : {nombre(cimentKg, 1)} kg ({nombre(cimentKg / 50, 2)} sac de 50 kg)</p>
+            <p>Sable : {nombre(sableM3, 3)} m³</p>
           </div>
         </Card>
       </section>
@@ -239,46 +256,44 @@ export default function MurCalculatorPage() {
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b border-border">
-                  <td className="p-2">
-                    Agglos {agglo ? `(${agglo.designation})` : "(non trouvé dans BPU)"}
-                  </td>
-                  <td className="p-2 text-center">{nbBlocs}</td>
-                  <td className="p-2 text-right">{agglo ? agglo.prix_unitaire.toLocaleString(langue === "fr" ? "fr-FR" : "en-US") : "-"}</td>
-                  <td className="p-2 text-right">{coutAgglo !== null ? Math.round(coutAgglo).toLocaleString(langue === "fr" ? "fr-FR" : "en-US") : "-"}</td>
-                </tr>
-                <tr className="border-b border-border">
-                  <td className="p-2">
-                    Ciment {ciment ? `(${ciment.designation})` : "(non trouvé dans BPU)"}
-                  </td>
-                  <td className="p-2 text-center">{cimentKg.toFixed(0)} kg</td>
-                  <td className="p-2 text-right">{ciment ? ciment.prix_unitaire.toLocaleString(langue === "fr" ? "fr-FR" : "en-US") : "-"}</td>
-                  <td className="p-2 text-right">{coutCiment !== null ? Math.round(coutCiment).toLocaleString(langue === "fr" ? "fr-FR" : "en-US") : "-"}</td>
-                </tr>
-                <tr className="border-b border-border">
-                  <td className="p-2">
-                    Sable {sable ? `(${sable.designation})` : "(non trouvé dans BPU)"}
-                  </td>
-                  <td className="p-2 text-center">{sableM3.toFixed(3)} m3</td>
-                  <td className="p-2 text-right">{sable ? sable.prix_unitaire.toLocaleString(langue === "fr" ? "fr-FR" : "en-US") : "-"}</td>
-                  <td className="p-2 text-right">{coutSable !== null ? Math.round(coutSable).toLocaleString(langue === "fr" ? "fr-FR" : "en-US") : "-"}</td>
-                </tr>
-                <tr className="border-b border-border">
-                  <td className="p-2">
-                    Enduit {enduit ? `(${enduit.designation})` : "(non sélectionné)"}
-                  </td>
-                  <td className="p-2 text-center">{surfaceNette.toFixed(2)} m2</td>
-                  <td className="p-2 text-right">{enduit ? enduit.prix_unitaire.toLocaleString(langue === "fr" ? "fr-FR" : "en-US") : "-"}</td>
-                  <td className="p-2 text-right">{coutEnduit !== null ? Math.round(coutEnduit).toLocaleString(langue === "fr" ? "fr-FR" : "en-US") : "-"}</td>
-                </tr>
+                {devis.lignes.map((ligne) => (
+                  <tr key={ligne.cle} className="border-b border-border">
+                    <td className="p-2">
+                      {ligne.libelle} {designations[ligne.cle] ? `(${designations[ligne.cle]})` : "(non trouvé dans BPU)"}
+                      {ligne.message && (
+                        <span className="mt-1 block text-xs text-warning">{ligne.message}</span>
+                      )}
+                    </td>
+                    <td className="p-2 text-center">
+                      {ligne.quantite !== null
+                        ? `${nombre(ligne.quantite, ligne.quantite >= 100 ? 0 : 2)} ${uniteLisible(ligne.unite)}`
+                        : "—"}
+                    </td>
+                    <td className="p-2 text-right">
+                      {ligne.prixUnitaire !== null ? fcfa(ligne.prixUnitaire) : "—"}
+                    </td>
+                    <td className="p-2 text-right font-medium">
+                      {ligne.total !== null ? fcfa(ligne.total) : "—"}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
             </div>
             <div className="mt-3 text-right font-bold text-foreground">
               Total matériaux estimé : {fcfa(totalMateriaux)} FCFA
             </div>
+            {devis.posteNonValorise && (
+              <p className="mt-2 text-xs text-warning">
+                Un poste n’a pas pu être valorisé : l’unité du prix du BPU ne correspond
+                pas aux quantités calculées. Choisissez un poste du BPU dans la bonne unité
+                (sac, m³, tonne, unité…) pour obtenir le total complet.
+              </p>
+            )}
             <p className="mt-2 text-xs text-muted">
-              Les prix sont pris depuis le BPU (premier poste correspondant). Ajustez si le prix est par sac/m3. Enduit : {enduit ? enduit.designation : " non trouvé dans le BPU"}.
+              Les quantités sont converties dans l’unité du prix du BPU avant le calcul
+              (par exemple : le ciment est chiffré au sac de 50 kg, pas au kilo).
+              Les montants sont arrondis au franc près (FCFA sans décimale).
             </p>
           </Card>
         </section>

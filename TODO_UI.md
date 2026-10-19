@@ -27,7 +27,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 | TODO-UI-021 | Rapports : sections détaillées + libellés « Valorisation travaux / Dépenses réelles » (T-UI-25) | 🔜 À FAIRE |
 | TODO-UI-022 | Export Excel : feuilles manquantes + valeurs traduites et dates JJ/MM/AAAA (T-UI-20) | 🔜 À FAIRE |
 | TODO-UI-023 | Fiche chantier : un seul affichage du statut (T-UI-21) | 🔜 À FAIRE |
-| TODO-UI-024 | Calculateur de murs : prix du sac de ciment appliqué à des kilos + total avec décimales (T-UI-26) | 🔜 À FAIRE |
+| TODO-UI-024 | Calculateur de murs : prix du sac de ciment appliqué à des kilos + total avec décimales (T-UI-26) | ✅ FAIT (19/10/2026) — quantités converties dans l'unité du prix, total en FCFA sans décimale, format français |
 | TODO-UI-025 | Base de prix : date de source + postes « à vérifier » (T-UI-27) | 🔜 À FAIRE |
 | TODO-UI-026 | Fournisseurs : écran « Conditions tarifaires » (T-UI-28) | 🔜 À FAIRE |
 | TODO-UI-027 | Livraisons : choisir le matériau dans une liste (BPU / DQE) (T-UI-29) | 🔜 À FAIRE |
@@ -360,6 +360,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 - **Constaté (test ingénieur du 19/10/2026)** : les quantités sont exactes, mais le **prix du sac de ciment est appliqué à des kilos** : 107 kg × 4 800 FCFA = **513 516 FCFA** affichés au lieu de **10 272 FCFA** (soit ×50). L'écran se contente d'écrire « Ajustez si le prix est par sac/m3 » tout en affichant un **total faux**. Le total est aussi affiché **avec des décimales** (« 9 662 799,56 FCFA ») — la règle RG-06 impose des montants en FCFA **sans décimale** — et les volumes utilisent le point décimal anglais (« 4.750 m³ ») au lieu de la virgule française.
 - **À faire** : total matériaux en FCFA **sans décimale** ; message clair quand l'unité du prix BPU ne correspond pas à l'unité de la quantité (« prix au sac de 50 kg — conversion appliquée ») ; virgule décimale française ; unité « m³ » — branchement de la logique **T-LOG-41** (Session 2).
 - **Priorité** : **haute** (c'est le prix présenté au client).
+- **✅ Corrigé (19/10/2026)** : la logique **T-LOG-41** est branchée (`src/lib/calculs/mur.ts`, 16 tests) — chaque poste est valorisé dans l'unité de son prix (ciment au sac de 50 kg, sable au m³ ou à la tonne, enduit au m², au kg ou au sac), le total est en **FCFA sans décimale**, les quantités s'affichent en **virgule française** avec « m³ » / « m² », et un poste dont l'unité de prix est incompatible est **signalé** au lieu d'être chiffré de travers. Cas de recette : mur 20 × 3 m → ciment **10 270 FCFA** (au lieu de 513 516) ; mur de 400 m² → **69 458 FCFA** (au lieu de 3 472 896).
 - **Référence** : `AUDIT_METIER.md` partie 2 §10 ; exigences MET-03, RG-06.
 
 ---

@@ -20,6 +20,10 @@ décrites avec le détail.
 | TODO-LOGIC-008 | Planning : liens entre les tâches (T-LOG-38)                     |
 | TODO-LOGIC-009 | Rapport complet : agrégats + export (T-LOG-39)                   |
 | TODO-LOGIC-010 | BPU : dédoublonnage + conditions fournisseurs (T-LOG-40)         |
+| TODO-LOGIC-011 | Calculateur de murs : prix dans la bonne unité + montants sans décimale (T-LOG-41) | ✅ CORRIGÉ (19/10) |
+| TODO-LOGIC-012 | Base de prix : date de source obligatoire + lien avec le Référentiel (T-LOG-42) | 🔜 À FAIRE |
+| TODO-LOGIC-013 | Fournisseurs : conditions tarifaires (T-LOG-43)                  | 🔜 À FAIRE |
+| TODO-LOGIC-014 | Livraisons : matériau rattaché au BPU / DQE (T-LOG-44)            | 🔜 À FAIRE |
 
 ---
 
@@ -179,12 +183,20 @@ décrites avec le détail.
 
 - **Zone** : logique (calculateurs de métré). Amélioration issue de l'audit métier du 19/10/2026.
 - **Constaté (test ingénieur)** : les **volumes sont exacts** (mur 20 × 3 m, ép. 0,20 → 60 m² brut, 57 m² net, 11,4 m³, 1 497 blocs, mortier 0,382 m³, ciment 107 kg, sable 0,306 m³) mais le **prix du sac de ciment est appliqué à des kilos** : 107 kg × 4 800 = **513 516 FCFA** affichés au lieu de 2,14 sacs × 4 800 = **10 272 FCFA** (soit **×50** ; sur le mur de 400 m² : 3 472 896 au lieu de 69 458). Le total est aussi affiché **avec des décimales** (« 9 662 799,56 FCFA ») alors que RG-06 impose des montants en FCFA **sans décimale**, et les volumes utilisent le point décimal anglais (« 4.750 m³ »).
-- **À faire**
-  1. Convertir la quantité dans l'unité du prix du BPU avant de multiplier (ciment : kg → sacs de 50 kg ; même règle pour tout poste dont l'unité diffère).
-  2. Arrondir chaque poste et le total à l'entier (FCFA sans décimale).
-  3. Format français : virgule décimale, unité « m³ ».
-  4. Tests automatiques avec les cas de recette (mur 20 × 3 × 0,20 et 10 × 2,5 × 0,20) + un test « unité de prix ≠ unité de quantité ».
-- **Suite** : écran **T-UI-26** (Session 1).
+- **État** : CORRIGÉ — module pur testé `src/lib/calculs/mur.ts` (16 tests),
+  branché sur l'écran `/calculateurs/mur`.
+  1. ✅ La quantité est convertie dans l'unité du prix du BPU avant de
+     multiplier (`normaliserUnite`, `convertirQuantite`, `choisirQuantite`) :
+     ciment au sac de 50 kg, sable au m³ ou à la tonne, enduit au m² / kg / sac,
+     agglos à l'unité, au m² ou au m³.
+  2. ✅ Chaque poste et le total sont arrondis à l'entier (`arrondirFcfa`).
+  3. ✅ Format français : virgule décimale, « m³ » / « m² ».
+  4. ✅ Un poste dont l'unité de prix est incompatible est signalé
+     (« unité incompatible ») et n'est pas chiffré de travers.
+  5. ✅ Tests avec les cas de recette : mur 20 × 3 × 0,20 (60 m² bruts,
+     57 m² nets, 11,4 m³, 1 497 blocs, mortier 0,382 m³, 106,98 kg de ciment)
+     et mur de 400 m² → ciment **69 458 FCFA** (au lieu de 3 472 896).
+- **Suite** : écran **T-UI-26** → ✅ fait.
 - **Priorité** : **haute** (un devis de mur part avec un total faux).
 
 ---
