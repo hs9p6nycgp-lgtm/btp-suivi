@@ -505,6 +505,19 @@ La Session 2 a produit un **rapport de qualité de la base de prix en lecture se
 
 ---
 
+# Partie 20 — Procès-verbal de chantier (nouveauté du 19/10)
+
+## 38. Procès-verbal journalier imprimable et partageable — ✅ **NOUVELLE FONCTION VÉRIFIÉE**
+
+Depuis la fiche journal, le bouton « **Imprimer le PV** » ouvre `/chantiers/<id>/journaux/<journalId>/imprimer` : un **procès-verbal de chantier** complet, en-tête « PROCÈS-VERBAL DE CHANTIER » avec l'identité du chantier (maître d'ouvrage, entreprise, n° de marché), la date du journal, l'effectif présent, puis les sections **Conditions et observations** (météo, observations), **Effectifs**, **Matériels**, **Quantités réalisées**, **Incidents et arrêts**, **Photos jointes**, et deux **blocs de signature** (« Chef de chantier » et « Maître d'œuvre / Maître d'ouvrage », avec « Date et signature »).
+
+- **Impression** : la feuille tient exactement dans la largeur A4 (**794 px**, aucun débordement) — vérifié en conditions d'impression réelles.
+- **Partage par message** : le bouton « **Copier le texte** » met le PV complet dans le presse-papiers (à coller dans WhatsApp ou un SMS). Quand l'appareil ne permet pas la copie, l'application affiche un message explicite (« Copie impossible sur cet appareil ») au lieu d'échouer en silence — le texte restant sélectionnable à la main.
+
+→ C'est le document qui manquait pour faire valider la journée au client ou à la maîtrise d'œuvre.
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
