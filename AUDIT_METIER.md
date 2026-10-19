@@ -202,6 +202,25 @@ Les indicateurs HSE existent en logique (taux de fréquence, jours sans accident
 
 ---
 
+# Partie 3 — Nouveautés livrées le 19/10 et derniers écrans
+
+**Écrans testés :** création d'un chantier avec le **découpage automatique par PK** (nouveauté du 19/10), recherche globale (Ctrl+K), page « Hors connexion », alertes et seuils de la fiche chantier, page « Modifier le chantier ».
+
+## 17. Découpage automatique par PK — ✅ en place et juste
+
+Sur le formulaire de création d'une route : longueur du tracé **1 200 m**, longueur des tronçons **250 m** → le bouton « Générer les sections » produit **250 m / 250 m / 250 m / 250 m / 200 m**, soit 5 sections totalisant exactement 1 200 m (la dernière est tronquée pour tomber juste). L'aperçu 3D est disponible derrière le bouton « Voir l'aperçu 3D » (il ne se charge pas d'emblée, pour ne pas ralentir la page). La création redirige ensuite vers la fiche du chantier. **Fonctionnalité conforme à CHA-02.**
+
+**Point d'attention (à confirmer manuellement)** : pendant deux essais automatisés, le chantier **a bien été créé** mais **l'écran est resté sur le formulaire** (aucune redirection, aucun message visible) — risque pour l'ingénieur de recliquer et de créer un doublon. Deux autres créations faites dans les mêmes conditions ont redirigé normalement, et le code de l'application redirige bien. À reproduire à la main une fois.
+
+## 18. Recherche globale, page hors connexion, seuils, page Modifier — ✅ en place
+
+- **Recherche globale (Ctrl+K)** : trouve le chantier par son nom (« TEST INGENIEUR — Voirie 1,2 km + assainissement ») et propose d'y aller.
+- **Hors connexion** : la page s'affiche (« Hors connexion »). Réserve mineure : elle conserve la barre latérale et la recherche, alors qu'un écran plein écran serait plus lisible pour un chef de chantier privé de réseau.
+- **Alertes et seuils** : le chantier affiche « Seuil d'alerte : 10 % » (paramétrable, RG-07) et la liste des alertes ouvertes.
+- **Page « Modifier le chantier »** : tous les champs présents (identité, marché, description de l'ouvrage pour une route : longueur, largeur, voies, accotements, revêtement, GPS, seuil d'alerte écart de quantité).
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
@@ -209,4 +228,5 @@ Les indicateurs HSE existent en logique (taux de fréquence, jours sans accident
 - Journal `dac73e20-010a-4f74-ba0b-558926b5fa6c` (validé) + 2 000 m² de décapage.
 - Import DQE 3 postes, 1 dépense 170 000 FCFA, exports Excel de test.
 - **Livraison** (partie 2) : Laterite 120, commandée 150, mise en œuvre 60, bon `TEST-BL-2026-01`, du 19/10/2026.
+- **Chantiers de test** (partie 3) : « TEST INGENIEUR 2 — Route 1,2 km troncons 250 m », « TEST INGENIEUR 2 — Route 1,2 km », « TEST INGENIEUR 3 — controle message » (avec 5 sections), « TEST INGENIEUR 4 — sans sections ». À supprimer en même temps que le chantier principal.
 - Compte de test : `test-pc-20261018@example.com`.
