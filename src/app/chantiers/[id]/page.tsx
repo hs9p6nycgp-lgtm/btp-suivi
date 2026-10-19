@@ -2,6 +2,7 @@
 
 import {
   AlertTriangle,
+  BookOpen,
   Box,
   CalendarRange,
   Calculator,
@@ -264,6 +265,7 @@ export default function ChantierDetailPage() {
               { href: `/chantiers/${chantier.id}/securite`, label: langue === "fr" ? "Sécurité (HSE)" : "Safety (HSE)", icon: <ShieldCheck className="h-4 w-4" /> },
               { href: `/chantiers/${chantier.id}/modelisation3d`, label: langue === "fr" ? "Modélisation 3D" : "3D Modeling", icon: <Box className="h-4 w-4" /> },
               { href: `/chantiers/${chantier.id}/imprimer`, label: langue === "fr" ? "Imprimer la fiche" : "Print sheet", icon: <Printer className="h-4 w-4" /> },
+              { href: `/chantiers/${chantier.id}/carnet`, label: langue === "fr" ? "Imprimer le carnet" : "Print the logbook", icon: <BookOpen className="h-4 w-4" /> },
             ].map((lien) => (
               <Link
                 key={lien.href}
