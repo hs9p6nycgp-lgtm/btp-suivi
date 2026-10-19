@@ -10,6 +10,7 @@ import { useParams, useRouter } from "next/navigation";
 import { getLangue, traduireErreur } from "@/lib/i18n";
 import { ConfirmDialog, type DemandeConfirmation } from "@/components/ui/ConfirmDialog";
 import FournisseurConditions from "@/components/FournisseurConditions";
+import FournisseurFiche from "@/components/FournisseurFiche";
 import { toast } from "@/components/ui/toast";
 import { Users } from "lucide-react";
 
@@ -48,6 +49,8 @@ export default function FournisseursPage() {
   // Formulaire
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Fournisseur | null>(null);
+  // Fiche detaillee affichee (evaluation, documents, livraisons)
+  const [fournisseurSelectionne, setFournisseurSelectionne] = useState<Fournisseur | null>(null);
   const [raisonSociale, setRaisonSociale] = useState("");
   const [type, setType] = useState("materiaux");
   const [adresse, setAdresse] = useState("");
@@ -259,6 +262,14 @@ export default function FournisseursPage() {
           )}
         </div>
       )}
+      {fournisseurSelectionne && (
+        <FournisseurFiche
+          fournisseurId={fournisseurSelectionne.id}
+          fournisseurNom={fournisseurSelectionne.raison_sociale}
+          onMessage={setMessage}
+        />
+      )}
+
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {filtres.map((f) => (
           <Card key={f.id}>
@@ -268,6 +279,14 @@ export default function FournisseursPage() {
                 <p className="text-xs text-muted">{TYPES.find((t) => t.value === f.type)?.label ?? f.type}</p>
               </div>
               <div className="flex gap-3">
+                <button
+                  onClick={() => setFournisseurSelectionne(fournisseurSelectionne?.id === f.id ? null : f)}
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  {fournisseurSelectionne?.id === f.id
+                    ? langue === "fr" ? "Masquer la fiche" : "Hide sheet"
+                    : langue === "fr" ? "Fiche" : "Sheet"}
+                </button>
                 <button onClick={() => startEdit(f)} className="text-xs font-medium text-primary hover:underline">Modifier</button>
                 <button
                   onClick={() =>
