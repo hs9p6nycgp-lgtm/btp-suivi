@@ -9,6 +9,13 @@ import {
   parametresEquivalents,
   type PlanControle,
 } from "@/lib/qualite/plansControle";
+import {
+  etatEcheanceNC,
+  formaterDateNC,
+  libelleGraviteNC,
+  libelleStatutNC,
+  validerSuiviNC,
+} from "@/lib/qualite/nonConformites";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -74,6 +81,13 @@ export default function QualitePage() {
   const [epreuves, setEpreuves] = useState<EpreuveBeton[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
+
+  // Suivi d'une fiche de non-conformité (responsable, action corrective, échéance)
+  const [ncEnTraitement, setNcEnTraitement] = useState<NonConformite | null>(null);
+  const [ncResponsable, setNcResponsable] = useState("");
+  const [ncAction, setNcAction] = useState("");
+  const [ncEcheance, setNcEcheance] = useState("");
+  const [ncMessage, setNcMessage] = useState<string | null>(null);
 
   // QUA-04 : formulaire nouvel éprouvette béton
   const [nouvelleDateCoulage, setNouvelleDateCoulage] = useState<Date | null>(null);
@@ -165,11 +179,59 @@ export default function QualitePage() {
     load();
   }
 
-  async function cloturerNC(id: string) {
+  // Ouvre le traitement d'une fiche : responsable, action corrective, échéance
+  function ouvrirSuiviNC(nc: NonConformite) {
+    setNcEnTraitement(nc);
+    setNcResponsable(nc.responsable ?? "");
+    setNcAction(nc.action_corrective ?? "");
+    setNcEcheance(nc.echeance ?? "");
+    setNcMessage(null);
+  }
+
+  function fermerSuiviNC() {
+    setNcEnTraitement(null);
+    setNcMessage(null);
+  }
+
+  async function enregistrerSuiviNC(cloturer: boolean) {
+    if (!ncEnTraitement) return;
+    const controle = validerSuiviNC(
+      { responsable: ncResponsable, action_corrective: ncAction, echeance: ncEcheance },
+      { cloture: cloturer },
+    );
+    if (!controle.ok) {
+      setNcMessage(controle.erreurs.join(" "));
+      return;
+    }
+    setNcMessage(null);
     const supabase = createClient();
-    const { error } = await supabase.from("non_conformites").update({ statut: "cloturee", date_cloture: new Date().toISOString().slice(0, 10) }).eq("id", id);
-    if (error) { setMessage(traduireErreur(error)); return; }
-    setMessage(langue === "fr" ? "Non-conformite cloturee." : "Non-conformity closed.");
+    const champs: Record<string, unknown> = {
+      responsable: ncResponsable.trim(),
+      action_corrective: ncAction.trim(),
+      echeance: ncEcheance || null,
+    };
+    if (cloturer) {
+      champs.statut = "cloturee";
+      champs.date_cloture = new Date().toISOString().slice(0, 10);
+    }
+    const { error } = await supabase
+      .from("non_conformites")
+      .update(champs)
+      .eq("id", ncEnTraitement.id);
+    if (error) {
+      setNcMessage(traduireErreur(error));
+      return;
+    }
+    setMessage(
+      langue === "fr"
+        ? cloturer
+          ? "Fiche de non-conformité clôturée."
+          : "Suivi de la non-conformité enregistré."
+        : cloturer
+          ? "Non-conformity closed."
+          : "Non-conformity follow-up saved.",
+    );
+    fermerSuiviNC();
     load();
   }
 
@@ -404,38 +466,101 @@ export default function QualitePage() {
                   <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Gravité</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Statut</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Responsable</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Action corrective</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Échéance</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {nonConformites.map((nc) => (
-                  <tr key={nc.id} className={`border-b border-border/60 transition last:border-0 hover:bg-surface-2/70 ${nc.statut !== "cloturee" ? "bg-warning/10" : ""}`}>
-                    <td className="px-4 py-3">{nc.description}</td>
-                    <td className="px-4 py-3 text-center">
-                      <Badge variant={nc.gravite === "critique" ? "danger" : nc.gravite === "majeure" ? "warning" : "info"}>
-                        {nc.gravite}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <Badge variant={nc.statut === "cloturee" ? "success" : "warning"}>
-                        {nc.statut}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-center text-muted">{nc.responsable ?? "-"}</td>
-                    <td className="px-4 py-3 text-center text-muted">{nc.echeance ?? "-"}</td>
-                    <td className="px-4 py-3 text-center">
-                      {nc.statut !== "cloturee" && (
-                        <Button variant="secondary" size="sm" onClick={() => cloturerNC(nc.id)}>
-                          {langue === "fr" ? "Clôturer" : "Close"}
-                        </Button>
+                {nonConformites.map((nc) => {
+                  const echeance = etatEcheanceNC(nc);
+                  return (
+                    <tr key={nc.id} className={`border-b border-border/60 transition last:border-0 hover:bg-surface-2/70 ${nc.statut !== "cloturee" ? "bg-warning/10" : ""}`}>
+                      <td className="px-4 py-3">{nc.description}</td>
+                      <td className="px-4 py-3 text-center">
+                        <Badge variant={nc.gravite === "critique" ? "danger" : nc.gravite === "majeure" ? "warning" : "info"}>
+                          {libelleGraviteNC(nc.gravite)}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <Badge variant={nc.statut === "cloturee" ? "success" : "warning"}>
+                          {libelleStatutNC(nc.statut)}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-center text-muted">{nc.responsable ?? "—"}</td>
+                      <td className="px-4 py-3 text-xs text-muted">
+                        {nc.action_corrective ?? "—"}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <p className="text-muted">{formaterDateNC(nc.echeance) || "—"}</p>
+                        {echeance.enRetard && (
+                          <Badge variant="danger">{echeance.libelle}</Badge>
+                        )}
+                        {!echeance.enRetard && !echeance.clos && nc.echeance && (
+                          <p className="text-[11px] text-muted">{echeance.libelle}</p>
+                        )}
+                        {echeance.clos && nc.date_cloture && (
+                          <p className="text-[11px] text-muted">Clôturée le {formaterDateNC(nc.date_cloture)}</p>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {nc.statut !== "cloturee" && (
+                          <Button variant="secondary" size="sm" onClick={() => ouvrirSuiviNC(nc)}>
+                            {langue === "fr" ? "Traiter" : "Handle"}
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {ncEnTraitement && (
+                  <tr className="border-b border-border/60 bg-surface-2/60">
+                    <td colSpan={7} className="px-4 py-4">
+                      <p className="mb-3 text-sm font-semibold text-foreground">
+                        {langue === "fr" ? "Traitement de la non-conformité" : "Non-conformity follow-up"}
+                      </p>
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+                        <input
+                          className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                          placeholder={langue === "fr" ? "Responsable *" : "Owner *"}
+                          value={ncResponsable}
+                          onChange={(e) => setNcResponsable(e.target.value)}
+                        />
+                        <input
+                          className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10 md:col-span-2"
+                          placeholder={langue === "fr" ? "Action corrective *" : "Corrective action *"}
+                          value={ncAction}
+                          onChange={(e) => setNcAction(e.target.value)}
+                        />
+                        <input
+                          className="rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                          type="date"
+                          value={ncEcheance}
+                          onChange={(e) => setNcEcheance(e.target.value)}
+                        />
+                      </div>
+                      {ncMessage && (
+                        <p className="mt-2 rounded-xl border border-danger/40 bg-danger/10 p-2.5 text-xs text-foreground">
+                          {ncMessage}
+                        </p>
                       )}
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <Button size="sm" onClick={() => enregistrerSuiviNC(false)}>
+                          {langue === "fr" ? "Enregistrer" : "Save"}
+                        </Button>
+                        <Button size="sm" variant="success" onClick={() => enregistrerSuiviNC(true)}>
+                          {langue === "fr" ? "Enregistrer et clôturer" : "Save and close"}
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={fermerSuiviNC}>
+                          {langue === "fr" ? "Annuler" : "Cancel"}
+                        </Button>
+                      </div>
                     </td>
                   </tr>
-                ))}
+                )}
                 {nonConformites.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="p-4 text-center text-muted">Aucune non-conformité.</td>
+                    <td colSpan={7} className="p-4 text-center text-muted">Aucune non-conformité.</td>
                   </tr>
                 )}
               </tbody>
