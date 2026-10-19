@@ -8,6 +8,7 @@ import { MapPin, Pencil } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { getLangue, traduireErreur } from "@/lib/i18n";
 import { estTypeDetailValide, groupesTypesDetailles, type TypeChantier } from "@/lib/chantiers/types";
 
@@ -196,8 +197,22 @@ export default function ModifierChantierPage() {
   if (chargement) {
     return (
       <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
-        <div className="flex h-64 items-center justify-center">
-          <div className="h-9 w-9 animate-spin rounded-full border-[3px] border-border border-t-action" />
+        <div className="mx-auto w-full max-w-3xl space-y-4">
+          <div className="anim-fade-up flex items-center gap-3">
+            <Skeleton variant="rect" width="2.75rem" height="2.75rem" />
+            <div className="flex-1 space-y-2">
+              <Skeleton width="35%" />
+              <Skeleton width="60%" />
+            </div>
+          </div>
+          <div className="anim-fade-up anim-delay-1 space-y-3 rounded-2xl border border-border/70 bg-surface p-6 shadow-soft">
+            <Skeleton width="25%" />
+            <Skeleton variant="rect" height="2.75rem" />
+            <Skeleton variant="rect" height="2.75rem" />
+            <Skeleton variant="rect" height="2.75rem" />
+            <Skeleton variant="rect" height="2.75rem" />
+            <Skeleton variant="rect" height="3rem" />
+          </div>
         </div>
       </main>
     );

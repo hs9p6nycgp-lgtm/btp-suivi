@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getLangue, traduireErreur } from "@/lib/i18n";
+import { ConfirmDialog, type DemandeConfirmation } from "@/components/ui/ConfirmDialog";
 import { Users } from "lucide-react";
 
 type Fournisseur = {
@@ -39,6 +40,7 @@ export default function FournisseursPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filtreType, setFiltreType] = useState("");
+  const [confirmation, setConfirmation] = useState<DemandeConfirmation | null>(null);
 
   // Formulaire
   const [showForm, setShowForm] = useState(false);
@@ -133,7 +135,6 @@ export default function FournisseursPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Supprimer ce fournisseur ?")) return;
     const supabase = createClient();
     const { error } = await supabase.from("fournisseurs").delete().eq("id", id);
     if (error) { setMessage(traduireErreur(error)); return; }
@@ -237,7 +238,20 @@ export default function FournisseursPage() {
               </div>
               <div className="flex gap-3">
                 <button onClick={() => startEdit(f)} className="text-xs font-medium text-primary hover:underline">Modifier</button>
-                <button onClick={() => handleDelete(f.id)} className="text-xs font-medium text-danger hover:underline">Supprimer</button>
+                <button
+                  onClick={() =>
+                    setConfirmation({
+                      titre: "Supprimer ce fournisseur ?",
+                      message: "La fiche du fournisseur sera définitivement supprimée.",
+                      confirmerLibelle: "Supprimer",
+                      danger: true,
+                      action: () => handleDelete(f.id),
+                    })
+                  }
+                  className="text-xs font-medium text-danger hover:underline"
+                >
+                  Supprimer
+                </button>
               </div>
             </div>
             {f.ville && <p className="mt-2 text-sm text-muted">{f.ville}</p>}
@@ -247,6 +261,8 @@ export default function FournisseursPage() {
           </Card>
         ))}
       </div>
+
+      <ConfirmDialog demande={confirmation} onFermer={() => setConfirmation(null)} />
     </main>
   );
 }

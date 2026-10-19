@@ -6,6 +6,7 @@ import { Mail, Phone, Plus, Trash2, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
+import { ConfirmDialog, type DemandeConfirmation } from "@/components/ui/ConfirmDialog";
 import { traduireErreur } from "@/lib/i18n";
 import { normaliserTelephone } from "@/lib/chantiers/complet";
 
@@ -44,6 +45,7 @@ export default function ChantierIntervenants({ chantierId }: { chantierId: strin
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [confirmation, setConfirmation] = useState<DemandeConfirmation | null>(null);
 
   async function load() {
     const supabase = createClient();
@@ -89,7 +91,6 @@ export default function ChantierIntervenants({ chantierId }: { chantierId: strin
   }
 
   async function supprimer(intervenant: Intervenant) {
-    if (!window.confirm(`Supprimer « ${intervenant.nom} » de la liste des intervenants ?`)) return;
     const supabase = createClient();
     const { error } = await supabase.from("intervenants_chantier").delete().eq("id", intervenant.id);
     if (error) {
@@ -197,7 +198,15 @@ export default function ChantierIntervenants({ chantierId }: { chantierId: strin
                 </div>
                 <button
                   type="button"
-                  onClick={() => supprimer(intervenant)}
+                  onClick={() =>
+                    setConfirmation({
+                      titre: `Supprimer « ${intervenant.nom} » ?`,
+                      message: "L'intervenant sera retiré des contacts du chantier.",
+                      confirmerLibelle: "Supprimer",
+                      danger: true,
+                      action: () => supprimer(intervenant),
+                    })
+                  }
                   className="rounded-lg p-2 text-muted transition hover:bg-danger/10 hover:text-danger"
                   aria-label={`Supprimer ${intervenant.nom}`}
                 >
@@ -208,6 +217,8 @@ export default function ChantierIntervenants({ chantierId }: { chantierId: strin
           })}
         </ul>
       )}
+
+      <ConfirmDialog demande={confirmation} onFermer={() => setConfirmation(null)} />
     </Card>
   );
 }

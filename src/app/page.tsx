@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -14,6 +14,16 @@ import { detailAlerte, libelleTypeAlerte } from "@/lib/alertes";
 import { lireDernierChantier } from "@/lib/chantiers/dernier";
 import { actionsDuJour } from "@/lib/journal/actionsDuJour";
 import { urlsSignees } from "@/lib/photos/urls";
+
+// recharts (≈ 100 Ko) n'est téléchargé que lorsque cette section est affichée.
+const CourbePlanRealise = dynamic(() => import("@/components/accueil/CourbePlanRealise"), {
+  loading: () => (
+    <div className="space-y-4">
+      <Skeleton variant="rect" height="14rem" />
+      <Skeleton variant="rect" height="14rem" />
+    </div>
+  ),
+});
 
 type Chantier = {
   id: string;
@@ -677,54 +687,7 @@ export default function Home() {
           </div>
         </div>
         <Card padding="lg">
-          {/* Courbe du plan prévu : avancement en % */}
-          <div className="mb-6 h-56 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={donnees}
-                margin={{ top: 10, left: 10, right: 20, bottom: 10 }}
-              >
-                <XAxis dataKey="x" tick={{ fontSize: 11 }} stroke="var(--border)" />
-                <YAxis
-                  domain={[0, 100]}
-                  unit="%"
-                  tick={{ fontSize: 11 }}
-                  stroke="var(--border)"
-                  label={{ value: "Avancement", angle: -90, position: "insideLeft" }}
-                />
-                <Tooltip
-                  formatter={(valeur) => [`${Number(valeur).toLocaleString(langue === "fr" ? "fr-FR" : "en-US")}%`, "Avancement"]}
-                />
-                <Line type="monotone" dataKey="planifiee" stroke="var(--primary)" strokeWidth={2} dot={{ r: 3 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-          {/* Courbe des dépenses réelles : cumul des montants FCFA */}
-          <div>
-            <h3 className="mb-2 text-sm font-semibold text-muted">Dépenses réelles</h3>
-            <div className="h-56 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={donnees}
-                  margin={{ top: 10, left: 10, right: 20, bottom: 10 }}
-                >
-                  <XAxis dataKey="x" tick={{ fontSize: 11 }} stroke="var(--border)" />
-                  <YAxis
-                    tick={{ fontSize: 11 }}
-                    stroke="var(--border)"
-                    tickFormatter={(valeur) => `${Number(valeur) / 1000} k`}
-                  />
-                  <Tooltip
-                    formatter={(valeur) => [
-                      `${Number(valeur).toLocaleString(langue === "fr" ? "fr-FR" : "en-US")} FCFA`,
-                      "Dépenses",
-                    ]}
-                  />
-                  <Line type="monotone" dataKey="realisee" stroke="var(--action)" strokeWidth={2} dot={{ r: 3 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+          <CourbePlanRealise donnees={donnees} langue={langue} />
           <p className="mt-2 text-xs text-muted">
             {langue === "fr"
               ? "La courbe « prévu » atteint 100 % à la date de fin prévue, la « réalisé » suit les dépenses réelles."

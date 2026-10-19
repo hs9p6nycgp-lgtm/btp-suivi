@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { getLangue, traduireErreur } from "@/lib/i18n";
+import { ConfirmDialog, type DemandeConfirmation } from "@/components/ui/ConfirmDialog";
 import { lignesAffecteesParMiseAJour, exporterReferentielCSV, type LigneReferentiel } from "@/lib/referentiel/prix";
 import { BookOpen } from "lucide-react";
 import ReferentielImport from "@/components/ReferentielImport";
@@ -39,6 +40,7 @@ export default function ReferentielPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filtreCategorie, setFiltreCategorie] = useState("");
+  const [confirmation, setConfirmation] = useState<DemandeConfirmation | null>(null);
 
   // Propagation REF-06 : confirmation avant de mettre à jour les DQE/BPU affectés
   const [propagating, setPropagating] = useState(false);
@@ -190,7 +192,6 @@ export default function ReferentielPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Supprimer ce prix du référentiel ?")) return;
     const supabase = createClient();
     const { error } = await supabase.from("referentiel_prix").delete().eq("id", id);
     if (error) { setMessage(traduireErreur(error)); return; }
@@ -347,7 +348,20 @@ export default function ReferentielPage() {
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-3">
                     <button onClick={() => startEdit(p)} className="text-xs font-medium text-primary hover:underline">Modifier</button>
-                    <button onClick={() => handleDelete(p.id)} className="text-xs font-medium text-danger hover:underline">Supprimer</button>
+                    <button
+                      onClick={() =>
+                        setConfirmation({
+                          titre: "Supprimer ce prix du référentiel ?",
+                          message: "Ce prix sera définitivement retiré du référentiel.",
+                          confirmerLibelle: "Supprimer",
+                          danger: true,
+                          action: () => handleDelete(p.id),
+                        })
+                      }
+                      className="text-xs font-medium text-danger hover:underline"
+                    >
+                      Supprimer
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -362,6 +376,8 @@ export default function ReferentielPage() {
           </tbody>
         </table>
       </div>
+
+      <ConfirmDialog demande={confirmation} onFermer={() => setConfirmation(null)} />
     </main>
   );
 }

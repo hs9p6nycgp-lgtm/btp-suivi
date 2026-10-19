@@ -6,6 +6,7 @@ import { ClipboardCheck, Download, File, FileSignature, FileText, Ruler, Trash2,
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
+import { ConfirmDialog, type DemandeConfirmation } from "@/components/ui/ConfirmDialog";
 import { traduireErreur } from "@/lib/i18n";
 import {
   LIMITE_DOCUMENT_OCTETS,
@@ -68,6 +69,7 @@ export default function ChantierDocuments({ chantierId }: { chantierId: string }
   const [type, setType] = useState("plan");
   const [message, setMessage] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState(false);
+  const [confirmation, setConfirmation] = useState<DemandeConfirmation | null>(null);
 
   async function load() {
     const supabase = createClient();
@@ -162,7 +164,6 @@ export default function ChantierDocuments({ chantierId }: { chantierId: string }
   }
 
   async function supprimer(document: DocumentChantier) {
-    if (!window.confirm(`Supprimer le document « ${document.nom} » ?`)) return;
     const supabase = createClient();
     const { error: errStorage } = await supabase.storage.from(BUCKET).remove([document.chemin]);
     if (errStorage) {
@@ -269,7 +270,15 @@ export default function ChantierDocuments({ chantierId }: { chantierId: string }
               </button>
               <button
                 type="button"
-                onClick={() => supprimer(document)}
+                onClick={() =>
+                  setConfirmation({
+                    titre: `Supprimer le document « ${document.nom} » ?`,
+                    message: "Le fichier et sa fiche seront définitivement supprimés.",
+                    confirmerLibelle: "Supprimer",
+                    danger: true,
+                    action: () => supprimer(document),
+                  })
+                }
                 className="rounded-lg p-2 text-muted transition hover:bg-danger/10 hover:text-danger"
                 aria-label={`Supprimer ${document.nom}`}
               >
@@ -279,6 +288,8 @@ export default function ChantierDocuments({ chantierId }: { chantierId: string }
           ))}
         </ul>
       )}
+
+      <ConfirmDialog demande={confirmation} onFermer={() => setConfirmation(null)} />
     </Card>
   );
 }

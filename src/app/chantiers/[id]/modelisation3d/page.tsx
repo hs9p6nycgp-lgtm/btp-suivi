@@ -136,8 +136,22 @@ export default function Modelisation3DPage() {
   if (loading) {
     return (
       <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
-        <div className="flex h-64 items-center justify-center">
-          <div className="animate-pulse rounded-full h-8 w-8 bg-action/60"></div>
+        <div className="mx-auto w-full max-w-6xl space-y-4">
+          <div className="anim-fade-up flex items-center gap-3">
+            <Skeleton variant="rect" width="2.75rem" height="2.75rem" />
+            <div className="flex-1 space-y-2">
+              <Skeleton width="35%" />
+              <Skeleton width="60%" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-1">
+              <Skeleton variant="rect" height="22rem" />
+            </div>
+            <div className="lg:col-span-2">
+              <Skeleton variant="rect" height="26rem" />
+            </div>
+          </div>
         </div>
       </main>
     );

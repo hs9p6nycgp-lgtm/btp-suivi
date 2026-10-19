@@ -25,7 +25,7 @@ export function Button({
       "bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary/90 hover:shadow-primary/30 active:scale-[0.98]",
     outline:
       "border-2 border-primary/60 text-primary hover:border-primary hover:bg-primary/5 active:scale-[0.98]",
-    ghost: "text-foreground hover:bg-slate-100 dark:hover:bg-white/10",
+    ghost: "text-foreground hover:bg-slate-100 active:scale-[0.98] dark:hover:bg-white/10",
     danger:
       "bg-gradient-to-br from-rose-500 to-rose-600 text-white shadow-lg shadow-rose-500/25 hover:shadow-rose-500/35 active:scale-[0.98]",
     success:

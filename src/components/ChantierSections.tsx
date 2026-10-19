@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { ConfirmDialog, type DemandeConfirmation } from "@/components/ui/ConfirmDialog";
 import { traduireErreur } from "@/lib/i18n";
 import {
   analyserPK,
@@ -73,6 +74,7 @@ export default function ChantierSections({
   const [hauteur3D, setHauteur3D] = useState("");
   const [avancements, setAvancements] = useState<Record<string, number>>({});
   const [message, setMessage] = useState<string | null>(null);
+  const [confirmation, setConfirmation] = useState<DemandeConfirmation | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
   // Correction d'une section existante (sans perdre son avancement)
   const [editionId, setEditionId] = useState<string | null>(null);
@@ -173,7 +175,6 @@ export default function ChantierSections({
   }
 
   async function supprimer(section: SectionChantier) {
-    if (!window.confirm(`Supprimer la section « ${section.nom} » ?`)) return;
     const supabase = createClient();
     const { error } = await supabase.from("sections_chantier").delete().eq("id", section.id);
     if (error) {
@@ -480,7 +481,15 @@ export default function ChantierSections({
                     </button>
                     <button
                       type="button"
-                      onClick={() => supprimer(section)}
+                      onClick={() =>
+                        setConfirmation({
+                          titre: `Supprimer la section « ${section.nom} » ?`,
+                          message: "Cette partie du découpage sera retirée, avec son avancement.",
+                          confirmerLibelle: "Supprimer",
+                          danger: true,
+                          action: () => supprimer(section),
+                        })
+                      }
                       className="rounded-lg p-2 text-muted transition hover:bg-danger/10 hover:text-danger"
                       aria-label={`Supprimer ${section.nom}`}
                     >
@@ -506,6 +515,8 @@ export default function ChantierSections({
           <code className="font-mono">0017_phase2_chantiers_suivi_complet.sql</code> à exécuter dans Supabase).
         </p>
       )}
+
+      <ConfirmDialog demande={confirmation} onFermer={() => setConfirmation(null)} />
     </Card>
   );
 }

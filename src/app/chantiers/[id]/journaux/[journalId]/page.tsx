@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { ConfirmDialog, type DemandeConfirmation } from "@/components/ui/ConfirmDialog";
 import { getLangue, traduireErreur } from "@/lib/i18n";
 import { compresserImage } from "@/lib/photos/compression";
 import { BUCKET_PHOTOS, urlSignee, urlsSignees } from "@/lib/photos/urls";
@@ -61,6 +62,7 @@ export default function JournalDetailPage() {
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [confirmation, setConfirmation] = useState<DemandeConfirmation | null>(null);
 
   const [postes, setPostes] = useState<any[]>([]);
   const [sections, setSections] = useState<any[]>([]);
@@ -237,7 +239,6 @@ export default function JournalDetailPage() {
 
   async function validateJournal() {
     if (!editable) return;
-    if (!confirm(langue === "fr" ? "Valider ce journal ? Il sera verrouillé, mais vous pourrez le rouvrir si une erreur est trouvée." : "Validate this journal? It will be locked, but you can reopen it if a mistake is found.")) return;
     setLoading(true);
     const supabase = createClient();
 
@@ -280,7 +281,6 @@ export default function JournalDetailPage() {
   // Rouvrir un journal validé pour corriger une erreur : il repasse en brouillon.
   async function reopenJournal() {
     if (editable) return;
-    if (!confirm(langue === "fr" ? "Rouvrir ce journal pour le corriger ? Il repassera en brouillon." : "Reopen this log to fix it? It will go back to draft.")) return;
     setLoading(true);
     const { error } = await offlineUpdate("journaux", journalId, { statut: "brouillon", validated_at: null });
     setLoading(false);
@@ -331,7 +331,21 @@ export default function JournalDetailPage() {
                 : (langue === "fr" ? "Validé" : "Validated")}
             </Badge>
             {!editable && (
-              <Button variant="secondary" onClick={reopenJournal} disabled={loading}>
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  setConfirmation({
+                    titre: langue === "fr" ? "Rouvrir ce journal ?" : "Reopen this log?",
+                    message:
+                      langue === "fr"
+                        ? "Il repassera en brouillon pour être corrigé."
+                        : "It will go back to draft for editing.",
+                    confirmerLibelle: langue === "fr" ? "Rouvrir" : "Reopen",
+                    action: reopenJournal,
+                  })
+                }
+                disabled={loading}
+              >
                 <RotateCcw className="h-4 w-4" />
                 {langue === "fr" ? "Rouvrir la saisie" : "Reopen entry"}
               </Button>
@@ -550,7 +564,22 @@ export default function JournalDetailPage() {
 
       {editable ? (
         <div className="mt-8 rounded-2xl border border-action/30 bg-action/5 p-4">
-          <Button onClick={validateJournal} size="lg" disabled={loading} className="w-full sm:w-auto">
+          <Button
+            onClick={() =>
+              setConfirmation({
+                titre: langue === "fr" ? "Valider ce journal ?" : "Validate this log?",
+                message:
+                  langue === "fr"
+                    ? "Il sera verrouillé ; vous pourrez le rouvrir si une erreur est trouvée."
+                    : "It will be locked; you can reopen it if a mistake is found.",
+                confirmerLibelle: langue === "fr" ? "Valider" : "Validate",
+                action: validateJournal,
+              })
+            }
+            size="lg"
+            disabled={loading}
+            className="w-full sm:w-auto"
+          >
             {loading ? (langue === "fr" ? "Validation..." : "Validating...") : (langue === "fr" ? "Valider le journal (verrouille la saisie)" : "Validate the log (locks entry)")}
           </Button>
           <p className="mt-2 text-xs text-muted">
@@ -567,6 +596,8 @@ export default function JournalDetailPage() {
         </div>
       )}
       </div>
+
+      <ConfirmDialog demande={confirmation} onFermer={() => setConfirmation(null)} />
     </main>
   );
 }
