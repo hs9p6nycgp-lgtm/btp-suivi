@@ -243,6 +243,24 @@ Deux corrections issues du dispatch de la partie 1 ont été livrées par les se
 
 ---
 
+# Partie 5 — Vérification de la correction « devis enregistrable »
+
+Une troisième correction a été livrée pendant le test (commit `1abc805`, tables `devis` / `devis_lignes` en migration `0022`, page `/calculateurs/devis/[id]`).
+
+## 21. Devis : enregistrement, fiche, impression, export — ✅ **CORRIGÉ ET VÉRIFIÉ**
+
+- **Bouton « Enregistrer le devis »** présent sur le calculateur, avec un formulaire **Client \***, **Numéro du devis \***, **Date du devis \*** et rattachement à un chantier.
+- **Enregistrement effectif** : devis **DEV-2026-019**, client **SODECI**, date 19/10/2026, objet « Chaussée – couche de base + enrobé (détaillé) », **total 230 120 800 FCFA** — identique au total affiché par le calculateur. Les **10 lignes** sont enregistrées avec désignation, unité, quantité, prix unitaire et total, puis reaffichées sur une fiche devis autonome (« BTP SUIVI PRO — DEVIS », n° de devis, objet, date, client, tableau, **TOTAL DU DEVIS**, pied de page et **zones de signature client / entreprise**).
+- **Export Excel** : fichier `devis_DEV-2026-019_2026-10-19.xlsx` téléchargé (17,9 Ko) ✓.
+- **Impression / PDF** : la mise en page est exploitable et conserve les séparateurs de milliers (8 400 m², 3 922 800 FCFA) ✓.
+- La migration `0022_devis_enregistres.sql` est **appliquée en base** (tables présentes et vides avant le test).
+
+→ **Les exigences MET-02 / MET-03 sont désormais couvertes** : un devis se nomme, se rattache, se relit, s'imprime et s'exporte.
+
+*Réserve mineure* : une fois le devis enregistré, la fiche ne permet plus de le rattacher à un chantier (le choix se fait au moment de l'enregistrement) ; les lignes sans prix (surface, nombre de bennes) sont conservées avec un prix unitaire à 0, ce qui est normal mais devrait être signalé sur le devis imprimé.
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
@@ -250,5 +268,7 @@ Deux corrections issues du dispatch de la partie 1 ont été livrées par les se
 - Journal `dac73e20-010a-4f74-ba0b-558926b5fa6c` (validé) + 2 000 m² de décapage.
 - Import DQE 3 postes, 1 dépense 170 000 FCFA, exports Excel de test.
 - **Livraison** (partie 2) : Laterite 120, commandée 150, mise en œuvre 60, bon `TEST-BL-2026-01`, du 19/10/2026.
+- **Devis enregistré** (partie 5) : DEV-2026-019, client SODECI, 230 120 800 FCFA, 10 lignes (`e5c4d8ac-b1ea-4372-860e-d7695257ea8c`) + le fichier Excel correspondant dans `downloads-devis/`.
+- **Plans de contrôle du chantier principal** (partie 4) : 8 paramètres « Route » + 1 essai non conforme (999 m) et sa fiche de non-conformité (gravité critique) — utiles pour montrer la démonstration RG-04 ; à supprimer si vous voulez un chantier de test vierge.
 - **Chantiers de test de la partie 3** (« TEST INGENIEUR 2 », « 3 », « 4 ») : **supprimés le 19/10/2026 sur accord de l'utilisateur** (sauvegarde JSON préalable, cascade vérifiée, aucune donnée orpheline).
 - Compte de test : `test-pc-20261018@example.com` (conservé).
