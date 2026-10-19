@@ -398,4 +398,14 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 
 ---
 
+## TODO-UI-028 — Journal : éviter la double fiche journalière (T-UI-30)
+
+- **Écran** : Journal de chantier (`/chantiers/[id]/journaux`) — `src/app/chantiers/[id]/journaux/page.tsx`.
+- **Constaté (test ingénieur du 19/10/2026)** : après un test de coupure réseau, **10 fiches journalières identiques** ont été créées pour la même journée (voir `AUDIT_METIER.md` partie 18). L'écran propose déjà « Un journal existe déjà pour le 18/10/2026 — Ouvrir ce journal », mais rien n'empêche un double clic sur « Enregistrer le journal » ni une fiche dupliquée par la reprise hors connexion.
+- **À faire** : **désactiver le bouton « Enregistrer le journal » pendant l'enregistrement** (et afficher « fiche enregistrée » / « déjà sur le téléphone »), **message explicite** quand une fiche existe déjà pour la date choisie, et cas particulier de la fiche du jour : proposer « Rouvrir ce journal » plutôt que de créer une seconde fiche.
+- **Priorité** : moyenne (la correction de fond est côté logique : T-LOG-46).
+- **Référence** : `AUDIT_METIER.md` partie 18 ; exigences RG-02, JOU-01.
+
+---
+
 *Fin de TODO_UI.md.*

@@ -465,6 +465,24 @@ La Session 2 a produit un **rapport de qualité de la base de prix en lecture se
 
 ---
 
+# Partie 18 — Défaut trouvé : la reprise hors connexion peut créer des doublons
+
+## 35. Un journal hors connexion peut être créé plusieurs fois — ⚠️ **DÉFAUT CONFIRMÉ**
+
+**Constat** : après mon test de coupure réseau, la base du chantier de test contenait **10 fiches journalières identiques** pour le 18/10/2026 (mêmes observations « Journal hors connexion — test du 18/10 », même météo, toutes créées dans la même seconde).
+
+**Analyse** (code relu) :
+- `creerJournal()` met **une seule** opération en file par clic — le clic n'est pas en cause.
+- `flushQueue()` (composant `NetworkStatus`) relit la file et insère chaque opération, puis la retire. **Il n'y a aucun verrou d'exécution en cours** : le composant déclenche une reprise au montage **et** sur l'événement `online`.
+- `queueAdd()` ajoute toujours une nouvelle entrée (pas de clé de déduplication).
+- La table `journaux` **n'impose pas l'unicité** de (chantier, date) : rien n'empêche l'insertion de la même fiche journalière plusieurs fois.
+
+**Conséquence réelle** : sur le terrain, un chef de chantier qui garde **deux onglets ouverts** (ou dont l'application se recharge au moment où le réseau revient) peut voir **plusieurs fiches journalières pour la même journée** — ce qui casse la règle RG-02 (« un journal validé n'est plus modifiable », donc un seul journal par jour) et fausse les comptages de jours travaillés, l'avancement et le rapport.
+
+**Correctif proposé** (Session 2, logique) : verrou d'exécution sur la reprise (une seule reprise à la fois, en cours ou en attente), déduplication des opérations identiques dans la file, et contrainte d'unicité sur (chantier, date) avec `upsert` côté rejeu. **Session 1 (écran)** : désactiver le bouton « Enregistrer le journal » pendant l'enregistrement et afficher « fiche déjà enregistrée » si le jour existe déjà.
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 

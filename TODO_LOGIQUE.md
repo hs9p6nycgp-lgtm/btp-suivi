@@ -312,4 +312,19 @@ décrites avec le détail.
 
 ---
 
-*Fin de TODO_LOGIQUE.md.*
+## TODO-LOGIC-014 — File hors connexion : une reprise ne doit pas insérer la même opération plusieurs fois (T-LOG-46)
+
+- **Zone** : logique + base (mode hors connexion). Défaut trouvé pendant l'audit métier du 19/10/2026.
+- **Constaté (test ingénieur, coupure réseau réelle)** : **10 fiches journalières identiques** créées pour le 18/10/2026 (mêmes observations, même météo, même seconde). La règle RG-02 suppose **un seul journal par chantier et par jour** ; les doublons faussent les jours travaillés, l'avancement et le rapport.
+- **Cause (code relu)**
+  1. `creerJournal()` (`src/lib/journal/creation.ts`) ne met qu'**une** opération en file par clic → le clic n'est pas en cause.
+  2. `flushQueue()` (`src/components/NetworkStatus.tsx`) relit la file et insère chaque opération avant de la retirer, **sans verrou d'exécution en cours** ; il est déclenché au montage **et** sur l'événement `online` → deux reprises concurrentes (deux onglets, rechargement au retour du réseau) insèrent la même opération.
+  3. `queueAdd()` (`src/lib/offline/storage.ts`) ajoute toujours une nouvelle entrée, sans clé de déduplication.
+  4. La table `journaux` **n'a pas de contrainte d'unicité** sur (chantier, date) : rien ne bloque l'insertion en double.
+- **À faire**
+  1. **Verrou de reprise** : une seule reprise à la fois (variable de module ou promesse partagée), avec reprise en attente si une autre est déjà en cours.
+  2. **Déduplication** : ne pas empiler deux opérations identiques (même table et même payload) dans la file ; à défaut, ignorer une opération déjà traitée.
+  3. **Contrainte d'unicité (chantier_id, date_journal)** sur `journaux` (migration idempotente) et rejeu en `upsert` pour rester compatible avec les données déjà enregistrées.
+  4. Tests automatiques : deux reprises concurrentes sur une file d'une seule opération → **une seule ligne** créée ; rejeu d'une opération en double → une seule ligne.
+- **Suite** : écran **T-UI-30** (Session 1).
+- **Priorité** : **haute** (données dupliquées en terrain, et RG-02 bafouillée).
