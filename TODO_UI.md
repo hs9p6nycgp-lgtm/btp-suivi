@@ -29,7 +29,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 | TODO-UI-023 | Fiche chantier : un seul affichage du statut (T-UI-21) | 🔜 À FAIRE |
 | TODO-UI-024 | Calculateur de murs : prix du sac de ciment appliqué à des kilos + total avec décimales (T-UI-26) | ✅ FAIT (19/10/2026) — quantités converties dans l'unité du prix, total en FCFA sans décimale, format français |
 | TODO-UI-025 | Base de prix : date de source + postes « à vérifier » (T-UI-27) | ✅ FAIT (19/10/2026) — date de source affichée et obligatoire, recherche rétablie, filtre « À vérifier » + liste de travail, synchronisation vers le Référentiel |
-| TODO-UI-026 | Fournisseurs : écran « Conditions tarifaires » (T-UI-28) | 🔜 À FAIRE |
+| TODO-UI-026 | Fournisseurs : écran « Conditions tarifaires » (T-UI-28) | ✅ FAIT (19/10/2026) — saisie des offres, comparaison par poste, choix motivé, report du prix dans la base de prix |
 | TODO-UI-027 | Livraisons : choisir le matériau dans une liste (BPU / DQE) (T-UI-29) | 🔜 À FAIRE |
 
 ---
@@ -382,6 +382,7 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 - **Constaté (test ingénieur du 19/10/2026)** : le module fonctionne (liste, filtres par type, formulaire complet : raison sociale, type, adresse, ville, contact, téléphone, e-mail, NIF, RCCM) mais **aucune section « conditions tarifaires »** : la table `devis_fournisseurs` reste inutilisée → impossible de saisir une offre fournisseur ou de comparer deux offres (FOU-03, FOU-04).
 - **À faire** : section « Conditions tarifaires » par fournisseur (poste, prix unitaire, unité, date de validité, référence du devis), comparaison de deux offres sur un même poste et affichage du **choix motivé** — branchement de **T-LOG-43** (Session 2).
 - **Priorité** : moyenne.
+- **✅ Corrigé (19/10/2026)** : la section **« Conditions tarifaires »** est en place dans l'écran Fournisseurs — saisie des offres (poste, prix, unité, délai, conditions, date, chantier facultatif), comparaison poste par poste (meilleur prix mis en avant, écart de prix en %), **choix motivé obligatoire** (FOU-04) affiché, offres hors validité signalées, et bouton **« Reporter dans la base de prix »** qui met à jour le prix avec la source et la date du devis (et trace le changement dans l'historique REF-03). Logique testée (11 tests) ; migration `0024` à appliquer dans Supabase pour l'unité des offres et les offres sans chantier.
 - **Référence** : `AUDIT_METIER.md` partie 2 §14 ; exigences FOU-03, FOU-04.
 
 ---

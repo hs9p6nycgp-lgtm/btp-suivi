@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getLangue, traduireErreur } from "@/lib/i18n";
 import { ConfirmDialog, type DemandeConfirmation } from "@/components/ui/ConfirmDialog";
+import FournisseurConditions from "@/components/FournisseurConditions";
 import { toast } from "@/components/ui/toast";
 import { Users } from "lucide-react";
 
@@ -23,6 +24,7 @@ type Fournisseur = {
   contact_email: string | null;
   nif: string | null;
   rccm: string | null;
+  validite_prix_jours?: number | null;
   created_at: string;
 };
 
@@ -189,9 +191,18 @@ export default function FournisseursPage() {
         </select>
       </div>
 
+      {/* Conditions tarifaires (FOU-03, FOU-04) */}
+      <FournisseurConditions
+        fournisseurs={items.map((f) => ({
+          id: f.id,
+          raison_sociale: f.raison_sociale,
+          validite_prix_jours: f.validite_prix_jours ?? null,
+        }))}
+        onMessage={setMessage}
+      />
+
       {/* Formulaire */}
-      {showForm && (
-        <Card className="mb-6">
+      {showForm && (        <Card className="mb-6">
           <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
             <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
             {editing ? "Modifier le fournisseur" : "Nouveau fournisseur"}

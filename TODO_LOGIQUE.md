@@ -22,7 +22,7 @@ décrites avec le détail.
 | TODO-LOGIC-010 | BPU : dédoublonnage + conditions fournisseurs (T-LOG-40)         |
 | TODO-LOGIC-011 | Calculateur de murs : prix dans la bonne unité + montants sans décimale (T-LOG-41) | ✅ CORRIGÉ (19/10) |
 | TODO-LOGIC-012 | Base de prix : date de source obligatoire + lien avec le Référentiel (T-LOG-42) | ✅ CORRIGÉ (19/10) — date obligatoire à la saisie, référentiel alimenté (289 prix), historique REF-03, liste de travail des 131 postes « à vérifier ». |
-| TODO-LOGIC-013 | Fournisseurs : conditions tarifaires (T-LOG-43)                  | 🔜 À FAIRE |
+| TODO-LOGIC-013 | Fournisseurs : conditions tarifaires (T-LOG-43) | ✅ CORRIGÉ (19/10) — module `src/lib/fournisseurs/conditions.ts` (11 tests) + écran « Conditions tarifaires » (migration `0024` à appliquer). |
 | TODO-LOGIC-014 | Livraisons : matériau rattaché au BPU / DQE (T-LOG-44)            | 🔜 À FAIRE |
 
 ---
@@ -249,12 +249,24 @@ décrites avec le détail.
 
 - **Zone** : logique + base (fournisseurs). Amélioration issue de l'audit métier du 19/10/2026.
 - **Constaté (test ingénieur)** : le module fournisseurs fonctionne (liste, filtres par type, formulaire complet) mais **aucune section « conditions tarifaires »** : la table `devis_fournisseurs` n'est utilisée par aucun écran → impossible de saisir une offre, de comparer deux offres sur un même poste ou de tracer le choix motivé (FOU-03, FOU-04).
-- **À faire**
-  1. Fonctions d'enregistrement / lecture des conditions tarifaires (fournisseur, poste, prix unitaire, unité, date de validité, référence du devis).
-  2. Comparaison de plusieurs offres pour un même poste, avec **choix motivé et trace de la décision** (FOU-04).
-  3. Propagation du prix retenu vers la base de prix / le devis (comme le référentiel).
-  4. Tests automatiques (comparaison, tri par prix, traçabilité du choix).
-- **Suite** : écran **T-UI-28** (Session 1).
+- **État** : CORRIGÉ — module pur testé `src/lib/fournisseurs/conditions.ts`
+  (11 tests) + écran « Conditions tarifaires » dans `/fournisseurs`.
+  1. ✅ **Saisie des offres** (FOU-03) : poste, prix unitaire, unité, délai
+     de livraison, conditions, date du devis, chantier facultatif.
+  2. ✅ **Comparaison** des offres d'un même poste : tri par prix croissant,
+     meilleure offre, offre la plus rapide, écart de prix en %.
+  3. ✅ **Choix motivé et tracé** (FOU-04) : le motif est obligatoire pour
+     retenir une offre ; l'offre retenue est signalée et son motif affiché.
+     Les offres hors validité (validité annoncée par le fournisseur) sont
+     signalées.
+  4. ✅ **Propagation du prix retenu** vers la base de prix (source = devis du
+     fournisseur, date = date du devis, REF-04) et vers le référentiel avec
+     trace dans l'historique (REF-03).
+  5. ✅ Migration `0024` : colonne `unite` sur `devis_fournisseurs` et accès
+     aux offres sans chantier (fournisseur propriétaire) — **à exécuter dans
+     Supabase** (sans elle, l'unité n'est pas enregistrée et une offre
+     générale reste invisible ; l'écran reste utilisable).
+- **Suite** : écran **T-UI-28** → fait.
 - **Priorité** : moyenne.
 
 ---
