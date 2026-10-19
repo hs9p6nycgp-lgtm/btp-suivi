@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { getLangue } from "@/lib/i18n";
+import { calculerIndicateursQualite, type IndicateursQualite } from "@/lib/indicateurs/qualite";
 import { chargerAvecCache } from "@/lib/offline/cacheDonnees";
 import { BandeauDonneesCachees } from "@/components/ui/BandeauDonneesCachees";
 import { detailAlerte, libelleTypeAlerte } from "@/lib/alertes";
@@ -230,6 +231,13 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [journauxAujourdhui, setJournauxAujourdhui] = useState<string[]>([]);
   const [nonConformitesOuvertes, setNonConformitesOuvertes] = useState<Record<string, number>>({});
+  const [indicateursQualite, setIndicateursQualite] = useState<IndicateursQualite>({
+    ouvertes: 0,
+    traitees: 0,
+    total: 0,
+    tauxTraitement: 0,
+    delaiMoyenJours: null,
+  });
   const [dernierChantier, setDernierChantier] = useState<string | null>(null);
   const [horsLigne, setHorsLigne] = useState(false);
   const [dateCache, setDateCache] = useState<number | null>(null);
@@ -300,18 +308,28 @@ export default function Home() {
         if (!actif) return;
         setJournauxAujourdhui((journauxData.data ?? []).map((j) => j.chantier_id as string));
 
-        // Non-conformités encore ouvertes (celles « clôturées » ne comptent plus)
+        // Non-conformités : ouvertes (en cours de traitement) et traitées,
+        // pour l'indicateur de qualité du portefeuille.
         const ncData = await supabase
           .from("non_conformites")
-          .select("chantier_id, statut")
-          .neq("statut", "cloturee");
+          .select("chantier_id, statut, created_at, date_cloture");
         if (!actif) return;
         const ncParChantier: Record<string, number> = {};
         for (const nc of ncData.data ?? []) {
           const id = nc.chantier_id as string;
+          if (nc.statut === "cloturee" || nc.statut === "rejetee") continue;
           ncParChantier[id] = (ncParChantier[id] ?? 0) + 1;
         }
         setNonConformitesOuvertes(ncParChantier);
+        setIndicateursQualite(
+          calculerIndicateursQualite(
+            (ncData.data ?? []) as {
+              statut: string;
+              created_at?: string | null;
+              date_cloture?: string | null;
+            }[],
+          ),
+        );
 
         const photosData = await supabase
           .from("photos_journal")

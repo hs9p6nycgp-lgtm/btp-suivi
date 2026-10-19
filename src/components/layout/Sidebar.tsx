@@ -24,6 +24,7 @@ import {
   User,
   Users,
   Download,
+  Film,
   Printer,
 } from "lucide-react";
 import { getLangue, setLangue, t, Langue } from "@/lib/i18n";
@@ -48,6 +49,7 @@ const NAV_TOP_LEVEL: ItemNav[] = [
   { href: "/calculateurs/devis", cle: "nav.devis", icon: <Calculator className="h-5 w-5" /> },
   { href: "/calculateurs/mur", cle: "nav.mur", icon: <Ruler className="h-5 w-5" /> },
   { href: "/aide", cle: "nav.aide", icon: <CircleHelp className="h-5 w-5" /> },
+  { href: "/demo", cle: "nav.demo", icon: <Film className="h-5 w-5" /> },
   { href: "/parametres", cle: "nav.parametres", icon: <Building2 className="h-5 w-5" /> },
 ];
 

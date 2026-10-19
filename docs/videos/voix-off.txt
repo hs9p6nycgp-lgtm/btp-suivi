@@ -1,0 +1,27 @@
+VOIX OFF — BTP Suivi Pro (3 vidéos de 30 secondes)
+
+VIDÉO 1 — Le tableau de bord (30 s)
+  0-4 s   « BTP Suivi Pro : le suivi de chantier, du chantier au bureau. »
+  4-13 s  « Tous vos chantiers, leur avancement et les alertes en cours, sur un seul écran. »
+  13-21 s « La liste complète : routes et bâtiments, montants, avancement et alertes. »
+  21-27 s « La fiche du chantier : avancement, alertes, journaux et travaux à faire. »
+  27-30 s « Un chantier, une seule application. »
+
+VIDÉO 2 — La saisie sur le terrain, sans réseau (30 s)
+  0-4 s   « Sur le chantier, sans réseau : la saisie continue, même sans couverture. »
+  4-12 s  « Le mode terrain : des textes lisibles en plein soleil. »
+  12-18 s « La photo est prise et jointe au journal, en deux gestes. »
+  18-24 s « Sans réseau, la photo est conservée sur le téléphone. »
+  24-30 s « De retour sur le réseau, tout part automatiquement. »
+
+VIDÉO 3 — Les alertes et le procès-verbal (30 s)
+  0-4 s   « Rien ne passe inaperçu : alertes, non-conformités, retards et stocks. »
+  4-12 s  « La cloche regroupe tout ce qui demande votre attention. »
+  12-20 s « Un seul écran pour les alertes de tous vos chantiers, exportables en CSV. »
+  20-26 s « Un procès-verbal A4 prêt à signer, sorti en un clic depuis le journal. »
+  26-30 s « Le suivi se justifie : chaque alerte traitée, chaque procès-verbal signé. »
+
+CONSEILS DE PRÉSENTATION
+  - Les vidéos se lisent dans n'importe quel navigateur (format GIF animé).
+  - Pour une soutenance : enchaîner les trois, puis montrer l'application en direct.
+  - Une version plein écran est disponible dans l'application : page « Démo ».
