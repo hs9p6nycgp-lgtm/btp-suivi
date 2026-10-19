@@ -609,6 +609,35 @@ Test réalisé avec une **coupure réseau réelle** (le navigateur passe hors li
 
 ---
 
+# Partie 25 — État des migrations : 5 fichiers à appliquer, et un point d'hygiène
+
+## 48. « Mon entreprise » (logo, coordonnées, destinataires) — 🟡 livré, **table absente en base**
+
+La page **/parametres** (« Mon entreprise ») est livrée : identité (nom, sigle, adresse, ville, téléphone, e-mail, NIF, RCCM), **logo** (téléversement) et **destinataires par défaut des rapports** (REP-04). Mais la table `parametres_entreprise` **n'existe pas encore en base** : rien ne peut être enregistré, et le logo / les coordonnées de l'entreprise **n'apparaissent donc pas sur les documents** (vérifié sur le procès-verbal : les coordonnées de l'entreprise n'y figurent pas).
+
+## 49. Liste définitive des migrations à appliquer
+
+Contrôle avec l'outil du projet (`node scripts/audit-base.mjs`) :
+
+```
+TABLES MANQUANTES : documents_fournisseur · hse_checklists · hse_incidents · parametres_entreprise
+COLONNE MANQUANTE  : devis_fournisseurs.unite
+```
+
+| Migration à exécuter (Supabase > SQL Editor) | Ce qu'elle apporte | Ce qui est bloqué sans elle |
+|---|---|---|
+| `0024_phase4_conditions_tarifaires_fournisseurs.sql` | colonne `unite` + politique d'accès | les **offres tarifaires** ne s'enregistrent pas |
+| `0025_phase4_hse_declarations.sql` | table `hse_incidents` | les **déclarations d'incident** ne s'enregistrent pas |
+| `0026_phase4_documents_fournisseurs.sql` | table `documents_fournisseur` | les **documents des fournisseurs** (factures, PV) ne s'enregistrent pas |
+| `0027_phase4_parametres_entreprise.sql` | table `parametres_entreprise` | **logo et coordonnées de l'entreprise** sur les documents ; destinataires des rapports |
+| `0028_phase4_hse_checklist.sql` | table `hse_checklists` | les **check-lists EPI** (HSE-02) |
+
+Les cinq fichiers sont idempotents : ils peuvent être relancés sans risque.
+
+**Point d'hygiène à signaler** : deux migrations portent le même numéro — `0026_phase4_documents_fournisseurs.sql` et `0026_planning_avancement_physique.sql`. Le suivi du projet se fait par inspection du schéma (et non par numéro), donc l'audit reste juste, mais un suivi par version fooledrait (l'une des deux serait considérée comme déjà appliquée). Il faudrait renuméroter celle qui n'est pas encore appliquée (`0026_phase4_documents_fournisseurs` → 0029, par exemple).
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
