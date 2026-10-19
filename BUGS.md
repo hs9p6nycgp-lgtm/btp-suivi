@@ -20,7 +20,7 @@ listés dans `TODO_LOGIQUE.md`.
 | BUG-006   | logique     | validerBasePrix jamais appelée lors de l’import         | ✅ CORRIGÉ (19/10) — `validerBasePrix` est le point de repère unique de la règle REF-04, appelé par l'import du référentiel. |
 | BUG-007   | logique     | estConforme jamais appelée dans la page qualité          | ✅ CORRIGÉ — `estConforme` est appelé par la page qualité (essais et éprouvettes). |
 | BUG-008   | logique     | Date de fin prévue du planning copiée de la date de début |
-| BUG-009   | logique     | Isolation multitenant non fonctionnelle                 | ✅ CORRIGÉ (Session 3, 19/10) — filtre `proprietaire_id` côté code + script d'isolation appliqué en base ; reste le test à 2 comptes. |
+| BUG-009   | logique     | Isolation multitenant non fonctionnelle                 | ✅ CORRIGÉ ET VÉRIFIÉ (Session 3, 19/10) — filtre `proprietaire_id` côté code + script d'isolation appliqué en base + test automatique à 2 comptes : chaque compte ne voit que ses propres chantiers. |
 | BUG-010   | logique+UI  | Journal : observations perdues + « Créer le journal » sans réponse sur réseau faible |
 | BUG-011   | UI          | Photos : galerie du tableau de bord cassée, aucune vignette au journal |
 | BUG-012   | UI          | Titre « Tableau de bord » affiché sur les écrans de chantier |
@@ -32,7 +32,7 @@ listés dans `TODO_LOGIQUE.md`.
 | BUG-018   | logique     | Navigation : clé de traduction brute « detail.quality » au lieu de « Qualité » | ✅ CORRIGÉ (Session 2, 18/10) — clé ajoutée au dictionnaire + test de cohérence. |
 | BUG-019   | UI          | Accueil : « 1 chantiers » (pluriel) et dates des mini-courbes coupées | ✅ CORRIGÉ (Session 2, 18/10) — accord `${chantiers.length === 1 ? "chantier" : "chantiers"}`, dates format `18/10`, marge droite résolue. |
 | BUG-020   | UI          | Connexion : la coquille (menus) s'affiche avant connexion | ✅ CORRIGÉ (Session 1, commit `45ee2b8`, AppShell + routeAuth) |
-| BUG-021   | logique     | Création d'un chantier refusée par la politique RLS       | ✅ CORRIGÉ côté application (19/10) — identifiant généré côté navigateur, insertion sans `returning` ; migration `0019` à appliquer en base pour rétablir `returning`. |
+| BUG-021   | logique     | Création d'un chantier refusée par la politique RLS       | ✅ CORRIGÉ ET VÉRIFIÉ (19/10) — identifiant généré côté navigateur, insertion sans retour de ligne ; migration `0021` **appliquée en base et vérifiée** (insertion avec retour de ligne acceptée : HTTP 201). |
 
 ---
 
@@ -301,12 +301,20 @@ listés dans `TODO_LOGIQUE.md`.
     ouvertes supprimées, nouvelles policies d'isolation par compte en place
     (`user_can_access_chantier` / `user_can_manage_chantier` /
     `user_can_access_journal`). Contrôles après application : audit de la base
-    « Base à jour » (migrations 0016 → 0019 appliquées), sites en ligne
+    « Base à jour » (migrations 0016 → 0022 appliquées), sites en ligne
     opérationnels, et aucune donnée lisible avec la clé publique (tout est
-    filtré pour un visiteur non connecté). **Reste :** le test d'isolation à
-    2 comptes (`supabase/RLS_MANUAL_CHECK.md` §4) et, si le compteur
-    « chantiers sans propriétaire » est > 0, le rattachement des anciens
-    chantiers à leur compte.
+    filtré pour un visiteur non connecté).
+  - **Isolation vérifiée de bout en bout (Session 3, 19/10)** :
+    `scripts/verifier-isolation.mjs` connecte deux comptes de test, fait créer
+    un chantier par le compte A et vérifie que le compte B ne le voit pas (ni
+    aucun chantier sans propriétaire) ; le chantier de test est supprimé à la
+    fin. Résultat : **isolation conforme**. La migration `0021` (politique de
+    lecture des chantiers) est elle aussi appliquée en base : l'insertion avec
+    retour de ligne est acceptée (HTTP 201) — la création de chantier
+    fonctionne donc des deux côtés.
+  - *Point de vigilance* : les identifiants des deux comptes de test sont
+    inscrits dans le dépôt (`scripts/verifier-isolation.mjs`) — à supprimer
+    depuis l'authentification Supabase quand les vérifications sont terminées.
 - **Référence de code** : requêtes dans `src/app/page.tsx`,
   `src/app/chantiers/page.tsx`, `src/app/chantiers/[id]/page.tsx`,
   `src/components/ChantierStatut.tsx` ;
@@ -458,8 +466,9 @@ listés dans `TODO_LOGIQUE.md`.
      `src/lib/chantiers/identifiant.ts`) et l'insertion se fait **sans**
      demander la ligne renvoyée. Si une erreur survient, l'application vérifie
      si la ligne a bien été créée avant d'afficher un message.
-  2. **Base** (migration `0021_phase3_politique_rls_chantiers.sql`, à
-     exécuter dans Supabase) : la politique de lecture devient
+  2. **Base** (migration `0021_phase3_politique_rls_chantiers.sql`,
+     **appliquée en base et vérifiée le 19/10** — test : insertion avec
+     retour de ligne acceptée, HTTP 201) : la politique de lecture devient
      `proprietaire_id = auth.uid() or user_can_access_chantier(id)` — le
      propriétaire voit sa propre ligne sans passer par la fonction ; l'accès
      des membres reste inchangé.

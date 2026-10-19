@@ -8,9 +8,7 @@
 | Gravité | Catégorie | État |
 |---------|-----------|------|
 | 🔴 **Critique** | Clés d'accès exposées dans `.env.local` | ✅ **Corrigé** - SUPABASE_SERVICE_ROLE_KEY retirée |
-| 🔴 **Critique** | RLS non actif / anciennes policies `using (true)` | ✅ **Corrigé** - script `supabase/APPLIQUER_ISOLATION.sql` appliqué en base le 19/10 |
-| 🟠 **Élevée** | Isolement multitenant non appliqué en base | ✅ **Corrigé** - script appliqué le 19/10 (RLS actif partout) ; reste le test d'isolation à 2 comptes |
-| 🟠 **Élevée** | Clé `SUPABASE_SERVICE_ROLE_KEY` utilisée dans des scripts | ✅ **Corrigé** - Avertissements dans 4 scripts, clés remplacées dans 2 |
+| 🔴 **Critique** | RLS non actif / anciennes policies `using (true)` | ✅ **Corrigé et vérifié** - script `supabase/APPLIQUER_ISOLATION.sql` appliqué en base le 19/10, isolation testée à 2 comptes || 🟠 **Élevée** | Isolement multitenant non appliqué en base | ✅ **Corrigé et vérifié** - script appliqué le 19/10, RLS actif partout, test à 2 comptes concluant || 🟠 **Élevée** | Clé `SUPABASE_SERVICE_ROLE_KEY` utilisée dans des scripts | ✅ **Corrigé** - Avertissements dans 4 scripts, clés remplacées dans 2 |
 | 🟡 **Moyenne** | Validation d'entrées de formulaire insuffisante | ⚠️ **En amélioration** - Validations renforcées en cours |
 | 🟡 **Moyenne** | Stockage local (localStorage) sans chiffrement | ℹ️ **Non modifié** - Risque faible, fonctionnalité commodité |
 | 🟢 **Faible** | Middleware d'authentification partiel | ✅ **Non modifié** - Fonctionne correctement tel quel |
@@ -73,7 +71,8 @@ La `SUPABASE_SERVICE_ROLE_KEY` (clé secrète donnant accès complet à la base 
 
 **Action effectuée (19/10/2026 — Session 3)** :
 - ✅ Script **`supabase/APPLIQUER_ISOLATION.sql`** exécuté dans le SQL Editor de Supabase (un seul copier-coller, relançable, sans perte de données) : les anciennes policies trop ouvertes ont été remplacées par les nouvelles, le RLS a été activé partout et la table `seuils_stock_chantier` (0016) créée.
-- ✅ Contrôles après application : audit de la base « Base à jour » (migrations 0016 → 0019 appliquées), sites en ligne opérationnels, et aucune donnée lisible avec la clé publique (tout est filtré pour un visiteur non connecté).
+- ✅ Contrôles après application : audit de la base « Base à jour » (migrations 0016 → 0022 appliquées), sites en ligne opérationnels, et aucune donnée lisible avec la clé publique (tout est filtré pour un visiteur non connecté).
+- ✅ **Isolation vérifiée de bout en bout le 19/10** (`scripts/verifier-isolation.mjs`) : le compte A voit le chantier qu'il crée, le compte B ne le voit pas, aucun chantier sans propriétaire n'est visible, et le chantier de test est supprimé. La migration `0021` est également appliquée (insertion avec retour de ligne acceptée : HTTP 201).
 - ⏳ Reste à faire : lire le résultat affiché à la fin du script (`chantiers sans proprietaire` — à traiter si > 0, `politiques inattendues restantes` — attendu : 0) et tester l'isolation multitenant avec deux comptes utilisateurs différents (voir `supabase/RLS_MANUAL_CHECK.md` §4).
 
 **Note** : Les tables `referentiel_prix`, `historique_prix` et `bpu_postes` restent en accès partagé (data de référence commune) par choix architectonique. Leur accès `using (true)` est assumé et documenté.
@@ -89,7 +88,8 @@ Les policies RLS sont correctement définies dans les fichiers migration et sont
 Le script unique et relançable `supabase/APPLIQUER_ISOLATION.sql` a été collé et exécuté dans le SQL Editor de Supabase : RLS activé sur toutes les tables concernées, anciennes policies trop ouvertes supprimées, policies d'isolation par compte créées (propriétaire + membres), table `seuils_stock_chantier` (0016) créée, et vérifications finales affichées (« chantiers sans proprietaire », « politiques inattendues restantes »).
 
 Contrôles après application : audit de la base « Base à jour » (migrations 0016 → 0019 appliquées), sites en ligne opérationnels, et **aucune donnée lisible avec la clé publique** (tout est filtré pour un visiteur non connecté).
-**Reste à faire :** le test d'isolation à 2 comptes (`supabase/RLS_MANUAL_CHECK.md` §4) et, si le compteur « chantiers sans proprietaire » est > 0, le rattachement des anciens chantiers à leur compte.
+**Vérification finale (19/10/2026)** : test automatique à deux comptes (`scripts/verifier-isolation.mjs`) → le compte A voit le chantier qu'il crée, le compte B ne le voit pas, aucun chantier sans propriétaire n'est visible, et le chantier de test est supprimé. La migration `0021` est appliquée en base (insertion avec retour de ligne acceptée : HTTP 201).
+**Reste à faire** : rattacher les éventuels anciens chantiers sans propriétaire à leur compte (commande indiquée à la fin du script d'isolation) — sans effet sur les autres comptes.
 
 **Pour mémoire — la procédure appliquée dans Supabase SQL Editor** :
 
