@@ -21,6 +21,11 @@ import {
   libelleLien,
   verifierLien,
 } from "@/lib/planning/liens";
+import {
+  formaterRessources,
+  joursSansEquipe,
+  repartitionCharge,
+} from "@/lib/planning/ressources";
 
 type Tache = {
   id: string;
@@ -34,6 +39,8 @@ type Tache = {
   date_reelle_fin: string | null;
   avancement_pct: number;
   est_jalon: boolean;
+  equipe?: string | null;
+  engins?: string | null;
   statut: "a_faire" | "en_cours" | "termine" | "retarde" | "annule";
 };
 
@@ -81,11 +88,15 @@ export default function PlanningPage() {
   const [dateFinPrevue, setDateFinPrevue] = useState<string | null>(null);
   const [dateDebutChantier, setDateDebutChantier] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<DemandeConfirmation | null>(null);
+  // Ressources par tâche : disponibles après la migration 0023.
+  const [ressourcesDisponibles, setRessourcesDisponibles] = useState<boolean | null>(null);
 
   const [nomTache, setNomTache] = useState("");
   const [dureeTache, setDureeTache] = useState("1");
   const [dateDebutTache, setDateDebutTache] = useState("");
   const [estJalon, setEstJalon] = useState(false);
+  const [equipeTache, setEquipeTache] = useState("");
+  const [enginsTache, setEnginsTache] = useState("");
   const [predecesseurTache, setPredecesseurTache] = useState("");
   const [tacheEnEdition, setTacheEnEdition] = useState<Tache | null>(null);
   const [lienPredecesseur, setLienPredecesseur] = useState("");
@@ -113,6 +124,13 @@ export default function PlanningPage() {
     setDependances((dRes.data ?? []) as Dependance[]);
     setDateFinPrevue(cRes.data?.date_fin_prevue ?? null);
     setDateDebutChantier(cRes.data?.date_debut ?? null);
+    // Colonnes d'affectation des ressources (migration 0023) : si elles
+    // manquent, l'écran fonctionne quand même, sans les ressources.
+    const { error: errRessources } = await supabase
+      .from("taches_planning")
+      .select("id,equipe,engins")
+      .limit(1);
+    setRessourcesDisponibles(!errRessources);
     setLoading(false);
   }
 
@@ -166,6 +184,8 @@ export default function PlanningPage() {
     taches.map((t) => ({ id: t.id, nom: t.nom, duree_jours: t.duree_jours })),
     dependances,
   );
+  const charges = repartitionCharge(taches);
+  const joursNonAffectes = joursSansEquipe(taches);
 
   // 5.4 - Écart de délai : fin prévue du planning (PERT) vs date contractuelle du chantier
   const dateFinProjet = dateDebutChantier ? ajouterJours(dateDebutChantier, dureeProjet) : null;
@@ -262,6 +282,8 @@ export default function PlanningPage() {
     setDureeTache("1");
     setDateDebutTache("");
     setEstJalon(false);
+    setEquipeTache("");
+    setEnginsTache("");
     setPredecesseurTache("");
     setTacheEnEdition(null);
   }
@@ -272,6 +294,8 @@ export default function PlanningPage() {
     setDureeTache(String(t.duree_jours ?? 1));
     setDateDebutTache(t.date_prevue_debut ?? "");
     setEstJalon(Boolean(t.est_jalon));
+    setEquipeTache(t.equipe ?? "");
+    setEnginsTache(t.engins ?? "");
     setMessage(
       langue === "fr"
         ? `Modification de « ${t.nom} » : corrigez les champs puis enregistrez.`
@@ -293,15 +317,20 @@ export default function PlanningPage() {
       : null;
 
     if (tacheEnEdition) {
+      const champs: Record<string, unknown> = {
+        nom: nomTache.trim(),
+        duree_jours: duree,
+        date_prevue_debut: dateDebutTache || null,
+        date_prevue_fin: finPrevue,
+        est_jalon: estJalon,
+      };
+      if (ressourcesDisponibles) {
+        champs.equipe = equipeTache.trim() || null;
+        champs.engins = enginsTache.trim() || null;
+      }
       const { error } = await supabase
         .from("taches_planning")
-        .update({
-          nom: nomTache.trim(),
-          duree_jours: duree,
-          date_prevue_debut: dateDebutTache || null,
-          date_prevue_fin: finPrevue,
-          est_jalon: estJalon,
-        })
+        .update(champs)
         .eq("id", tacheEnEdition.id);
       setLoading(false);
       if (error) { setMessage(traduireErreur(error)); return; }
@@ -311,7 +340,7 @@ export default function PlanningPage() {
       return;
     }
 
-    const { data, error } = await supabase.from("taches_planning").insert({
+    const champs: Record<string, unknown> = {
       chantier_id: chantierId,
       nom: nomTache.trim(),
       duree_jours: duree,
@@ -319,7 +348,12 @@ export default function PlanningPage() {
       date_prevue_fin: finPrevue,
       est_jalon: estJalon,
       statut: "a_faire",
-    }).select().single();
+    };
+    if (ressourcesDisponibles) {
+      champs.equipe = equipeTache.trim() || null;
+      champs.engins = enginsTache.trim() || null;
+    }
+    const { data, error } = await supabase.from("taches_planning").insert(champs).select().single();
     setLoading(false);
     if (error) { setMessage(traduireErreur(error)); return; }
 
@@ -518,6 +552,28 @@ export default function PlanningPage() {
                 {langue === "fr" ? "Jalon" : "Milestone"}
               </label>
             </div>
+            {ressourcesDisponibles !== false && (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:col-span-4">
+                <label className="block text-sm font-medium text-foreground">
+                  {langue === "fr" ? "Équipe affectée" : "Assigned team"}
+                  <input
+                    className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                    placeholder={langue === "fr" ? "ex. : Terrassiers" : "e.g. Earthworks"}
+                    value={equipeTache}
+                    onChange={(e) => setEquipeTache(e.target.value)}
+                  />
+                </label>
+                <label className="block text-sm font-medium text-foreground">
+                  {langue === "fr" ? "Engins et matériel" : "Plant and equipment"}
+                  <input
+                    className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                    placeholder={langue === "fr" ? "ex. : 1 pelleteuse, 2 camions" : "e.g. 1 excavator"}
+                    value={enginsTache}
+                    onChange={(e) => setEnginsTache(e.target.value)}
+                  />
+                </label>
+              </div>
+            )}
             {!tacheEnEdition && (
               <div className="md:col-span-4">
                 <label className="mb-1 block text-xs font-medium text-muted">
@@ -675,6 +731,9 @@ export default function PlanningPage() {
                 <tr className="border-b border-border/80 bg-surface-2 text-left">
                   <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted">Tâche</th>
                   <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted">Prédécesseurs</th>
+                  {ressourcesDisponibles !== false && (
+                    <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted">Ressources</th>
+                  )}
                   <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">Durée</th>
                   <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">ES</th>
                   <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">EF</th>
@@ -704,6 +763,11 @@ export default function PlanningPage() {
                       <td className="px-3 py-2.5 text-xs text-muted">
                         {predecesseurs.length > 0 ? predecesseurs.join(", ") : "—"}
                       </td>
+                      {ressourcesDisponibles !== false && (
+                        <td className="px-3 py-2.5 text-xs text-muted">
+                          {formaterRessources({ equipe: tache?.equipe, engins: tache?.engins })}
+                        </td>
+                      )}
                       <td className="px-3 py-2.5 text-center tabular-nums">{p.duree_jours}</td>
                       <td className="px-3 py-2.5 text-center tabular-nums">{p.es}</td>
                       <td className="px-3 py-2.5 text-center tabular-nums">{p.ef}</td>
@@ -782,7 +846,7 @@ export default function PlanningPage() {
                 })}
                 {pert.length === 0 && (
                   <tr>
-                    <td colSpan={10} className="p-4 text-center text-muted">Aucune tâche. Ajoutez une tâche ci-dessus.</td>
+                    <td colSpan={ressourcesDisponibles !== false ? 11 : 10} className="p-4 text-center text-muted">Aucune tâche. Ajoutez une tâche ci-dessus.</td>
                   </tr>
                 )}
               </tbody>
@@ -790,6 +854,51 @@ export default function PlanningPage() {
           </div>
         </Card>
       </section>
+
+      {/* Charge par équipe (ressources affectées aux tâches) */}
+      {ressourcesDisponibles !== false && charges.length > 0 && (
+        <section className="anim-fade-up anim-delay-3 mb-6">
+          <h2 className="mb-4 flex items-center gap-2.5 text-lg font-bold text-foreground">
+            <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+            {langue === "fr" ? "Charge par équipe" : "Workload per team"}
+          </h2>
+          <Card padding="lg">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/80 bg-surface-2 text-left">
+                  <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted">
+                    {langue === "fr" ? "Équipe" : "Team"}
+                  </th>
+                  <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">
+                    {langue === "fr" ? "Tâches" : "Tasks"}
+                  </th>
+                  <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wider text-muted">
+                    {langue === "fr" ? "Charge (j)" : "Workload (d)"}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {charges.map((c) => (
+                  <tr key={c.equipe} className="border-b border-border/60">
+                    <td className="px-3 py-2.5 font-medium text-foreground">{c.equipe}</td>
+                    <td className="px-3 py-2.5 text-center tabular-nums">{c.nombreTaches}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums font-semibold">{c.jours}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="mt-3 text-xs text-muted">
+              {langue === "fr"
+                ? "Charge = somme des durées des tâches affectées à l'équipe."
+                : "Workload = sum of the durations of the tasks assigned to the team."}
+              {joursNonAffectes > 0 &&
+                (langue === "fr"
+                  ? ` ${joursNonAffectes} jour(s) de planning ne sont encore affectés à aucune équipe.`
+                  : ` ${joursNonAffectes} day(s) of schedule are not assigned to a team yet.`)}
+            </p>
+          </Card>
+        </section>
+      )}
 
       {/* Diagramme de Gantt */}
       <section className="anim-fade-up anim-delay-4 mb-6">
@@ -829,6 +938,11 @@ export default function PlanningPage() {
                   {pert.map((p) => {
                     const largeur = Math.max((p.ef - p.es) * 30 - 4, 20);
                     const debut = p.es * 30;
+                    const tache = taches.find((t) => t.id === p.tache_id);
+                    const ressources =
+                      ressourcesDisponibles !== false
+                        ? formaterRessources({ equipe: tache?.equipe, engins: tache?.engins })
+                        : "";
                     return (
                       <div key={p.tache_id} className="relative h-10 border-b border-border">
                         <div
@@ -838,7 +952,7 @@ export default function PlanningPage() {
                               : "bg-gradient-to-r from-primary to-primary-deep"
                           }`}
                           style={{ left: `${debut}px`, width: `${largeur}px` }}
-                          title={`${p.nom} — J${p.es} → J${p.ef}`}
+                          title={`${p.nom} — J${p.es} → J${p.ef}${ressources && ressources !== "—" ? ` · ${ressources}` : ""}`}
                         />
                         <span
                           className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[10px] text-muted"
