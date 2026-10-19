@@ -16,6 +16,14 @@ import { getLangue, traduireErreur } from "@/lib/i18n";
 import { compresserImage } from "@/lib/photos/compression";
 import { enregistrerPhotoEnAttente } from "@/lib/photos/attente";
 import { cheminPhoto, doitMettreEnFile } from "@/lib/photos/regles";
+import { creerId } from "@/lib/chantiers/identifiant";
+import {
+  construireVersion,
+  prochaineVersion,
+  resumeVersion,
+  versionsTriees,
+  type VersionJournal,
+} from "@/lib/journal/versions";
 import { BUCKET_PHOTOS, urlSignee, urlsSignees } from "@/lib/photos/urls";
 import { rendementEngin, tauxDisponiteEngin } from "@/lib/calculs/metre";
 import Dictation from "@/components/Dictation";
@@ -45,6 +53,11 @@ export default function JournalDetailPage() {
   const [journal, setJournal] = useState<any>(null);
   const [meteo, setMeteo] = useState("");
   const [observations, setObservations] = useState("");
+
+  // RG-02 : réouverture d'un journal validé = version tracée + motif
+  const [versions, setVersions] = useState<VersionJournal[]>([]);
+  const [reouvertureOuverte, setReouvertureOuverte] = useState(false);
+  const [motifReouverture, setMotifReouverture] = useState("");
 
   const [effMetier, setEffMetier] = useState("");
   const [effNombre, setEffNombre] = useState("");
@@ -123,7 +136,7 @@ export default function JournalDetailPage() {
     const { data: chantier } = await supabase.from("chantiers").select("id,seuil_ecart_pct").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle();
     if (!chantier) { router.replace("/chantiers"); return; }
     setSeuilEcart(Number((chantier as { seuil_ecart_pct?: number }).seuil_ecart_pct ?? 10));
-    const [j, p, s, ef, en, inc, ph, qt, qtAll] = await Promise.all([
+    const [j, p, s, ef, en, inc, ph, qt, qtAll, verRes] = await Promise.all([
       supabase.from("journaux").select("*").eq("id", journalId).maybeSingle(),
       supabase.from("postes_dqe").select("id,code,designation,unite,quantite_marche").eq("chantier_id", chantierId).order("created_at"),
       supabase.from("sections_chantier").select("id,nom").eq("chantier_id", chantierId).order("created_at"),
@@ -135,6 +148,8 @@ export default function JournalDetailPage() {
       // Cumul de toutes les saisies du chantier : sert au « restant » affiché
       // pendant la saisie.
       supabase.from("quantites_realisees").select("poste_dqe_id,quantite").eq("chantier_id", chantierId),
+      // Versions tracées (RG-02) : la table peut ne pas encore exister.
+      supabase.from("journal_versions").select("*").eq("journal_id", journalId).order("version", { ascending: false }),
     ]);
     if (j.data) {
       setJournal(j.data);
@@ -147,6 +162,7 @@ export default function JournalDetailPage() {
     if (en.data) setEngins(en.data);
     if (inc.data) setIncidents(inc.data);
     if (qt.data) setQuantites(qt.data);
+    if (verRes.data) setVersions(verRes.data as VersionJournal[]);
     if (qtAll.data) {
       const cumul: Record<string, number> = {};
       for (const q of qtAll.data as Array<{ poste_dqe_id: string; quantite: number }>) {
@@ -349,13 +365,52 @@ export default function JournalDetailPage() {
     loadAll();
   }
 
-  // Rouvrir un journal validé pour corriger une erreur : il repasse en brouillon.
+  // Rouvrir un journal validé pour corriger une erreur : le contenu validé est
+  // mis en version (RG-02), puis la saisie redevient modifiable.
   async function reopenJournal() {
     if (editable) return;
+    const motif = motifReouverture.trim();
+    if (!motif) {
+      setMessage(
+        langue === "fr"
+          ? "Indiquez le motif de la correction : il sera tracé avec la version."
+          : "Enter the reason for the correction: it is recorded with the version.",
+      );
+      return;
+    }
     setLoading(true);
+    const version = construireVersion(
+      {
+        meteo: journal?.meteo ?? meteo,
+        observations: journal?.observations ?? observations,
+        effectif: effectifs,
+        engins,
+        incidents,
+        quantites,
+        photos: photos.map((p) => ({ chemin: p.chemin, legende: p.legende })),
+      },
+      motif,
+      prochaineVersion(versions),
+    );
+    const { error: errVersion } = await offlineInsert("journal_versions", {
+      id: creerId(),
+      journal_id: journalId,
+      ...version,
+    });
     const { error } = await offlineUpdate("journaux", journalId, { statut: "brouillon", validated_at: null });
     setLoading(false);
+    setReouvertureOuverte(false);
+    setMotifReouverture("");
     if (error) { setMessage(traduireErreur(error)); return; }
+    if (errVersion) {
+      setMessage(
+        langue === "fr"
+          ? "Journal rouvert, mais la version n'a pas pu être tracée : exécutez la migration 0028 dans Supabase."
+          : "Log reopened, but the version could not be recorded: run migration 0028 in Supabase.",
+      );
+      loadAll();
+      return;
+    }
     toastEnregistre("Journal rouvert : la saisie est de nouveau modifiable.", "Log reopened: entries can be edited again.");
     loadAll();
   }
@@ -404,17 +459,7 @@ export default function JournalDetailPage() {
             {!editable && (
               <Button
                 variant="secondary"
-                onClick={() =>
-                  setConfirmation({
-                    titre: langue === "fr" ? "Rouvrir ce journal ?" : "Reopen this log?",
-                    message:
-                      langue === "fr"
-                        ? "Il repassera en brouillon pour être corrigé."
-                        : "It will go back to draft for editing.",
-                    confirmerLibelle: langue === "fr" ? "Rouvrir" : "Reopen",
-                    action: reopenJournal,
-                  })
-                }
+                onClick={() => setReouvertureOuverte((v) => !v)}
                 disabled={loading}
               >
                 <RotateCcw className="h-4 w-4" />
@@ -443,6 +488,84 @@ export default function JournalDetailPage() {
         <div className="anim-fade-up mb-4 rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
           {message}
         </div>
+      )}
+
+      {/* RG-02 : réouverture motivée et version tracée */}
+      {reouvertureOuverte && !editable && (
+        <CardVariant padding="lg" className="mb-6">
+          <h2 className="mb-1 text-lg font-bold text-foreground">
+            {langue === "fr" ? "Correction d'un journal validé" : "Correcting a validated log"}
+          </h2>
+          <p className="mb-3 text-sm text-muted">
+            {langue === "fr"
+              ? "Le contenu validé est archivé dans l'historique des versions avec le motif de la correction, avant que la saisie redevienne modifiable."
+              : "The validated content is archived in the version history with the reason for the correction, before entries become editable again."}
+          </p>
+          <input
+            className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+            placeholder={
+              langue === "fr"
+                ? "Motif de la correction (obligatoire) — ex. : météo erronée, quantité reprise"
+                : "Reason for the correction (required) — e.g. wrong weather"
+            }
+            value={motifReouverture}
+            onChange={(e) => setMotifReouverture(e.target.value)}
+          />
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button size="sm" onClick={reopenJournal} disabled={loading}>
+              {langue === "fr" ? "Tracer et rouvrir" : "Record and reopen"}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setReouvertureOuverte(false);
+                setMotifReouverture("");
+              }}
+            >
+              {langue === "fr" ? "Annuler" : "Cancel"}
+            </Button>
+          </div>
+        </CardVariant>
+      )}
+
+      {/* Historique des versions */}
+      {versions.length > 0 && (
+        <CardVariant padding="lg" className="mb-6">
+          <h2 className="mb-1 text-lg font-bold text-foreground">
+            {langue === "fr" ? "Historique des versions" : "Version history"}
+          </h2>
+          <p className="mb-3 text-sm text-muted">
+            {langue === "fr"
+              ? "Chaque correction d'un journal validé laisse une version tracée (RG-02)."
+              : "Each correction of a validated log leaves a traced version (RG-02)."}
+          </p>
+          <ul className="space-y-2">
+            {versionsTriees(versions).map((version) => (
+              <li
+                key={version.id ?? version.version}
+                className="rounded-xl border border-border/70 bg-surface-2/60 p-3 text-sm"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-semibold text-foreground">
+                    {langue === "fr" ? "Version" : "Version"} {version.version}
+                    {version.motif ? ` — ${version.motif}` : ""}
+                  </p>
+                  <p className="text-xs text-muted">
+                    {version.created_at ? new Date(version.created_at).toLocaleDateString("fr-FR") : ""}
+                  </p>
+                </div>
+                <p className="mt-1 text-xs text-muted">
+                  {version.meteo ? `Météo : ${version.meteo} · ` : ""}
+                  {resumeVersion(version)}
+                </p>
+                {version.observations && (
+                  <p className="mt-1 text-xs italic text-muted">« {version.observations} »</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </CardVariant>
       )}
 
       {editable && (
