@@ -1,6 +1,6 @@
 // Modélisation 3D des devis : convertit les entrées d'un modèle de devis en une
-// description géométrique simple (boîtes et cylindres), prête à être affichée
-// par un composant basé sur three.js (voir TODO-UI-007).
+// description géométrique (boîtes et cylindres), prête à être affichée par un
+// composant basé sur three.js (Modele3DGenerique.tsx).
 //
 // Conventions à respecter côté affichage :
 // - Unités : mètres. Axes : X = longueur, Y = hauteur (vers le haut), Z = largeur.
@@ -11,10 +11,87 @@
 // - `rotation` est en degrés, autour d'un seul axe à la fois (ordre XYZ).
 //   Exemple : une conduite couchée le long de X a la rotation [0, 0, 90].
 // - `dimensions` et `centre` servent à cadrer la caméra (boîte englobante).
+//
+// Rendu réaliste (détails de chantier) :
+// - murs : poteaux de renfort apparents + chaînage haut + chaînage bas ;
+// - dalles / radiers : coffrage de rive périphérique ;
+// - fondations : béton de propreté, amorces de poteaux, longrines de liaison ;
+// - pieux : têtes de pieux émergeant du sol ;
+// - charpente : faîtière, sablières et pannes sous les versants ;
+// - planchers : poutrelles + dalle de compression + poutres de rive ;
+// - chaussées : couche de base, enrobé, accotements et marquage axial ;
+// - assainissement : conduite sur lit de pose + regards de visite ;
+// - voirie : bordures, caniveaux, trottoirs et chaussée au droit du caniveau.
+//
+// Couleurs standardisées (COULEURS_ELEMENTS) : chaque type d'élément garde la
+// même couleur dans TOUS les projets (route ou bâtiment, présents et futurs).
 
 import type { DevisTemplate } from "./templates";
 
 export type Forme3D = "boite" | "cylindre";
+
+/** Couleur fixe par type d'élément, identique pour tous les projets. */
+export const COULEURS_ELEMENTS = {
+  // Maçonnerie et béton
+  murAgglo: "#d9cdb8",
+  enduit: "#e6e1d5",
+  betonArme: "#9aa0a6",
+  betonProprete: "#8c9196",
+  dalleBeton: "#a8adb4",
+  poteauBeton: "#8f98a5",
+  chainage: "#6f7887",
+  poutreBeton: "#7b8494",
+  fondation: "#8d95a0",
+  longrine: "#78818f",
+  pieu: "#98a1a9",
+  tetePieu: "#6d7683",
+  treillis: "#5f6b7a",
+  hourdis: "#b5bac1",
+  coffrage: "#b98352",
+  // Terrains et chaussées
+  terre: "#b07a45",
+  sable: "#d8c49a",
+  grave: "#9e9e9e",
+  enrobe: "#3f3f46",
+  marquage: "#f4f4f5",
+  accotement: "#c2b49a",
+  // Réseaux et voirie
+  conduite: "#38bdf8",
+  regard: "#8b8684",
+  caniveau: "#b9bcc0",
+  bordure: "#d4d4d8",
+  trottoir: "#cbcdd1",
+  // Enveloppe
+  tuile: "#b45309",
+  charpenteBois: "#a1662f",
+  faitiere: "#8a4b1f",
+  // Finitions
+  carrelage: "#e7e5e4",
+  plinthe: "#c9c7c3",
+  peinture: "#7fb3d5",
+  fenetre: "#7dd3fc",
+  porte: "#92400e",
+} as const;
+
+/** Clé de matériau standardisée (une couleur fixe par clé, tous projets confondus). */
+export type CleMateriau = keyof typeof COULEURS_ELEMENTS;
+
+/** @deprecated Conservé pour compatibilité : utiliser COULEURS_ELEMENTS (clé par élément). */
+export const PALETTE_MATERIAUX = {
+  agglo: COULEURS_ELEMENTS.murAgglo,
+  beton: COULEURS_ELEMENTS.dalleBeton,
+  betonArme: COULEURS_ELEMENTS.betonArme,
+  betonProprete: COULEURS_ELEMENTS.betonProprete,
+  terre: COULEURS_ELEMENTS.terre,
+  grave: COULEURS_ELEMENTS.grave,
+  enrobe: COULEURS_ELEMENTS.enrobe,
+  tuile: COULEURS_ELEMENTS.tuile,
+  carrelage: COULEURS_ELEMENTS.carrelage,
+  peinture: COULEURS_ELEMENTS.peinture,
+  pvc: COULEURS_ELEMENTS.conduite,
+  regard: COULEURS_ELEMENTS.regard,
+  bordure: COULEURS_ELEMENTS.bordure,
+} as const;
 
 export type Element3D = {
   /** Identifiant technique stable (ex. "poutrelle-3"). */
@@ -22,7 +99,9 @@ export type Element3D = {
   forme: Forme3D;
   /** Libellé lisible en français (pour info-bulle / légende). */
   libelle: string;
-  /** Couleur hexadécimale "#rrggbb". */
+  /** Clé de matériau standardisée (couleur fixe, identique pour tous les projets). */
+  materiau: CleMateriau;
+  /** Couleur hexadécimale "#rrggbb" (toujours COULEURS_ELEMENTS[materiau]). */
   couleur: string;
   /** Dimensions en mètres [X, Y, Z] (voir conventions). */
   taille: [number, number, number];
@@ -45,23 +124,6 @@ export type Modele3D = {
   centre: [number, number, number];
   elements: Element3D[];
 };
-
-/** Couleurs des matériaux (hexadécimal, à titre indicatif pour l'affichage). */
-export const PALETTE_MATERIAUX = {
-  agglo: "#d9cdb8",
-  beton: "#a8adb4",
-  betonArme: "#9aa0a6",
-  betonProprete: "#8c9196",
-  terre: "#b07a45",
-  grave: "#9e9e9e",
-  enrobe: "#3f3f46",
-  tuile: "#b45309",
-  carrelage: "#e7e5e4",
-  peinture: "#7fb3d5",
-  pvc: "#38bdf8",
-  regard: "#8b8684",
-  bordure: "#d4d4d8",
-} as const;
 
 // ---------------------------------------------------------------
 // Outils internes
@@ -89,11 +151,11 @@ const fmt = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 });
 
 type V3 = [number, number, number];
 
-/** Crée une boîte (parallélépipède) centrée sur `position`. */
+/** Crée une boîte (parallélépipède) centrée sur `position`, colorée par clé de matériau. */
 function boite(
   id: string,
   libelle: string,
-  couleur: string,
+  materiau: CleMateriau,
   taille: V3,
   position: V3,
   rotation?: V3,
@@ -102,7 +164,8 @@ function boite(
     id,
     forme: "boite",
     libelle,
-    couleur,
+    materiau,
+    couleur: COULEURS_ELEMENTS[materiau],
     taille: taille.map(minTaille) as V3,
     position: position.map((v) => arrondi(v)) as V3,
     rotation,
@@ -113,7 +176,7 @@ function boite(
 function cylindre(
   id: string,
   libelle: string,
-  couleur: string,
+  materiau: CleMateriau,
   taille: V3,
   position: V3,
   rotation?: V3,
@@ -122,7 +185,8 @@ function cylindre(
     id,
     forme: "cylindre",
     libelle,
-    couleur,
+    materiau,
+    couleur: COULEURS_ELEMENTS[materiau],
     taille: taille.map(minTaille) as V3,
     position: position.map((v) => arrondi(v)) as V3,
     rotation,
@@ -227,11 +291,29 @@ const construire: Record<string, Fabrique> = {
     const L = n(i, "longueur", 10);
     const H = n(i, "hauteur", 2.8);
     const e = n(i, "epaisseur", 0.15);
+    // Poteaux de renfort (béton armé) : aux extrémités et tous les ~3,5 m.
+    const nbPoteaux = Math.max(2, Math.ceil(L / 3.5) + 1);
+    const ePoteau = e + 0.06; // poteaux légèrement plus épais que le mur (apparents)
+    const eChaine = e + 0.04; // chaînages apparents sur les deux faces
+    const elements: Element3D[] = [
+      boite("mur", `Mur ${fmt.format(L)} x ${fmt.format(H)} m`, "murAgglo", [L, H, e], [0, H / 2, 0]),
+      boite("chainage-bas", "Chaînage bas / longrine", "chainage", [L, 0.2, eChaine], [0, 0.09, 0]),
+      boite(
+        "chainage-haut",
+        "Chaînage haut (ceinture)",
+        "chainage",
+        [L, 0.2, eChaine],
+        [0, Math.max(H - 0.11, 0.11), 0],
+      ),
+    ];
+    repartition(nbPoteaux, L).forEach((x, k) => {
+      elements.push(
+        boite(`poteau-${k + 1}`, `Poteau ${k + 1} (section 20 cm)`, "poteauBeton", [0.2, H, ePoteau], [x, H / 2 - 0.02, 0]),
+      );
+    });
     return {
-      resume: `Mur de ${fmt.format(L)} m x ${fmt.format(H)} m, épaisseur ${fmt.format(e * 100)} cm`,
-      elements: [
-        boite("mur", `Mur ${fmt.format(L)} x ${fmt.format(H)} m`, PALETTE_MATERIAUX.agglo, [L, H, e], [0, H / 2, 0]),
-      ],
+      resume: `Mur de ${fmt.format(L)} m x ${fmt.format(H)} m, épaisseur ${fmt.format(e * 100)} cm, avec ${nbPoteaux} poteaux et chaînages haut / bas`,
+      elements,
     };
   },
 
@@ -239,11 +321,16 @@ const construire: Record<string, Fabrique> = {
     const L = n(i, "longueur", 10);
     const l = n(i, "largeur", 5);
     const e = n(i, "epaisseur", 0.12);
+    const elements: Element3D[] = [
+      boite("dalle", `Dalle ${fmt.format(e * 100)} cm`, "dalleBeton", [L, e, l], [0, e / 2, 0]),
+      boite("coffrage-avant", "Coffrage de rive avant", "coffrage", [L + 0.2, e, 0.05], [0, e / 2, l / 2 + 0.03]),
+      boite("coffrage-arriere", "Coffrage de rive arrière", "coffrage", [L + 0.2, e, 0.05], [0, e / 2, -(l / 2 + 0.03)]),
+      boite("coffrage-gauche", "Coffrage de rive gauche", "coffrage", [0.05, e, l + 0.2], [-(L / 2 + 0.03), e / 2, 0]),
+      boite("coffrage-droit", "Coffrage de rive droit", "coffrage", [0.05, e, l + 0.2], [L / 2 + 0.03, e / 2, 0]),
+    ];
     return {
-      resume: `Dalle de ${fmt.format(L)} m x ${fmt.format(l)} m, épaisseur ${fmt.format(e * 100)} cm`,
-      elements: [
-        boite("dalle", `Dalle ${fmt.format(e * 100)} cm`, PALETTE_MATERIAUX.beton, [L, e, l], [0, e / 2, 0]),
-      ],
+      resume: `Dalle de ${fmt.format(L)} m x ${fmt.format(l)} m, épaisseur ${fmt.format(e * 100)} cm (coffrage de rive compris)`,
+      elements,
     };
   },
 
@@ -251,11 +338,20 @@ const construire: Record<string, Fabrique> = {
     const S = n(i, "surface", 100);
     const H = 2.8; // hauteur d'étage retenue pour représenter la surface à peindre
     const L = S / H;
+    const elements: Element3D[] = [
+      boite("panneau", `Surface peinte ${fmt.format(S)} m²`, "peinture", [L, H, 0.05], [0, H / 2, 0]),
+      boite("plinthe", "Plinthes", "plinthe", [L, 0.1, 0.04], [0, 0.055, 0.04]),
+      boite("porte", "Porte", "porte", [0.9, 2.05, 0.08], [0, 1.035, 0.045]),
+    ];
+    if (L >= 4) {
+      elements.push(
+        boite("fenetre-1", "Fenêtre 1", "fenetre", [0.9, 1.1, 0.075], [-L / 4, 1.6, 0.04]),
+        boite("fenetre-2", "Fenêtre 2", "fenetre", [0.9, 1.1, 0.075], [L / 4, 1.6, 0.04]),
+      );
+    }
     return {
-      resume: `Surface à peindre de ${fmt.format(S)} m² (équivalent d'un mur de ${fmt.format(L)} m x 2,8 m)`,
-      elements: [
-        boite("panneau", `Surface peinte ${fmt.format(S)} m²`, PALETTE_MATERIAUX.peinture, [L, H, 0.05], [0, H / 2, 0]),
-      ],
+      resume: `Surface à peindre de ${fmt.format(S)} m² (équivalent d'un mur de ${fmt.format(L)} m x 2,8 m, porte et fenêtres compris)`,
+      elements,
     };
   },
 
@@ -265,18 +361,42 @@ const construire: Record<string, Fabrique> = {
     const l = n(i, "largeur", 1.2);
     const H = n(i, "hauteur", 0.6);
     const ep = n(i, "ep_proprete", 0.05);
+    const positions = grille(nb, Math.max(L, l) + 1.5);
+    const cols = Math.max(1, Math.ceil(Math.sqrt(nb)));
     const elements: Element3D[] = [];
-    grille(nb, Math.max(L, l) + 1.5).forEach(([x, z], k) => {
+    positions.forEach(([x, z], k) => {
       const rang = k + 1;
       elements.push(
-        boite(`proprete-${rang}`, `Béton de propreté ${rang}`, PALETTE_MATERIAUX.betonProprete, [L + 0.2, ep, l + 0.2], [x, ep / 2, z]),
-      );
-      elements.push(
-        boite(`semelle-${rang}`, `Semelle ${rang} (${fmt.format(L)} x ${fmt.format(l)} m)`, PALETTE_MATERIAUX.betonArme, [L, H, l], [x, ep + H / 2, z]),
+        boite(`proprete-${rang}`, `Béton de propreté ${rang}`, "betonProprete", [L + 0.2, ep, l + 0.2], [x, ep / 2, z]),
+        boite(`semelle-${rang}`, `Semelle ${rang} (${fmt.format(L)} x ${fmt.format(l)} m)`, "fondation", [L, H, l], [x, ep + H / 2, z]),
+        boite(`amorce-poteau-${rang}`, `Amorce de poteau ${rang}`, "poteauBeton", [0.25, 0.5, 0.25], [x, ep + H + 0.25, z]),
       );
     });
+    // Longrines de liaison entre semelles voisines (mêmes lignes et colonnes).
+    const yLongrine = ep + H + 0.09;
+    for (let k = 0; k < positions.length; k++) {
+      const [x, z] = positions[k];
+      if (k + 1 < positions.length && (k + 1) % cols !== 0) {
+        const [x2] = positions[k + 1];
+        const longueur = Math.abs(x2 - x);
+        if (longueur > 0.4) {
+          elements.push(
+            boite(`longrine-x-${k + 1}`, `Longrine (${fmt.format(longueur)} m)`, "longrine", [longueur, 0.2, 0.2], [(x + x2) / 2, yLongrine, z]),
+          );
+        }
+      }
+      if (k + cols < positions.length) {
+        const z2 = positions[k + cols][1];
+        const longueur = Math.abs(z2 - z);
+        if (longueur > 0.4) {
+          elements.push(
+            boite(`longrine-z-${k + 1}`, `Longrine transversale (${fmt.format(longueur)} m)`, "longrine", [0.2, 0.2, longueur], [x, yLongrine, (z + z2) / 2]),
+          );
+        }
+      }
+    }
     return {
-      resume: `${nb} semelles isolées de ${fmt.format(L)} x ${fmt.format(l)} m (h ${fmt.format(H)} m) sur béton de propreté (implantation indicative)`,
+      resume: `${nb} semelles isolées de ${fmt.format(L)} x ${fmt.format(l)} m (h ${fmt.format(H)} m) sur béton de propreté, avec amorces de poteaux et longrines (implantation indicative)`,
       elements,
     };
   },
@@ -289,10 +409,15 @@ const construire: Record<string, Fabrique> = {
     const montee = Math.tan(angle) * (cote / 2); // hauteur du faîtage
     const rampant = cote / 2 / Math.cos(angle); // longueur d'un versant
     return {
-      resume: `Toiture de ${fmt.format(S)} m², pente ${fmt.format(pente)}° (emprise ${fmt.format(cote)} m x ${fmt.format(cote)} m)`,
+      resume: `Toiture de ${fmt.format(S)} m², pente ${fmt.format(pente)}° (emprise ${fmt.format(cote)} m x ${fmt.format(cote)} m) : versants, faîtière, sablières et pannes`,
       elements: [
-        boite("versant-sud", `Versant (pente ${fmt.format(pente)}°)`, PALETTE_MATERIAUX.tuile, [cote, 0.06, rampant], [0, montee / 2, cote / 4], [pente, 0, 0]),
-        boite("versant-nord", `Versant (pente ${fmt.format(pente)}°)`, PALETTE_MATERIAUX.tuile, [cote, 0.06, rampant], [0, montee / 2, -cote / 4], [-pente, 0, 0]),
+        boite("versant-sud", `Versant (pente ${fmt.format(pente)}°)`, "tuile", [cote, 0.06, rampant], [0, montee / 2, cote / 4], [pente, 0, 0]),
+        boite("versant-nord", `Versant (pente ${fmt.format(pente)}°)`, "tuile", [cote, 0.06, rampant], [0, montee / 2, -cote / 4], [-pente, 0, 0]),
+        boite("faitiere", `Faîtière (${fmt.format(cote)} m)`, "faitiere", [cote, 0.1, 0.12], [0, montee + 0.05, 0]),
+        boite("sabliere-avant", "Sablière avant", "charpenteBois", [cote, 0.08, 0.12], [0, 0.04, cote / 2]),
+        boite("sabliere-arriere", "Sablière arrière", "charpenteBois", [cote, 0.08, 0.12], [0, 0.04, -cote / 2]),
+        boite("panne-sud", "Panne intermédiaire sud", "faitiere", [cote, 0.12, 0.12], [0, montee / 2 - 0.07, cote / 4]),
+        boite("panne-nord", "Panne intermédiaire nord", "faitiere", [cote, 0.12, 0.12], [0, montee / 2 - 0.07, -cote / 4]),
       ],
     };
   },
@@ -301,11 +426,15 @@ const construire: Record<string, Fabrique> = {
     const nb = nbBorne(n(i, "nb", 6), 6);
     const d = n(i, "diametre", 0.6);
     const P = n(i, "profondeur", 8);
-    const elements = grille(nb, Math.max(d + 1.5, 2)).map(([x, z], k) =>
-      cylindre(`pieu-${k + 1}`, `Pieu ${k + 1} (Ø${fmt.format(d * 100)} cm, ${fmt.format(P)} m)`, PALETTE_MATERIAUX.betonArme, [d, P, d], [x, -P / 2, z]),
-    );
+    const elements: Element3D[] = [];
+    grille(nb, Math.max(d + 1.5, 2)).forEach(([x, z], k) => {
+      elements.push(
+        cylindre(`pieu-${k + 1}`, `Pieu ${k + 1} (Ø${fmt.format(d * 100)} cm, ${fmt.format(P)} m)`, "pieu", [d, P, d], [x, -P / 2, z]),
+        boite(`tete-pieu-${k + 1}`, `Tête de pieu ${k + 1}`, "tetePieu", [d + 0.4, 0.3, d + 0.4], [x, 0.14, z]),
+      );
+    });
     return {
-      resume: `${nb} pieux forés de Ø${fmt.format(d * 100)} cm et ${fmt.format(P)} m de profondeur (représentés sous le niveau du sol)`,
+      resume: `${nb} pieux forés de Ø${fmt.format(d * 100)} cm et ${fmt.format(P)} m de profondeur, avec têtes de pieux émergeantes (corps des pieux sous le niveau du sol)`,
       elements,
     };
   },
@@ -314,9 +443,13 @@ const construire: Record<string, Fabrique> = {
     const S = n(i, "surface", 50);
     const cote = Math.sqrt(Math.max(S, 0));
     return {
-      resume: `Revêtement de sol sur ${fmt.format(S)} m² (pièce carrée de ${fmt.format(cote)} m de côté)`,
+      resume: `Revêtement de sol sur ${fmt.format(S)} m² (pièce carrée de ${fmt.format(cote)} m de côté), plinthes comprises`,
       elements: [
-        boite("sol", `Revêtement ${fmt.format(S)} m²`, PALETTE_MATERIAUX.carrelage, [cote, 0.02, cote], [0, 0.01, 0]),
+        boite("sol", `Revêtement ${fmt.format(S)} m²`, "carrelage", [cote, 0.02, cote], [0, 0.01, 0]),
+        boite("plinthe-1", "Plinthes avant", "plinthe", [cote, 0.1, 0.03], [0, 0.055, cote / 2 + 0.015]),
+        boite("plinthe-2", "Plinthes arrière", "plinthe", [cote, 0.1, 0.03], [0, 0.055, -(cote / 2 + 0.015)]),
+        boite("plinthe-3", "Plinthes gauche", "plinthe", [0.03, 0.1, cote], [cote / 2 + 0.015, 0.055, 0]),
+        boite("plinthe-4", "Plinthes droite", "plinthe", [0.03, 0.1, cote], [-(cote / 2 + 0.015), 0.055, 0]),
       ],
     };
   },
@@ -326,11 +459,16 @@ const construire: Record<string, Fabrique> = {
     const a = n(i, "section_a", 0.2);
     const b = n(i, "section_b", 0.2);
     const H = n(i, "hauteur", 3);
-    const elements = grille(nb, 3).map(([x, z], k) =>
-      boite(`poteau-${k + 1}`, `Poteau ${k + 1} (${fmt.format(a * 100)} x ${fmt.format(b * 100)} cm)`, PALETTE_MATERIAUX.betonArme, [a, H, b], [x, H / 2, z]),
-    );
+    const elements: Element3D[] = [];
+    grille(nb, 3).forEach(([x, z], k) => {
+      const rang = k + 1;
+      elements.push(
+        boite(`poteau-${rang}`, `Poteau ${rang} (${fmt.format(a * 100)} x ${fmt.format(b * 100)} cm)`, "poteauBeton", [a, H, b], [x, H / 2, z]),
+        boite(`amorce-${rang}`, `Amorce / socle du poteau ${rang}`, "fondation", [a + 0.3, 0.3, b + 0.3], [x, 0.14, z]),
+      );
+    });
     return {
-      resume: `${nb} poteaux de ${fmt.format(a * 100)} x ${fmt.format(b * 100)} cm, hauteur ${fmt.format(H)} m (implantation indicative)`,
+      resume: `${nb} poteaux de ${fmt.format(a * 100)} x ${fmt.format(b * 100)} cm, hauteur ${fmt.format(H)} m, avec amorces béton (implantation indicative)`,
       elements,
     };
   },
@@ -342,20 +480,46 @@ const construire: Record<string, Fabrique> = {
     const section = `section ${fmt.format(sl * 100)} x ${fmt.format(sh * 100)} cm`;
     if (L >= 4) {
       const cote = L / 4; // chaînage représenté en cadre fermé
+      const hPoteau = 2.5;
+      const elements: Element3D[] = [
+        boite("chaine-1", `Chaînage bas avant (${fmt.format(cote)} m)`, "chainage", [cote, sh, sl], [0, sh / 2, cote / 2]),
+        boite("chaine-2", `Chaînage bas arrière (${fmt.format(cote)} m)`, "chainage", [cote, sh, sl], [0, sh / 2, -cote / 2]),
+        boite("chaine-3", `Chaînage bas gauche (${fmt.format(cote)} m)`, "chainage", [sl, sh, cote], [-cote / 2, sh / 2, 0]),
+        boite("chaine-4", `Chaînage bas droit (${fmt.format(cote)} m)`, "chainage", [sl, sh, cote], [cote / 2, sh / 2, 0]),
+      ];
+      // Poteaux d'angle (structure poteaux + chaînages)
+      const coins: [number, number][] = [
+        [cote / 2, cote / 2],
+        [cote / 2, -cote / 2],
+        [-cote / 2, cote / 2],
+        [-cote / 2, -cote / 2],
+      ];
+      coins.forEach(([x, z], k) => {
+        elements.push(
+          boite(`poteau-angle-${k + 1}`, `Poteau d'angle ${k + 1} (h ${fmt.format(hPoteau)} m)`, "poteauBeton", [sl + 0.02, hPoteau, sl + 0.02], [x, hPoteau / 2 - 0.01, z]),
+        );
+      });
+      // Ceinture haute au sommet des poteaux
+      const yHaut = hPoteau - sh / 2;
+      elements.push(
+        boite("chaine-haut-1", "Chaînage haut avant", "chainage", [cote, sh, sl], [0, yHaut, cote / 2]),
+        boite("chaine-haut-2", "Chaînage haut arrière", "chainage", [cote, sh, sl], [0, yHaut, -cote / 2]),
+        boite("chaine-haut-3", "Chaînage haut gauche", "chainage", [sl, sh, cote], [-cote / 2, yHaut, 0]),
+        boite("chaine-haut-4", "Chaînage haut droit", "chainage", [sl, sh, cote], [cote / 2, yHaut, 0]),
+      );
       return {
-        resume: `Chaînage de ${fmt.format(L)} ml en cadre de ${fmt.format(cote)} m x ${fmt.format(cote)} m (${section})`,
-        elements: [
-          boite("chaine-1", `Chaînage avant (${fmt.format(cote)} m)`, PALETTE_MATERIAUX.betonArme, [cote, sh, sl], [0, sh / 2, cote / 2]),
-          boite("chaine-2", `Chaînage arrière (${fmt.format(cote)} m)`, PALETTE_MATERIAUX.betonArme, [cote, sh, sl], [0, sh / 2, -cote / 2]),
-          boite("chaine-3", `Chaînage gauche (${fmt.format(cote)} m)`, PALETTE_MATERIAUX.betonArme, [sl, sh, cote], [-cote / 2, sh / 2, 0]),
-          boite("chaine-4", `Chaînage droit (${fmt.format(cote)} m)`, PALETTE_MATERIAUX.betonArme, [sl, sh, cote], [cote / 2, sh / 2, 0]),
-        ],
+        resume: `Chaînage de ${fmt.format(L)} ml en cadre de ${fmt.format(cote)} m x ${fmt.format(cote)} m (${section}) : ceintures basse et haute + 4 poteaux d'angle`,
+        elements,
       };
     }
+    // Poutre isolée posée sur deux appuis.
+    const longueur = Math.max(L, 0.5);
     return {
-      resume: `Poutre / chaînage de ${fmt.format(L)} ml (${section})`,
+      resume: `Poutre / chaînage de ${fmt.format(L)} ml (${section}), posée sur deux appuis`,
       elements: [
-        boite("chaine", `Poutre ${fmt.format(L)} m`, PALETTE_MATERIAUX.betonArme, [Math.max(L, 0.5), sh, sl], [0, sh / 2, 0]),
+        boite("chaine", `Poutre ${fmt.format(L)} m`, "chainage", [longueur, sh, sl], [0, 0.4 + sh / 2, 0]),
+        boite("appui-gauche", "Appui gauche", "fondation", [0.25, 0.4, sl + 0.02], [-(longueur / 2 - 0.125), 0.2, 0]),
+        boite("appui-droit", "Appui droit", "fondation", [0.25, 0.4, sl + 0.02], [longueur / 2 - 0.125, 0.2, 0]),
       ],
     };
   },
@@ -366,11 +530,19 @@ const construire: Record<string, Fabrique> = {
     const e = n(i, "entraxe", 0.6) > 0 ? n(i, "entraxe", 0.6) : 0.6;
     const nbP = Math.min(120, Math.max(2, Math.ceil(l / e) + 1));
     const elements: Element3D[] = repartition(nbP, l).map((z, k) =>
-      boite(`poutrelle-${k + 1}`, `Poutrelle ${k + 1} (entraxe ${fmt.format(e * 100)} cm)`, PALETTE_MATERIAUX.beton, [L, 0.16, 0.12], [0, 0.08, z]),
+      boite(`poutrelle-${k + 1}`, `Poutrelle ${k + 1} (entraxe ${fmt.format(e * 100)} cm)`, "poutreBeton", [L, 0.16, 0.12], [0, 0.08, z]),
     );
-    elements.push(boite("table", "Dalle de compression (5 cm)", PALETTE_MATERIAUX.beton, [L, 0.05, l], [0, 0.185, 0]));
+    elements.push(boite("table", "Dalle de compression (5 cm)", "dalleBeton", [L, 0.05, l], [0, 0.185, 0]));
+    // Poutres de rive (ceinture périphérique du plancher)
+    const marge = 0.08;
+    elements.push(
+      boite("rive-avant", "Poutre de rive avant", "chainage", [L, 0.2, 0.15], [0, 0.105, l / 2 + marge]),
+      boite("rive-arriere", "Poutre de rive arrière", "chainage", [L, 0.2, 0.15], [0, 0.105, -(l / 2 + marge)]),
+      boite("rive-gauche", "Poutre de rive gauche", "chainage", [0.15, 0.2, l], [-(L / 2 + marge), 0.105, 0]),
+      boite("rive-droite", "Poutre de rive droite", "chainage", [0.15, 0.2, l], [L / 2 + marge, 0.105, 0]),
+    );
     return {
-      resume: `Plancher de ${fmt.format(L)} m x ${fmt.format(l)} m : ${nbP} poutrelles (entraxe ${fmt.format(e * 100)} cm) + dalle de compression`,
+      resume: `Plancher de ${fmt.format(L)} m x ${fmt.format(l)} m : ${nbP} poutrelles (entraxe ${fmt.format(e * 100)} cm) + dalle de compression + poutres de rive`,
       elements,
     };
   },
@@ -382,9 +554,11 @@ const construire: Record<string, Fabrique> = {
     const l = n(i, "largeur", 7);
     const e = n(i, "epaisseur", 0.25);
     return {
-      resume: `Couche granulaire de ${fmt.format(L)} m x ${fmt.format(l)} m, épaisseur ${fmt.format(e * 100)} cm (${fmt.format(L * l * e)} m³ en place)`,
+      resume: `Couche granulaire de ${fmt.format(L)} m x ${fmt.format(l)} m, épaisseur ${fmt.format(e * 100)} cm (${fmt.format(L * l * e)} m³ en place) avec accotements`,
       elements: [
-        boite("couche", `Couche ${fmt.format(e * 100)} cm`, PALETTE_MATERIAUX.grave, [L, e, l], [0, e / 2, 0]),
+        boite("couche", `Couche ${fmt.format(e * 100)} cm`, "grave", [L, e, l], [0, e / 2, 0]),
+        boite("accotement-gauche", "Accotement gauche", "accotement", [L, e, 1], [0, e / 2 - 0.02, l / 2 + 0.505]),
+        boite("accotement-droit", "Accotement droit", "accotement", [L, e, 1], [0, e / 2 - 0.02, -(l / 2 + 0.505)]),
       ],
     };
   },
@@ -394,12 +568,22 @@ const construire: Record<string, Fabrique> = {
     const l = n(i, "largeur", 7);
     const eb = n(i, "ep_base", 0.25);
     const er = n(i, "ep_roul", 0.05);
+    const elements: Element3D[] = [
+      boite("base", `Couche de base ${fmt.format(eb * 100)} cm`, "grave", [L, eb, l], [0, eb / 2, 0]),
+      boite("roulement", `Enrobé ${fmt.format(er * 100)} cm`, "enrobe", [L, er, l], [0, eb + er / 2, 0]),
+      boite("accotement-gauche", "Accotement gauche", "accotement", [L, eb, 1], [0, eb / 2 - 0.02, l / 2 + 0.505]),
+      boite("accotement-droit", "Accotement droit", "accotement", [L, eb, 1], [0, eb / 2 - 0.02, -(l / 2 + 0.505)]),
+    ];
+    // Marquage axial en pointillés (bandes de 3 m tous les 8 m).
+    const nbBandes = Math.max(1, Math.floor(L / 8));
+    repartition(nbBandes, Math.max(L - 4, 0.5)).forEach((x, k) => {
+      elements.push(
+        boite(`marquage-${k + 1}`, `Marquage axial ${k + 1}`, "marquage", [3, 0.01, 0.15], [x, eb + er + 0.005, 0]),
+      );
+    });
     return {
-      resume: `Chaussée de ${fmt.format(L)} m x ${fmt.format(l)} m : base ${fmt.format(eb * 100)} cm + enrobé de roulement ${fmt.format(er * 100)} cm`,
-      elements: [
-        boite("base", `Couche de base ${fmt.format(eb * 100)} cm`, PALETTE_MATERIAUX.grave, [L, eb, l], [0, eb / 2, 0]),
-        boite("roulement", `Enrobé ${fmt.format(er * 100)} cm`, PALETTE_MATERIAUX.enrobe, [L, er, l], [0, eb + er / 2, 0]),
-      ],
+      resume: `Chaussée de ${fmt.format(L)} m x ${fmt.format(l)} m : base ${fmt.format(eb * 100)} cm + enrobé de roulement ${fmt.format(er * 100)} cm, accotements et marquage axial (${nbBandes} bandes)`,
+      elements,
     };
   },
 
@@ -411,14 +595,16 @@ const construire: Record<string, Fabrique> = {
     // Diamètre de conduite estimé d'après la largeur de fouille (l'entrée n'existe pas),
     // arrondi à 10 cm pour rester réaliste (ex. 50 cm).
     const d = arrondi(Math.round(((Math.min(0.4, Math.max(0.1, l / 3)) * 2) / 0.1)) * 0.1, 2);
+    const yConduite = -P + d / 2 + 0.05;
     const elements: Element3D[] = [
-      cylindre("conduite", `Conduite Ø${fmt.format(d * 100)} cm`, PALETTE_MATERIAUX.pvc, [d, L, d], [0, -P + d / 2 + 0.05, 0], [0, 0, 90]),
+      boite("lit-pose", "Lit de pose (sable)", "sable", [L, 0.1, d + 0.3], [0, yConduite - d / 2 - 0.05, 0]),
+      cylindre("conduite", `Conduite Ø${fmt.format(d * 100)} cm`, "conduite", [d, L, d], [0, yConduite, 0], [0, 0, 90]),
     ];
     repartition(nbR, L).forEach((x, k) => {
-      elements.push(boite(`regard-${k + 1}`, `Regard ${k + 1}`, PALETTE_MATERIAUX.regard, [0.6, P, 0.6], [x, -P / 2, 0]));
+      elements.push(boite(`regard-${k + 1}`, `Regard ${k + 1}`, "regard", [0.6, P, 0.6], [x, -P / 2, 0]));
     });
     return {
-      resume: `Fouille de ${fmt.format(L)} m x ${fmt.format(l)} m (profondeur ${fmt.format(P)} m) avec conduite Ø${fmt.format(d * 100)} cm et ${nbR} regard(s)`,
+      resume: `Fouille de ${fmt.format(L)} m x ${fmt.format(l)} m (profondeur ${fmt.format(P)} m) : conduite Ø${fmt.format(d * 100)} cm sur lit de pose et ${nbR} regard(s) de visite`,
       elements,
     };
   },
@@ -427,11 +613,19 @@ const construire: Record<string, Fabrique> = {
     const L = n(i, "longueur", 50);
     const l = n(i, "largeur", 6);
     const e = n(i, "epaisseur", 0.3);
+    // Talus latéraux à 35° (hauteur e), de part et d'autre du remblai.
+    const angleTalus = 35;
+    const rad = (angleTalus * Math.PI) / 180;
+    const longueurTalus = e / Math.sin(rad); // longueur de la pente
+    const empriseTalus = e / Math.tan(rad); // projection horizontale
+    const elements: Element3D[] = [
+      boite("remblai", `Remblai ${fmt.format(e * 100)} cm`, "terre", [L, e, l], [0, e / 2, 0]),
+      boite("talus-droit", `Talus droit (${angleTalus}°)`, "terre", [L, 0.05, longueurTalus], [0, e / 2, l / 2 + empriseTalus / 2], [angleTalus, 0, 0]),
+      boite("talus-gauche", `Talus gauche (${angleTalus}°)`, "terre", [L, 0.05, longueurTalus], [0, e / 2, -(l / 2 + empriseTalus / 2)], [-angleTalus, 0, 0]),
+    ];
     return {
-      resume: `Remblai d'apport de ${fmt.format(L)} m x ${fmt.format(l)} m, épaisseur ${fmt.format(e * 100)} cm (${fmt.format(L * l * e)} m³ en place)`,
-      elements: [
-        boite("remblai", `Remblai ${fmt.format(e * 100)} cm`, PALETTE_MATERIAUX.terre, [L, e, l], [0, e / 2, 0]),
-      ],
+      resume: `Remblai d'apport de ${fmt.format(L)} m x ${fmt.format(l)} m, épaisseur ${fmt.format(e * 100)} cm (${fmt.format(L * l * e)} m³ en place), talus à ${angleTalus}°`,
+      elements,
     };
   },
 
@@ -440,14 +634,16 @@ const construire: Record<string, Fabrique> = {
     const Lc = n(i, "longueur_caniveaux", 100);
     const nbR = Math.min(50, Math.max(0, Math.round(n(i, "nb_regards", 4))));
     const elements: Element3D[] = [
-      boite("bordures", `Bordures ${fmt.format(Lb)} ml`, PALETTE_MATERIAUX.betonProprete, [Lb, 0.25, 0.15], [0, 0.125, -0.225]),
-      boite("caniveaux", `Caniveaux ${fmt.format(Lc)} ml`, PALETTE_MATERIAUX.bordure, [Lc, 0.4, 0.3], [0, 0.2, 0]),
+      boite("bordures", `Bordures ${fmt.format(Lb)} ml`, "bordure", [Lb, 0.25, 0.15], [0, 0.125, -0.225]),
+      boite("caniveaux", `Caniveaux ${fmt.format(Lc)} ml`, "caniveau", [Lc, 0.4, 0.3], [0, 0.2, 0]),
+      boite("trottoir", `Trottoir ${fmt.format(Lb)} ml`, "trottoir", [Lb, 0.1, 1], [0, 0.05, -(0.3 + 0.505)]),
+      boite("chaussee", "Chaussée au droit du caniveau", "enrobe", [Lc, 0.06, 2], [0, 0.03, 0.3 / 2 + 1 + 0.005]),
     ];
     repartition(nbR, Lc).forEach((x, k) => {
-      elements.push(boite(`regard-${k + 1}`, `Regard ${k + 1}`, PALETTE_MATERIAUX.regard, [0.5, 0.45, 0.5], [x, 0.225, 0]));
+      elements.push(boite(`regard-${k + 1}`, `Regard ${k + 1}`, "regard", [0.5, 0.45, 0.5], [x, 0.23, 0]));
     });
     return {
-      resume: `${fmt.format(Lb)} ml de bordures + ${fmt.format(Lc)} ml de caniveaux + ${nbR} regard(s)`,
+      resume: `${fmt.format(Lb)} ml de bordures + ${fmt.format(Lc)} ml de caniveaux + ${nbR} regard(s), trottoir et chaussée au droit du caniveau`,
       elements,
     };
   },

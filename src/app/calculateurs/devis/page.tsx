@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { templates } from "@/lib/devis/templates";
 import { modele3dDevis } from "@/lib/devis/model3d";
+import { templatePourTypeDeChantier } from "@/lib/devis/types-projets";
+import { groupesTypesDetailles } from "@/lib/chantiers/types";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -13,9 +15,18 @@ import { getLangue } from "@/lib/i18n";
 
 type Bpu = { id: string; designation: string; unite: string; prix_unitaire: number };
 
+// Les 100 types de chantier (CHA-01), groupés par catégorie pour le sélecteur.
+const GROUPES_TYPES = groupesTypesDetailles();
+// Par défaut : le premier type de chantier qui correspond au modèle de devis proposé en premier.
+const TYPE_PAR_DEFAUT =
+  GROUPES_TYPES.flatMap((g) => g.types).find(
+    (t) => templatePourTypeDeChantier(t.value) === templates[0].id,
+  )?.value ?? "";
+
 export default function DevisAssistantPage() {
   const langue = getLangue();
 
+  const [typeChantier, setTypeChantier] = useState(TYPE_PAR_DEFAUT);
   const [templateId, setTemplateId] = useState(templates[0].id);
   const template = templates.find((t) => t.id === templateId) ?? templates[0];
 
@@ -92,7 +103,7 @@ export default function DevisAssistantPage() {
         <PageHeader
           eyebrow="Assistant"
           title="Calcul de devis"
-          description="Choisissez un type de projet, saisissez les dimensions, puis choisissez les matériaux proposés."
+          description="Choisissez un type de chantier parmi 100, saisissez les dimensions, puis choisissez les matériaux proposés."
           icon={<Calculator className="h-5 w-5" />}
           actions={
             <Link
@@ -107,18 +118,51 @@ export default function DevisAssistantPage() {
 
         <section className="anim-fade-up anim-delay-1 mb-6">
           <Card padding="lg">
-            <h2 className="mb-4 text-lg font-bold text-foreground">Type de projet</h2>
-            <select
-              className="w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
-              value={templateId}
-              onChange={(e) => setTemplateId(e.target.value)}
-            >
-              {templates.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.nom}
-                </option>
-              ))}
-            </select>
+            <h2 className="mb-4 text-lg font-bold text-foreground">Type de chantier</h2>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <label className="block text-sm font-medium text-foreground">
+                Type de chantier ({GROUPES_TYPES.reduce((s, g) => s + g.types.length, 0)} types)
+                <select
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  value={typeChantier}
+                  onChange={(e) => {
+                    const valeur = e.target.value;
+                    setTypeChantier(valeur);
+                    const propose = templatePourTypeDeChantier(valeur);
+                    if (propose && templates.some((t) => t.id === propose)) {
+                      setTemplateId(propose);
+                    }
+                  }}
+                >
+                  {GROUPES_TYPES.map((groupe) => (
+                    <optgroup key={groupe.categorie} label={groupe.categorie}>
+                      {groupe.types.map((t) => (
+                        <option key={t.value} value={t.value}>
+                          {t.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-sm font-medium text-foreground">
+                Modèle de calcul détaillé
+                <select
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  value={templateId}
+                  onChange={(e) => setTemplateId(e.target.value)}
+                >
+                  {templates.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.nom}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs font-normal text-muted">
+                  Proposé automatiquement selon le type de chantier ; vous pouvez le changer si besoin.
+                </p>
+              </label>
+            </div>
           </Card>
         </section>
 
