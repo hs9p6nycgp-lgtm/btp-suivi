@@ -566,6 +566,31 @@ J'ai vérifié que l'enregistrement d'une fiche journal (modification des observ
 
 ---
 
+# Partie 23 — Défaut de robustesse : sans WebGL, quatre pages tombent
+
+## 46. La vue 3D fait tomber la page entière quand WebGL est indisponible — ⚠️ **DÉFAUT CONFIRMÉ**
+
+**Constat** : en testant le calculateur de devis dans un navigateur **sans accélération graphique** (WebGL désactivé), la page affiche « **Une erreur est survenue** » au lieu du calcul. La console montre : `THREE.WebGLRenderer: Error creating WebGL context.` — l'exception remonte et **remplace toute la page**.
+
+**Cause** : `src/components/visualisation/Modele3DGenerique.tsx` (ligne 75) crée le moteur `new THREE.WebGLRenderer(...)` **sans garde-fou** (ni `try/catch`, ni limite d'erreur, ni détection préalable de WebGL).
+
+**Portée** — la 3D est embarquée dans **quatre pages**, toutes concernées :
+
+| Page | Ce que l'utilisateur perd |
+|---|---|
+| `/calculateurs/devis` | **le calcul de devis** (l'outil principal) |
+| `/chantiers/nouveau` | **la création d'un chantier** (aperçu 3D à la création) |
+| `/chantiers/[id]` | **la fiche chantier** |
+| `/chantiers/[id]/modelisation3d` | la page 3D (évidemment) |
+
+**Conséquence terrain** : sur un téléphone ancien, un navigateur avec l'accélération désactivée, ou en economy d'énergie, l'ingénieur voit une page d'erreur au lieu de l'outil — alors que la 3D n'est qu'un **aperçu** : tout le reste de la page (champs, tableau des prix, boutons) fonctionne parfaitement sans elle.
+
+**Correctif proposé** : détecter WebGL avant de charger three.js (ou créer le moteur dans un `try/catch`) et **dégrader proprement** : afficher « Aperçu 3D indisponible sur cet appareil » à la place de l'aperçu, sans interrompre le reste de la page.
+
+*Contrôle de non-régression* : avec le rendu logiciel (SwiftShader) réactivé, le calculateur de devis refonctionne et retrouve **exactement** le même total (**230 120 800 FCFA**) — les calculs n'ont jamais été affectés.
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 

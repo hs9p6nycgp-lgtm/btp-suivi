@@ -372,4 +372,20 @@ décrites avec le détail.
 
 ---
 
+## TODO-LOGIC-018 — Robustesse de la vue 3D : ne pas faire tomber la page sans WebGL (T-LOG-51)
+
+- **Zone** : logique / composants (visualisation 3D). Défaut trouvé pendant l'audit métier du 19/10/2026.
+- **Constaté (test ingénieur, navigateur sans accélération graphique)** : la page **/calculateurs/devis** affiche « Une erreur est survenue » au lieu du calcul. Console : `THREE.WebGLRenderer: Error creating WebGL context.` L'exception remonte jusqu'au niveau de la page.
+- **Cause** : `src/components/visualisation/Modele3DGenerique.tsx` (l. 75) crée `new THREE.WebGLRenderer(...)` sans garde-fou : ni `try/catch`, ni limite d'erreur, ni détection préalable de WebGL.
+- **Portée** : la 3D est embarquée dans **quatre pages** — `/calculateurs/devis` (le calcul de devis), `/chantiers/nouveau` (la création de chantier), `/chantiers/[id]` (la fiche chantier) et `/chantiers/[id]/modelisation3d`.
+- **À faire**
+  1. Détecter la disponibilité de WebGL **avant** de charger three.js (`document.createElement("canvas").getContext("webgl")`), et ne monter l'aperçu que si c'est possible.
+  2. Encadrer la création du moteur dans un `try/catch` et remonter un état d'erreur propre au composant, jamais à la page.
+  3. Ne jamais charger la heavier 3D si l'appareil ne peut pas la rendre (performance + robustesse).
+  4. Test automatique : le composant 3D rend un message « aperçu indisponible » quand le contexte WebGL est absent, sans lever d'exception.
+- **Suite** : écran **T-UI-32** (message de repli lisible dans la page).
+- **Priorité** : **haute** (sur un téléphone sans WebGL, l'ingénieur ne peut plus créer un chantier ni calculer un devis).
+
+---
+
 *Fin de TODO_LOGIQUE.md.*

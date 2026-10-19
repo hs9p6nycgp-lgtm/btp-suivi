@@ -418,4 +418,14 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 
 ---
 
+## TODO-UI-030 — Aperçu 3D indisponible : message local au lieu d'une page d'erreur (T-UI-32)
+
+- **Écrans** : Calculateur de devis (`/calculateurs/devis`), Création de chantier (`/chantiers/nouveau`), Fiche chantier (`/chantiers/[id]`), Modélisation 3D (`/chantiers/[id]/modelisation3d`) — composants `src/components/visualisation/`.
+- **Constaté (test ingénieur du 19/10/2026)** : sur un appareil **sans WebGL** (téléphone ancien, accélération désactivée, mode économie d'énergie), l'aperçu 3D provoque une exception et **toute la page est remplacée** par « Une erreur est survenue » : sur le calculateur de devis, l'ingénieur ne peut plus calculer ; sur la création de chantier, il ne peut plus enregistrer.
+- **À faire** : quand la 3D n'est pas disponible, afficher **à la place de l'aperçu** un message clair « Aperçu 3D indisponible sur cet appareil — le reste de la page fonctionne normalement », et **laisser la page fully utilisable** (champs, tableaux, boutons, enregistrement). La correction de fond (détection WebGL, `try/catch`) est côté logique : **T-LOG-51**.
+- **Priorité** : moyenne (la page doit rester utilisable ; sans le correctif logique, l'écran d'erreur général reste possible).
+- **Référence** : `AUDIT_METIER.md` partie 23 §46.
+
+---
+
 *Fin de TODO_UI.md.*
