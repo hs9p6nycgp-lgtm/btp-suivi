@@ -5,7 +5,7 @@ import { offlineInsert, offlineUpdate, offlineDelete } from "@/lib/offline/mutat
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CalendarDays, RotateCcw } from "lucide-react";
+import { CalendarDays, Printer, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -420,6 +420,13 @@ export default function JournalDetailPage() {
                 {langue === "fr" ? "Rouvrir la saisie" : "Reopen entry"}
               </Button>
             )}
+            <Link
+              href={`/chantiers/${chantierId}/journaux/${journalId}/imprimer`}
+              className="inline-flex items-center gap-2 rounded-xl border border-border/80 bg-surface px-3.5 py-2 text-sm font-semibold text-muted shadow-sm transition hover:border-primary-light/50 hover:text-foreground"
+            >
+              <Printer className="h-4 w-4" />
+              {langue === "fr" ? "Imprimer le PV" : "Print report"}
+            </Link>
             <Link
               href={`/chantiers/${chantierId}/journaux`}
               className="inline-flex items-center gap-2 rounded-xl border border-border/80 bg-surface px-3.5 py-2 text-sm font-semibold text-muted shadow-sm transition hover:border-primary-light/50 hover:text-foreground"
