@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { queueAll, queueRemove } from "@/lib/offline/storage";
+import { envoyerPhotosEnAttente, nombrePhotosEnAttente } from "@/lib/photos/attente";
 import { useEffect, useState } from "react";
 
 async function flushQueue() {
@@ -44,9 +45,14 @@ export default function NetworkStatus() {
   useEffect(() => {
     const updateStatus = async () => {
       setOnline(navigator.onLine);
-      if (navigator.onLine) await flushQueue();
+      if (navigator.onLine) {
+        await flushQueue();
+        // Les photos prises hors connexion partent dès que le réseau revient.
+        await envoyerPhotosEnAttente();
+      }
       const ops = await queueAll();
-      setPending(ops.length);
+      const photos = await nombrePhotosEnAttente();
+      setPending(ops.length + photos);
     };
     updateStatus();
     window.addEventListener("online", updateStatus);

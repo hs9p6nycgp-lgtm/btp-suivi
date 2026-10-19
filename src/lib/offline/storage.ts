@@ -2,7 +2,8 @@
 // Utilisable uniquement dans le navigateur.
 
 const DB_NAME = "btp-suivi";
-const DB_VERSION = 1;
+// Version 2 : ajout du magasin « fichiers » (photos prises hors connexion).
+const DB_VERSION = 2;
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -18,6 +19,9 @@ function openDb(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains("queue")) {
         db.createObjectStore("queue", { keyPath: "id", autoIncrement: true });
+      }
+      if (!db.objectStoreNames.contains("fichiers")) {
+        db.createObjectStore("fichiers", { keyPath: "chemin" });
       }
     };
     req.onsuccess = () => resolve(req.result);
@@ -122,4 +126,79 @@ export async function queueRemove(id: number): Promise<void> {
   } catch {
     // ignore
   }
+}
+
+// --- Fichiers en attente (photos prises hors connexion) -----------------------
+
+export type FichierEnAttente = {
+  /** Adresse du fichier dans le stockage (bucket « chantiers-documents »). */
+  chemin: string;
+  nom: string;
+  taille: number;
+  blob: Blob;
+  createdAt: number;
+};
+
+/** Ajoute un fichier binaire à la file d'attente. */
+export async function fileAdd(fichier: FichierEnAttente): Promise<boolean> {
+  try {
+    const db = await openDb();
+    return await new Promise<boolean>((resolve) => {
+      const tx = db.transaction("fichiers", "readwrite");
+      const store = tx.objectStore("fichiers");
+      store.put(fichier);
+      tx.oncomplete = () => {
+        annoncerFile();
+        resolve(true);
+      };
+      tx.onerror = () => resolve(false);
+      tx.onabort = () => resolve(false);
+    });
+  } catch {
+    return false;
+  }
+}
+
+/** Tous les fichiers en attente, du plus ancien au plus récent. */
+export async function fileAll(): Promise<FichierEnAttente[]> {
+  try {
+    const db = await openDb();
+    return await new Promise((resolve) => {
+      const tx = db.transaction("fichiers", "readonly");
+      const store = tx.objectStore("fichiers");
+      const req = store.getAll();
+      req.onsuccess = () => {
+        const fichiers = (req.result as FichierEnAttente[]) ?? [];
+        resolve([...fichiers].sort((a, b) => a.createdAt - b.createdAt));
+      };
+      req.onerror = () => resolve([]);
+    });
+  } catch {
+    return [];
+  }
+}
+
+/** Retire un fichier de la file (après envoi réussi). */
+export async function fileRemove(chemin: string): Promise<void> {
+  try {
+    const db = await openDb();
+    await new Promise<void>((resolve) => {
+      const tx = db.transaction("fichiers", "readwrite");
+      const store = tx.objectStore("fichiers");
+      store.delete(chemin);
+      tx.oncomplete = () => {
+        annoncerFile();
+        resolve();
+      };
+      tx.onerror = () => resolve();
+    });
+  } catch {
+    // ignore
+  }
+}
+
+/** Nombre de fichiers en attente d'envoi. */
+export async function fileCount(): Promise<number> {
+  const fichiers = await fileAll();
+  return fichiers.length;
 }

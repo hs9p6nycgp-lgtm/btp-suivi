@@ -6,6 +6,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { creerJournal, type EntreeJournal, type ResultatCreationJournal } from "@/lib/journal/creation";
 import { queueAdd } from "./storage";
+import { estErreurReseau } from "./erreurs.ts";
 
 export async function offlineInsert(table: string, payload: any) {
   if (typeof navigator !== "undefined" && !navigator.onLine) {
@@ -13,7 +14,13 @@ export async function offlineInsert(table: string, payload: any) {
     return { error: null };
   }
   const supabase = createClient();
-  return await supabase.from(table).insert(payload);
+  const resultat = await supabase.from(table).insert(payload);
+  // Le réseau a lâché pendant l'envoi : on met en file plutôt que de perdre la saisie.
+  if (resultat.error && estErreurReseau(resultat.error)) {
+    const miseEnFile = await queueAdd({ table, operation: "insert", payload });
+    if (miseEnFile) return { error: null };
+  }
+  return resultat;
 }
 
 export async function offlineUpdate(table: string, id: string, payload: any) {
@@ -22,7 +29,12 @@ export async function offlineUpdate(table: string, id: string, payload: any) {
     return { error: null };
   }
   const supabase = createClient();
-  return await supabase.from(table).update(payload).eq("id", id);
+  const resultat = await supabase.from(table).update(payload).eq("id", id);
+  if (resultat.error && estErreurReseau(resultat.error)) {
+    const miseEnFile = await queueAdd({ table, operation: "update", payload: { ...payload, id } });
+    if (miseEnFile) return { error: null };
+  }
+  return resultat;
 }
 
 export async function offlineDelete(table: string, id: string) {
@@ -31,7 +43,12 @@ export async function offlineDelete(table: string, id: string) {
     return { error: null };
   }
   const supabase = createClient();
-  return await supabase.from(table).delete().eq("id", id);
+  const resultat = await supabase.from(table).delete().eq("id", id);
+  if (resultat.error && estErreurReseau(resultat.error)) {
+    const miseEnFile = await queueAdd({ table, operation: "delete", payload: { id } });
+    if (miseEnFile) return { error: null };
+  }
+  return resultat;
 }
 
 // Création d'une fiche journal robuste au réseau faible (blocage n°1 du terrain).

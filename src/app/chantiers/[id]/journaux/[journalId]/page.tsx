@@ -14,6 +14,8 @@ import { ConfirmDialog, type DemandeConfirmation } from "@/components/ui/Confirm
 import { toast } from "@/components/ui/toast";
 import { getLangue, traduireErreur } from "@/lib/i18n";
 import { compresserImage } from "@/lib/photos/compression";
+import { enregistrerPhotoEnAttente } from "@/lib/photos/attente";
+import { cheminPhoto, doitMettreEnFile } from "@/lib/photos/regles";
 import { BUCKET_PHOTOS, urlSignee, urlsSignees } from "@/lib/photos/urls";
 import { rendementEngin, tauxDisponiteEngin } from "@/lib/calculs/metre";
 
@@ -239,10 +241,10 @@ export default function JournalDetailPage() {
     const supabase = createClient();
     // Photo compressée avant l'envoi (max 1600 px) : indispensable sur réseau faible
     const fichierEnvoye = await compresserImage(photoFile);
-    const path = `journaux/${journalId}/${Date.now()}-${fichierEnvoye.name}`;
-    const { error: upErr } = await supabase.storage.from(BUCKET_PHOTOS).upload(path, fichierEnvoye);
-    if (upErr) { setLoading(false); setMessage(traduireErreur(upErr)); return; }
+    const path = cheminPhoto(journalId, fichierEnvoye.name, Date.now());
 
+    // Position GPS relevée avant l'envoi : une photo prise hors connexion garde
+    // ainsi ses coordonnées.
     let lat: number | null = null, lon: number | null = null;
     if (navigator.geolocation) {
       try {
@@ -253,21 +255,32 @@ export default function JournalDetailPage() {
       } catch {}
     }
 
-    const { error } = await supabase.from("photos_journal").insert({
+    const { error: upErr } = await supabase.storage.from(BUCKET_PHOTOS).upload(path, fichierEnvoye);
+    // Hors connexion : la photo est conservée sur l'appareil et partira au retour
+    // du réseau (file d'attente des fichiers).
+    const enAttente = upErr ? doitMettreEnFile(upErr, navigator.onLine) : false;
+    if (upErr && !enAttente) { setLoading(false); setMessage(traduireErreur(upErr)); return; }
+    if (enAttente) { await enregistrerPhotoEnAttente(path, fichierEnvoye); }
+
+    const { error } = await offlineInsert("photos_journal", {
       journal_id: journalId, chemin: path, legende: photoLegende || null, latitude: lat, longitude: lon,
     });
     if (error) { setLoading(false); setMessage(traduireErreur(error)); return; }
 
-    // La photo envoyée apparaît tout de suite en vignette (URL signée), sans recharger la page
+    // La photo apparaît tout de suite en vignette (URL signée en ligne, aperçu
+    // local quand elle attend l'envoi), sans recharger la page
     const legende = photoLegende || null;
-    const url = await urlSignee(path);
+    const url = enAttente ? URL.createObjectURL(fichierEnvoye) : await urlSignee(path);
     setLoading(false);
     setPhotos((l) => [
       ...l,
-      { id: `local-${Date.now()}`, chemin: path, legende, latitude: lat, longitude: lon, url },
+      { id: `local-${Date.now()}`, chemin: path, legende, latitude: lat, longitude: lon, url, enAttente },
     ]);
     setPhotoFile(null); setPhotoLegende("");
-    toastEnregistre("Photo ajoutée.", "Photo added.");
+    toastEnregistre(
+      enAttente ? "Photo hors connexion : elle sera envoyée automatiquement." : "Photo ajoutée.",
+      enAttente ? "Photo saved offline: it will be sent automatically." : "Photo added.",
+    );
   }
 
   async function validateJournal() {
@@ -601,6 +614,11 @@ export default function JournalDetailPage() {
                   {ph.latitude !== null && ph.longitude !== null && (
                     <p className="text-xs text-muted">
                       GPS : {Number(ph.latitude).toFixed(5)}, {Number(ph.longitude).toFixed(5)}
+                    </p>
+                  )}
+                  {ph.enAttente && (
+                    <p className="mt-1 inline-block rounded-md bg-warning/15 px-1.5 py-0.5 text-[10px] font-semibold text-warning">
+                      {langue === "fr" ? "En attente d'envoi" : "Waiting to upload"}
                     </p>
                   )}
                 </div>
