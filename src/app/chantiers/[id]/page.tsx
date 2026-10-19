@@ -15,11 +15,12 @@ import {
   Printer,
   ShieldAlert,
   ShieldCheck,
+  Wallet,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import DqeImport from "@/components/DqeImport";
 import ChantierEquipe from "@/components/ChantierEquipe";
 import ChantierAvancement from "@/components/ChantierAvancement";
@@ -36,6 +37,9 @@ import { libelleTypeDetail } from "@/lib/chantiers/types";
 import { avancementMoyenSections, avancementParNiveau, etatEcheance, formaterMetres, joursRestants, longueurSection } from "@/lib/chantiers/complet";
 import { descriptionOuvrage, niveauxDepuisChantier, surfacesOuvrage } from "@/lib/chantiers/detailsOuvrage";
 import { receptionAutorisee } from "@/lib/chantiers/statuts";
+import { chaineCritique, dureePlanning } from "@/lib/planning/liens";
+import { syntheseRetards } from "@/lib/planning/delais";
+import { repartitionCharge } from "@/lib/planning/ressources";
 import { toast } from "@/components/ui/toast";
 import { urlsSignees } from "@/lib/photos/urls";
 
@@ -104,6 +108,8 @@ export default function ChantierDetailPage() {
   const [photos, setPhotos] = useState<
     { id: string; journalId: string; chemin: string; legende: string; date: string; url: string | null }[]
   >([]);
+  const [taches, setTaches] = useState<any[]>([]);
+  const [dependances, setDependances] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [statut, setStatut] = useState("");
 
@@ -125,7 +131,7 @@ export default function ChantierDetailPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.replace("/login"); return; }
 
-      const [cRes, pRes, mRes, sRes, aRes, nRes, avRes, jrRes] = await Promise.all([
+      const [cRes, pRes, mRes, sRes, aRes, nRes, avRes, jrRes, thRes, depRes] = await Promise.all([
         supabase.from("chantiers").select("*").eq("id", chantierId).eq("proprietaire_id", user.id).maybeSingle(),
         supabase.from("postes_dqe").select("*").eq("chantier_id", chantierId).order("created_at", { ascending: true }),
         supabase.from("chantier_utilisateurs").select("*, profil:profils(id,nom,email)").eq("chantier_id", chantierId),
@@ -151,6 +157,9 @@ export default function ChantierDetailPage() {
           .eq("chantier_id", chantierId)
           .order("date_journal", { ascending: false })
           .limit(30),
+        // Planning : tâches et liaisons (synthèse affichée sur la fiche)
+        supabase.from("taches_planning").select("*").eq("chantier_id", chantierId).order("created_at", { ascending: true }),
+        supabase.from("dependances_planning").select("*").eq("chantier_id", chantierId),
       ]);
 
       if (cRes.data) setChantier(cRes.data as Chantier);
@@ -161,6 +170,8 @@ export default function ChantierDetailPage() {
       setCompteurs({ alertes: aRes.count ?? 0, nonConformites: nRes.count ?? 0 });
       setAvancementSectionOk(!avRes.error);
       if (cRes.data?.statut) setStatut(cRes.data.statut);
+      if (thRes.data) setTaches(thRes.data as any[]);
+      if (depRes.data) setDependances(depRes.data as any[]);
 
       // Galerie des dernières photos du chantier (tableau de bord, §6.1)
       const journaux = (jrRes.data ?? []) as { id: string; date_journal: string }[];
@@ -217,6 +228,32 @@ export default function ChantierDetailPage() {
   const niveaux = chantier.type === "batiment" ? niveauxDepuisChantier(chantier) : [];
   const avancementNiveaux =
     chantier.type === "batiment" ? avancementParNiveau(sections, niveaux) : [];
+
+  // Synthèse du planning : durée projet, chaîne critique, retards, charge
+  const synthesePlanning = useMemo(() => {
+    if (taches.length === 0) return null;
+    const tachesPlanning = taches.map((t) => ({
+      id: t.id,
+      nom: t.nom,
+      duree_jours: Number(t.duree_jours) || 0,
+      date_prevue_fin: t.date_prevue_fin ?? null,
+      date_reelle_fin: t.date_reelle_fin ?? null,
+      statut: t.statut ?? "a_faire",
+      equipe: t.equipe ?? null,
+      engins: t.engins ?? null,
+    }));
+    const liens = dependances.map((d) => ({
+      tache_predecesseur_id: d.tache_predecesseur_id,
+      tache_successeur_id: d.tache_successeur_id,
+    }));
+    return {
+      duree: dureePlanning(tachesPlanning, liens),
+      critique: chaineCritique(tachesPlanning, liens).map((t) => t.nom),
+      retards: syntheseRetards(tachesPlanning),
+      charges: repartitionCharge(tachesPlanning),
+      nbTaches: tachesPlanning.length,
+    };
+  }, [taches, dependances]);
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
@@ -323,6 +360,7 @@ export default function ChantierDetailPage() {
               { href: `/chantiers/${chantier.id}/couts`, label: langue === "fr" ? "Coûts & Budget" : "Costs & Budget", icon: <Coins className="h-4 w-4" /> },
               { href: `/chantiers/${chantier.id}/qualite`, label: langue === "fr" ? "Qualité" : "Quality", icon: <ClipboardCheck className="h-4 w-4" /> },
               { href: `/chantiers/${chantier.id}/securite`, label: langue === "fr" ? "Sécurité (HSE)" : "Safety (HSE)", icon: <ShieldCheck className="h-4 w-4" /> },
+              { href: `/chantiers/${chantier.id}/situations`, label: langue === "fr" ? "Situations de paiement" : "Payment statements", icon: <Wallet className="h-4 w-4" /> },
               { href: `/chantiers/${chantier.id}/modelisation3d`, label: langue === "fr" ? "Modélisation 3D" : "3D Modeling", icon: <Box className="h-4 w-4" /> },
               { href: `/chantiers/${chantier.id}/imprimer`, label: langue === "fr" ? "Imprimer la fiche" : "Print sheet", icon: <Printer className="h-4 w-4" /> },
               { href: `/chantiers/${chantier.id}/carnet`, label: langue === "fr" ? "Imprimer le carnet" : "Print the logbook", icon: <BookOpen className="h-4 w-4" /> },
@@ -489,6 +527,87 @@ export default function ChantierDetailPage() {
       <div className="anim-fade-up anim-delay-3 mb-6">
         <CourbeAvancement chantierId={chantier.id} avancementActuel={avancementGlobal} />
       </div>
+
+      {/* Synthèse du planning */}
+      {synthesePlanning && (
+        <div className="anim-fade-up anim-delay-3 mb-6">
+          <Card padding="lg">
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
+                  <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+                  {langue === "fr" ? "Planning du chantier" : "Site schedule"}
+                </h2>
+                <p className="mt-1 text-sm text-muted">
+                  {langue === "fr"
+                    ? "Durée projet, chaîne critique, retards et charge par équipe."
+                    : "Project duration, critical path, delays and workload per team."}
+                </p>
+              </div>
+              <Link
+                href={`/chantiers/${chantier.id}/planning`}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border/80 bg-surface px-3.5 py-2 text-sm font-semibold text-muted transition hover:border-primary-light/50 hover:text-foreground"
+              >
+                <CalendarRange className="h-4 w-4" />
+                {langue === "fr" ? "Ouvrir le planning" : "Open schedule"}
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              <div className="rounded-xl border border-border/70 bg-surface-2 p-3 text-center">
+                <p className="text-xs text-muted">
+                  {langue === "fr" ? "Durée projet" : "Project duration"}
+                </p>
+                <p className="text-lg font-bold">{synthesePlanning.duree} j</p>
+              </div>
+              <div className="rounded-xl border border-border/70 bg-surface-2 p-3 text-center">
+                <p className="text-xs text-muted">{langue === "fr" ? "Tâches" : "Tasks"}</p>
+                <p className="text-lg font-bold">{synthesePlanning.nbTaches}</p>
+              </div>
+              <div className="rounded-xl border border-border/70 bg-surface-2 p-3 text-center">
+                <p className="text-xs text-muted">
+                  {langue === "fr" ? "Tâches en retard" : "Late tasks"}
+                </p>
+                <p
+                  className={`text-lg font-bold ${
+                    synthesePlanning.retards.enRetard > 0 ? "text-danger" : "text-foreground"
+                  }`}
+                >
+                  {synthesePlanning.retards.enRetard}
+                </p>
+              </div>
+              <div className="rounded-xl border border-border/70 bg-surface-2 p-3 text-center">
+                <p className="text-xs text-muted">
+                  {langue === "fr" ? "Chaîne critique" : "Critical path"}
+                </p>
+                <p className="text-lg font-bold">{synthesePlanning.critique.length}</p>
+              </div>
+            </div>
+
+            {synthesePlanning.critique.length > 0 && (
+              <p className="mt-3 text-sm text-foreground">
+                <span className="font-semibold">
+                  {langue === "fr" ? "Chaîne critique :" : "Critical path:"}
+                </span>{" "}
+                {synthesePlanning.critique.join(" → ")}
+              </p>
+            )}
+            {synthesePlanning.charges.length > 0 && (
+              <p className="mt-1 text-xs text-muted">
+                {langue === "fr" ? "Charge par équipe :" : "Workload per team:"}{" "}
+                {synthesePlanning.charges
+                  .map((c) => `${c.equipe} ${c.jours} j`)
+                  .join(" · ")}
+              </p>
+            )}
+            {synthesePlanning.retards.enRetard > 0 && (
+              <p className="mt-2 text-xs font-medium text-danger">
+                {synthesePlanning.retards.libelle}
+              </p>
+            )}
+          </Card>
+        </div>
+      )}
 
       {/* Intervenants + documents */}
       <div className="anim-fade-up anim-delay-3 mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
