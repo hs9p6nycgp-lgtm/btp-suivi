@@ -112,6 +112,7 @@ export default function NouveauChantierPage() {
   const [sections, setSections] = useState<LigneSection[]>([nouvelleSection()]);
   const [intervenants, setIntervenants] = useState<LigneIntervenant[]>([]);
   const [colonnesOk, setColonnesOk] = useState<boolean | null>(null);
+  const [modeleNom, setModeleNom] = useState<string | null>(null);
   const [doublon, setDoublon] = useState<{ id: string; nom: string } | null>(null);
   const [chantierCree, setChantierCree] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -126,6 +127,58 @@ export default function NouveauChantierPage() {
       setColonnesOk(!error);
     }
     verifier();
+  }, []);
+
+  // Duplication : /chantiers/nouveau?modele=<id> reprend l'identité du chantier
+  // et la structure de son découpage (les avancements et les intervenants ne
+  // sont pas recopiés : ce sont des données de terrain du chantier d'origine).
+  useEffect(() => {
+    const modele = new URLSearchParams(window.location.search).get("modele");
+    if (!modele) return;
+    const pkTexte = (valeur: number | null | undefined) =>
+      valeur === null || valeur === undefined ? "" : (formaterPK(valeur) ?? "").replace("PK ", "");
+    async function chargerModele() {
+      const supabase = createClient();
+      const { data } = await supabase.from("chantiers").select("*").eq("id", modele).maybeSingle();
+      if (!data) return;
+      setModeleNom(data.nom ?? null);
+      setNom(`${data.nom ?? "Chantier"} (copie)`);
+      setType((data.type as TypeChantier) ?? "route");
+      setTypeDetail(data.type_detail ?? "");
+      setMaitreOuvrage(data.maitre_ouvrage ?? "");
+      setVille(data.ville ?? "");
+      setMaitreOeuvre(data.maitre_oeuvre ?? "");
+      setEntreprise(data.entreprise ?? "");
+      setNumeroMarche(data.numero_marche ?? "");
+      setLatitude(data.latitude !== null && data.latitude !== undefined ? String(data.latitude) : "");
+      setLongitude(data.longitude !== null && data.longitude !== undefined ? String(data.longitude) : "");
+      setLongueur(data.longueur !== null && data.longueur !== undefined ? String(data.longueur) : "");
+      setLargeur(data.largeur !== null && data.largeur !== undefined ? String(data.largeur) : "");
+      setHauteur(data.hauteur !== null && data.hauteur !== undefined ? String(data.hauteur) : "");
+      setSeuil(
+        data.seuil_ecart_pct !== null && data.seuil_ecart_pct !== undefined
+          ? String(data.seuil_ecart_pct)
+          : "10",
+      );
+      const { data: sectionsModele } = await supabase
+        .from("sections_chantier")
+        .select("nom,pk_debut,pk_fin,niveau,lot")
+        .eq("chantier_id", modele)
+        .order("created_at", { ascending: true });
+      if (sectionsModele && sectionsModele.length > 0) {
+        setSections(
+          sectionsModele.map((s) => ({
+            cle: Math.random().toString(36).slice(2),
+            nom: (s.nom as string) ?? "",
+            pkDebut: pkTexte(s.pk_debut as number | null),
+            pkFin: pkTexte(s.pk_fin as number | null),
+            niveau: (s.niveau as string | null) ?? "",
+            lot: (s.lot as string | null) ?? "",
+          })),
+        );
+      }
+    }
+    chargerModele();
   }, []);
 
   // Deux chantiers qui portent le même nom sont une source de confusion :
@@ -376,6 +429,12 @@ export default function NouveauChantierPage() {
         ) : (
           <Card variant="elevated" padding="lg" className="anim-fade-up anim-delay-1">
             <form onSubmit={handleSubmit} className="space-y-8">
+              {modeleNom && (
+                <p className="rounded-xl border border-primary/30 bg-primary/5 p-3 text-sm text-foreground">
+                  Création à partir de « {modeleNom} » : vérifiez le nom, les dates, le montant et le découpage avant
+                  d&apos;enregistrer.
+                </p>
+              )}
               {/* 1. Identité */}
               <section className="space-y-4">
                 <TitreBloc numero={1} titre="Identité du chantier" icone={<Building2 className="h-4 w-4" />} />

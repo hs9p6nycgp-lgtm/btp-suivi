@@ -7,6 +7,7 @@ import {
   Calculator,
   ClipboardCheck,
   Coins,
+  Copy,
   ExternalLink,
   MapPin,
   Pencil,
@@ -223,6 +224,7 @@ export default function ChantierDetailPage() {
           <div className="mt-5 flex flex-wrap gap-2">
             {[
               { href: `/chantiers/${chantier.id}/modifier`, label: langue === "fr" ? "Modifier le chantier" : "Edit site", icon: <Pencil className="h-4 w-4" /> },
+              { href: `/chantiers/nouveau?modele=${chantier.id}`, label: langue === "fr" ? "Créer un chantier similaire" : "Create similar site", icon: <Copy className="h-4 w-4" /> },
               { href: `/chantiers/${chantier.id}/planning`, label: "Planning & PERT", icon: <CalendarRange className="h-4 w-4" /> },
               { href: `/chantiers/${chantier.id}/couts`, label: langue === "fr" ? "Coûts & Budget" : "Costs & Budget", icon: <Coins className="h-4 w-4" /> },
               { href: `/chantiers/${chantier.id}/qualite`, label: langue === "fr" ? "Qualité" : "Quality", icon: <ClipboardCheck className="h-4 w-4" /> },
