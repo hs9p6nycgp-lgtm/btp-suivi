@@ -374,6 +374,26 @@ Pour que les sessions attaquent la bonne cible, voici l'état réel de la base d
 
 ---
 
+# Partie 14 — Vérification des livraisons suivantes
+
+## 28. Base de prix et Référentiel (T-LOG-42 / T-UI-27) — ✅ **CORRIGÉ ET VÉRIFIÉ**
+
+- **Base de prix** : la colonne **« Date de source »** est affichée (ex. 14/10/2026) et le formulaire d'ajout comporte désormais un **champ date** — la date exigée par REF-04 est donc visible et saisissable.
+- **Référentiel de prix** : il affiche désormais **289 lignes** (il était vide) et le bouton est devenu **« Exporter CSV (289) »** (il était à « Exporter CSV (0) »). Contrôle en base : `referentiel_prix` passe de **0 à 289 lignes**, avec les colonnes attendues (catégorie, source, date de source, date de validité, statut, zone) ; `historique_prix` reste à 0, ce qui est normal tant que les prix ne changent pas.
+- Les 289 prix restent cohérents avec la base de prix (mêmes codes, mêmes prix, mêmes dates de source).
+
+→ **Le référentiel est enfin utilisable** : import/export REF-05 et traçabilité REF-03 deviennent opérationnels.
+
+## 29. Planning : affectation des équipes et des engins — ✅ **NOUVELLE FONCTION VERIFIÉE**
+
+Le planning gagne une **colonne « Ressources »** dans le tableau PERT, une section **« Charge par équipe »** (tableau Équipe / Tâches / Charge en jours) et, dans le formulaire de tâche, les champs **« Équipe affectée »** et **« Engins et matériel »** — la demande formulée en partie 1 (§2, « pas d'affectation d'équipe/engin aux tâches, pas de coût par tâche ») est donc livrée.
+
+## 30. Fournisseurs : conditions tarifaires (T-LOG-43 / T-UI-28) — 🟡 en cours de livraison
+
+Une section **« Conditions tarifaires »** est apparue dans l'écran Fournisseurs : « Saisissez les offres de vos fournisseurs, comparez-les poste par poste et tracez le choix retenu (FOU-03, FOU-04) », avec un choix de fournisseur et de chantier. La fonction est en cours de livraison par la Session 2 (fichiers non encore commités au moment du contrôle) : **à vérifier une fois la livraison terminée**.
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
