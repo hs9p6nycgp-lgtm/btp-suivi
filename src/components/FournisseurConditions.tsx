@@ -13,6 +13,8 @@ import { getLangue, traduireErreur } from "@/lib/i18n";
 import {
   choisirOffre,
   grouperParPoste,
+  messageDemandeDevis,
+  objetDemandeDevis,
   offrePerimee,
   propagationVersBasePrix,
   type OffreFournisseur,
@@ -24,6 +26,7 @@ import { Card } from "@/components/ui/Card";
 type Fournisseur = {
   id: string;
   raison_sociale: string;
+  email?: string | null;
   validite_prix_jours?: number | null;
 };
 
@@ -47,11 +50,32 @@ export default function FournisseurConditions({ fournisseurs, onMessage }: Props
   const [dateDevis, setDateDevis] = useState(new Date().toISOString().slice(0, 10));
   const [motif, setMotif] = useState("");
   const [offreAChoisir, setOffreAChoisir] = useState<string | null>(null);
-  const [chantierId, setChantierId] = useState("");
+
+  // FOU-08 : demande de devis prete a envoyer
   const [chantiers, setChantiers] = useState<{ id: string; nom: string }[]>([]);
+  const [chantierId, setChantierId] = useState("");
+  const [posteDemande, setPosteDemande] = useState("");
+  const [quantiteDemande, setQuantiteDemande] = useState("");
+  const [uniteDemande, setUniteDemande] = useState("");
+  const [delaiDemande, setDelaiDemande] = useState("");
+  const [messagePret, setMessagePret] = useState<string | null>(null);
   // La colonne « unite » est ajoutee par la migration 0024 : tant qu'elle
   // n'est pas en base, l'offre est enregistree sans unite.
   const [colonneUnite, setColonneUnite] = useState<boolean | null>(null);
+
+  // Chantiers de l'utilisateur : la demande de devis porte sur un chantier (FOU-08)
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("chantiers")
+        .select("id,nom")
+        .eq("proprietaire_id", user.id)
+        .order("created_at", { ascending: false });
+      setChantiers((data ?? []) as { id: string; nom: string }[]);
+    });
+  }, []);
 
   const charger = useCallback(async () => {
     const supabase = createClient();
@@ -235,6 +259,52 @@ export default function FournisseurConditions({ fournisseurs, onMessage }: Props
     charger();
   }
 
+  /**
+   * FOU-08 : demande de devis. Le message est partage (e-mail, WhatsApp ou
+   * autre application de messagerie) ; le fournisseur repond en saisissant
+   * son offre dans l'application.
+   */
+  async function envoyerDemandeDevis(e: React.FormEvent) {
+    e.preventDefault();
+    const fournisseur = fournisseurs.find((f) => f.id === fournisseurId);
+    const chantier = chantiers.find((c) => c.id === chantierId);
+    if (!fournisseur || !chantier) {
+      setMessagePret(
+        langue === "fr"
+          ? "Choisissez un fournisseur et un chantier avant de préparer la demande."
+          : "Choose a supplier and a site before preparing the request.",
+      );
+      return;
+    }
+    const texte = messageDemandeDevis({
+      fournisseur: fournisseur.raison_sociale,
+      chantier: chantier.nom,
+      poste: posteDemande.trim() || "à préciser",
+      quantite: quantiteDemande ? Number(quantiteDemande) : null,
+      unite: uniteDemande.trim() || null,
+      delaiSouhaiteJours: delaiDemande ? Number(delaiDemande) : null,
+      dateReponse: null,
+    });
+    const objet = objetDemandeDevis(chantier.nom, posteDemande.trim() || "poste à préciser");
+    try {
+      const partage = navigator as Navigator & {
+        share?: (data: { title?: string; text?: string; url?: string }) => Promise<void>;
+      };
+      if (partage.share) {
+        await partage.share({ title: objet, text: texte });
+        setMessagePret(
+          langue === "fr"
+            ? "Demande prête : choisissez l'application de messagerie dans la fenêtre de partage."
+            : "Request ready: choose the messaging app in the share sheet.",
+        );
+        return;
+      }
+    } catch {
+      // Partage annule ou indisponible : on montre le message.
+    }
+    setMessagePret(texte);
+  }
+
   const comparaisons = grouperParPoste(offres);
   const fr = langue === "fr" ? "fr-FR" : "en-US";
 
@@ -276,6 +346,38 @@ export default function FournisseurConditions({ fournisseurs, onMessage }: Props
         </select>
         <input className={CHAMP} placeholder={langue === "fr" ? "Conditions (paiement, transport…)" : "Conditions (payment, transport…)"} value={conditions} onChange={(e) => setConditions(e.target.value)} />
         <Button type="submit">{langue === "fr" ? "Ajouter l'offre" : "Add offer"}</Button>
+      </form>
+
+      {/* FOU-08 : demande de devis */}
+      <form onSubmit={envoyerDemandeDevis} className="mb-6 rounded-2xl border border-border/80 bg-surface-2/50 p-4">
+        <h3 className="mb-1 text-sm font-bold text-foreground">
+          {langue === "fr" ? "Demander un devis" : "Request a quote"}
+        </h3>
+        <p className="mb-3 text-xs text-muted">
+          {langue === "fr"
+            ? "Le message est préparé et envoyé à votre messagerie (e-mail, WhatsApp…) ; le fournisseur répond en saisissant son offre ci-dessus."
+            : "The message is prepared and sent to your messaging app; the supplier replies by entering their offer above."}
+        </p>
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+          <select className={CHAMP} value={chantierId} onChange={(e) => setChantierId(e.target.value)}>
+            <option value="">{langue === "fr" ? "Chantier *" : "Site *"}</option>
+            {chantiers.map((c) => (
+              <option key={c.id} value={c.id}>{c.nom}</option>
+            ))}
+          </select>
+          <input className={CHAMP} placeholder={langue === "fr" ? "Poste demandé" : "Requested item"} value={posteDemande} onChange={(e) => setPosteDemande(e.target.value)} />
+          <input className={CHAMP} type="number" placeholder={langue === "fr" ? "Quantité" : "Quantity"} value={quantiteDemande} onChange={(e) => setQuantiteDemande(e.target.value)} />
+          <input className={CHAMP} placeholder={langue === "fr" ? "Unité" : "Unit"} value={uniteDemande} onChange={(e) => setUniteDemande(e.target.value)} />
+          <input className={CHAMP} type="number" placeholder={langue === "fr" ? "Délai souhaité (j)" : "Wanted delay (days)"} value={delaiDemande} onChange={(e) => setDelaiDemande(e.target.value)} />
+          <Button type="submit">
+            {langue === "fr" ? "Préparer la demande" : "Prepare request"}
+          </Button>
+        </div>
+        {messagePret && (
+          <pre className="mt-3 whitespace-pre-wrap rounded-xl border border-border/70 bg-surface p-3 text-xs text-muted">
+            {messagePret}
+          </pre>
+        )}
       </form>
 
       {loading ? (

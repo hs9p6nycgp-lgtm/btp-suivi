@@ -18,6 +18,7 @@ import { enregistrerPhotoEnAttente } from "@/lib/photos/attente";
 import { cheminPhoto, doitMettreEnFile } from "@/lib/photos/regles";
 import { BUCKET_PHOTOS, urlSignee, urlsSignees } from "@/lib/photos/urls";
 import { rendementEngin, tauxDisponiteEngin } from "@/lib/calculs/metre";
+import Dictation from "@/components/Dictation";
 import { etatPoste, messageEtatPoste } from "@/lib/journal/quantites";
 
 // JJ/MM/AAAA sans risque de décalage de fuseau (chaîne « AAAA-MM-JJ »)
@@ -468,7 +469,13 @@ export default function JournalDetailPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Observations</label>
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <label className="block text-sm font-medium text-foreground">
+                  Observations
+                </label>
+                {/* JOU-06 : dictée vocale des observations */}
+                <Dictation valeur={observations} onChange={setObservations} />
+              </div>
               <textarea className={CLASSE_CHAMP} rows={3} value={observations} onChange={(e) => setObservations(e.target.value)} />
             </div>
             <Button type="submit" disabled={loading} className="md:col-span-2">

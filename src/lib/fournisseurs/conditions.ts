@@ -152,6 +152,46 @@ export function offrePerimee(
 }
 
 /**
+ * FOU-08 : demande de devis prete a envoyer au fournisseur (par e-mail ou
+ * WhatsApp). Le message reprend le chantier, le poste et la quantite ; le
+ * fournisseur repond ensuite en saisissant son offre dans l'application.
+ */
+export function messageDemandeDevis(demande: {
+  fournisseur: string;
+  chantier: string;
+  poste: string;
+  quantite: number | null;
+  unite: string | null;
+  delaiSouhaiteJours: number | null;
+  dateReponse: string | null;
+}): string {
+  const lignes = [
+    `Bonjour ${demande.fournisseur},`,
+    "",
+    `Dans le cadre du chantier « ${demande.chantier} », nous sollicitons un devis pour :`,
+    `- Poste : ${demande.poste}`,
+    demande.quantite !== null
+      ? `- Quantité souhaitée : ${demande.quantite}${demande.unite ? ` ${demande.unite}` : ""}`
+      : "- Quantité souhaitée : à préciser",
+    demande.delaiSouhaiteJours !== null
+      ? `- Délai souhaité : ${demande.delaiSouhaiteJours} jour(s)`
+      : "- Délai souhaité : à préciser",
+    demande.dateReponse
+      ? `- Date de réponse souhaitée : ${demande.dateReponse}`
+      : "- Date de réponse souhaitée : à préciser",
+    "",
+    "Merci de nous indiquer votre prix unitaire, votre délai de livraison et vos conditions de paiement.",
+    "Cordialement,",
+  ];
+  return lignes.join("\n");
+}
+
+/** Sujet du message de demande de devis. */
+export function objetDemandeDevis(chantier: string, poste: string): string {
+  return `Demande de devis — ${chantier} — ${poste}`;
+}
+
+/**
  * Propagation du prix retenu vers la base de prix : la source du prix est le
  * devis du fournisseur, la date de source est la date du devis (exigence
  * REF-04 : un prix porte toujours une source et une date).

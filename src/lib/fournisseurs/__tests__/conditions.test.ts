@@ -6,6 +6,8 @@ import {
   comparerOffres,
   grouperParPoste,
   memesUnites,
+  messageDemandeDevis,
+  objetDemandeDevis,
   offrePerimee,
   propagationVersBasePrix,
   type OffreFournisseur,
@@ -121,6 +123,46 @@ describe("conditions tarifaires des fournisseurs (FOU-03, FOU-04)", () => {
       // Offre du 15/10 valable 30 jours : encore valable
       assert.strictEqual(offrePerimee("2026-10-15", 30, reference), false);
       assert.strictEqual(offrePerimee("2026-01-01", null, reference), false);
+    });
+  });
+
+  describe("FOU-08 : demande de devis", () => {
+    it("prépare un message complet", () => {
+      const message = messageDemandeDevis({
+        fournisseur: "SODECI",
+        chantier: "Route de Yamoussoukro",
+        poste: "Ciment CPJ 42,5",
+        quantite: 200,
+        unite: "sac",
+        delaiSouhaiteJours: 7,
+        dateReponse: "2026-10-25",
+      });
+      assert.match(message, /Bonjour SODECI/);
+      assert.match(message, /Route de Yamoussoukro/);
+      assert.match(message, /Ciment CPJ 42,5/);
+      assert.match(message, /200 sac/);
+      assert.match(message, /7 jour/);
+      assert.match(message, /2026-10-25/);
+    });
+
+    it("indique les informations à préciser quand elles manquent", () => {
+      const message = messageDemandeDevis({
+        fournisseur: "BETON CI",
+        chantier: "Dalle",
+        poste: "Béton C30/37",
+        quantite: null,
+        unite: null,
+        delaiSouhaiteJours: null,
+        dateReponse: null,
+      });
+      assert.match(message, /à préciser/);
+    });
+
+    it("construit un objet lisible", () => {
+      assert.strictEqual(
+        objetDemandeDevis("Route de Yamoussoukro", "Ciment"),
+        "Demande de devis — Route de Yamoussoukro — Ciment",
+      );
     });
   });
 

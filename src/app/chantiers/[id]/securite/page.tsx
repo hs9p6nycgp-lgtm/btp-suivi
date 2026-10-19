@@ -22,6 +22,16 @@ import {
   type IncidentHse,
   type TypeIncident,
 } from "@/lib/hse/declarations";
+import {
+  ITEMS_CHECKLIST,
+  LIBELLES_CHECKLIST,
+  joursChecklistComplete,
+  libelleEtatChecklist,
+  pointsRestants,
+  tauxConformiteChecklist,
+  type EtatChecklist,
+  type ItemChecklist,
+} from "@/lib/hse/checklist";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -58,6 +68,17 @@ export default function SecuriteChantierPage() {
   const [fichiers, setFichiers] = useState<File[]>([]);
   const [envoi, setEnvoi] = useState(false);
 
+  // Check-list HSE du jour (HSE-02)
+  const [checklists, setChecklists] = useState<EtatChecklist[]>([]);
+  const [pointsDuJour, setPointsDuJour] = useState<Record<string, boolean>>({
+    epi: false,
+    echauffement: false,
+    signalisation: false,
+    extincteur: false,
+  });
+  const [commentaireChecklist, setCommentaireChecklist] = useState("");
+  const [enregistrementChecklist, setEnregistrementChecklist] = useState(false);
+
   useEffect(() => {
     if (chantierId) load();
   }, [chantierId]);
@@ -74,10 +95,23 @@ export default function SecuriteChantierPage() {
       .maybeSingle();
     if (!chantier) { router.replace("/chantiers"); return; }
 
-    const [hseRes, journauxRes] = await Promise.all([
+    const [hseRes, journauxRes, checkRes] = await Promise.all([
       supabase.from("hse_incidents").select("*").eq("chantier_id", chantierId).order("date_occurrence", { ascending: false }),
       supabase.from("journaux").select("id").eq("chantier_id", chantierId),
+      supabase.from("hse_checklists").select("*").eq("chantier_id", chantierId).order("date", { ascending: false }),
     ]);
+
+    const etatsChecklist = (checkRes.data ?? []) as EtatChecklist[];
+    setChecklists(etatsChecklist);
+    const aujourdhui = new Date().toISOString().slice(0, 10);
+    const etatDuJour = etatsChecklist.find((e) => e.date === aujourdhui) ?? null;
+    setPointsDuJour({
+      epi: Boolean(etatDuJour?.epi),
+      echauffement: Boolean(etatDuJour?.echauffement),
+      signalisation: Boolean(etatDuJour?.signalisation),
+      extincteur: Boolean(etatDuJour?.extincteur),
+    });
+    setCommentaireChecklist(etatDuJour?.commentaire ?? "");
 
     const lignes = (hseRes.data ?? []) as IncidentHse[];
     const tousChemins = lignes.flatMap((l) => l.photos ?? []);
@@ -153,7 +187,45 @@ export default function SecuriteChantierPage() {
 
   const heuresTravaillees = Number(heuresManuelles) || 0;
   const indicateurs = calculIndicateursHse(incidents, heuresTravaillees);
+  const conformiteChecklist = tauxConformiteChecklist(checklists);
+  const joursComplets = joursChecklistComplete(checklists);
+  const etatDuJour: EtatChecklist | null =
+    checklists.find((e) => e.date === new Date().toISOString().slice(0, 10)) ?? null;
   const fr = langue === "fr" ? "fr-FR" : "en-US";
+
+  /** Enregistre la check-list du jour (un etat par jour et par chantier). */
+  async function enregistrerChecklist(e: React.FormEvent) {
+    e.preventDefault();
+    setEnregistrementChecklist(true);
+    const supabase = createClient();
+    const aujourdhui = new Date().toISOString().slice(0, 10);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from("hse_checklists").upsert(
+      {
+        chantier_id: chantierId,
+        date: aujourdhui,
+        epi: pointsDuJour.epi,
+        echauffement: pointsDuJour.echauffement,
+        signalisation: pointsDuJour.signalisation,
+        extincteur: pointsDuJour.extincteur,
+        commentaire: commentaireChecklist.trim() || null,
+        saisi_par: user?.id ?? null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "chantier_id,date" },
+    );
+    setEnregistrementChecklist(false);
+    if (error) {
+      setMessage(traduireErreur(error));
+      return;
+    }
+    setMessage(
+      langue === "fr"
+        ? "Check-list enregistrée pour aujourd'hui."
+        : "Check-list saved for today.",
+    );
+    load();
+  }
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
@@ -206,6 +278,62 @@ export default function SecuriteChantierPage() {
           subtitle={langue === "fr" ? "des accidents évités" : "accidents avoided"}
         />
       </div>
+
+      {/* HSE-02 : check-list quotidienne */}
+      <Card padding="lg" className="mb-6">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-bold text-foreground">
+            {langue === "fr" ? "Check-list sécurité du jour" : "Daily safety check-list"}
+          </h2>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+            <Badge variant={conformiteChecklist.taux >= 100 ? "success" : conformiteChecklist.taux >= 75 ? "warning" : "danger"}>
+              {langue === "fr" ? "Conformité" : "Compliance"} : {conformiteChecklist.taux} %
+            </Badge>
+            <span>
+              {langue === "fr"
+                ? `${joursComplets} jour(s) de check-list complète d'affilée`
+                : `${joursComplets} consecutive full check-list day(s)`}
+            </span>
+          </div>
+        </div>
+
+        <p className="mb-3 text-sm text-muted">{libelleEtatChecklist(etatDuJour)}</p>
+
+        <form onSubmit={enregistrerChecklist} className="space-y-2">
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+            {ITEMS_CHECKLIST.map((item: ItemChecklist) => (
+              <label
+                key={item}
+                className="flex cursor-pointer items-start gap-3 rounded-xl border border-border/70 bg-surface-2/50 p-3"
+              >
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={Boolean(pointsDuJour[item])}
+                  onChange={(e) => setPointsDuJour((p) => ({ ...p, [item]: e.target.checked }))}
+                />
+                <span>
+                  <span className="block text-sm font-semibold text-foreground">
+                    {langue === "fr" ? LIBELLES_CHECKLIST[item].fr : LIBELLES_CHECKLIST[item].en}
+                  </span>
+                  <span className="block text-xs text-muted">{LIBELLES_CHECKLIST[item].aide}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+          <input
+            className={CHAMP}
+            placeholder={langue === "fr" ? "Commentaire (remarque, point bloquant…)" : "Comment (remark, blocking point…)"}
+            value={commentaireChecklist}
+            onChange={(e) => setCommentaireChecklist(e.target.value)}
+          />
+          <Button type="submit" disabled={enregistrementChecklist}>
+            {enregistrementChecklist
+              ? langue === "fr" ? "Enregistrement..." : "Saving..."
+              : langue === "fr" ? "Enregistrer la check-list du jour" : "Save today's check-list"}
+          </Button>
+        </form>
+      </Card>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         {/* Formulaire de declaration (HSE-01) */}
