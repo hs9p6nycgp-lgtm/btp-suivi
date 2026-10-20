@@ -83,6 +83,31 @@ const MODULES = [
   { href: "/exigences", icon: <ListChecks className="h-5 w-5" />, nom: "Exigences", desc: "La couverture du cahier des charges" },
 ];
 
+const GLOSSAIRE = [
+  { terme: "DQE", definition: "Dossier quantitatif estimatif : la liste des travaux avec quantités et prix unitaires, base de tous les calculs de l'application." },
+  { terme: "BPU", definition: "Bordereau des prix unitaires : la bibliothèque de prix de l'entreprise, alimentée par import Excel." },
+  { terme: "PV", definition: "Procès-verbal : document signé qui atteste d'un fait (journal du jour, réception d'une livraison, essais)." },
+  { terme: "OS", definition: "Ordre de service : instruction écrite du maître d'ouvrage qui modifie le programme des travaux." },
+  { terme: "Avenant", definition: "Modification du marché (quantité, prix ou délai) qui en découle, avec son historique." },
+  { terme: "PK", definition: "Point kilométrique : repère de position le long d'un linéaire routier (PK 12 + 350)." },
+  { terme: "Emprise", definition: "Surface de terrain occupée par l'ouvrage, celle qui est débroussée puis terrassée." },
+  { terme: "TN / TP", definition: "Terrain naturel (avant travaux) et terrain projeté (après) : leur différence donne les volumes de déblais et de remblais." },
+  { terme: "Latérite", definition: "Matériau de base des routes en pays latéral, souvent stabilisé à l'eau avant compactage." },
+  { terme: "Compactage", definition: "Énergie appliquée au sol pour le densifier ; la densité atteinte se contrôle par un essai Proctor." },
+  { terme: "Enrobé", definition: "Revêtement de chaussée en mélange hydrocarboné, mis en œuvre à chaud sur la couche de fondation." },
+  { terme: "Slump", definition: "Affaissement du béton frais mesuré au cône : indication de sa maniabilité (essai de béton)." },
+  { terme: "Éprouvette", definition: "Échantillon de béton conservé puis écrasé à 7, 14 ou 28 jours pour connaître la résistance atteinte." },
+  { terme: "Banche", definition: "Coffrage de béton : il donne sa forme au ouvrage et se retire après durcissement." },
+  { terme: "Bon de livraison", definition: "Document qui accompanies un matériaux livré sur chantier (matériau, quantité, fournisseur, n° de bon, photo)." },
+  { terme: "Chef de chantier", definition: "Le conducteur des travaux sur site : il saisit le journal, les quantités et les photos." },
+  { terme: "Conducteur de travaux", definition: "Le responsable d'exécution qui encadre le chantier et valide le journal de chantier." },
+  { terme: "Consignation", definition: "Procédure HSE qui met une installation hors tension avant toute intervention." },
+  { terme: "Réception provisoire", definition: "Visite officielle de fin de travaux ; elle ouvre le délai de parfait achèvement avant la réception définitive." },
+  { terme: "Délai d'exécution", definition: "Durée contractuelle des travaux : son dépassement déclenche des pénalités de retard." },
+  { terme: "Pénalité de retard", definition: "Somme appliquée au maître d'ouvrage par jour de retard sur le délai contractuel." },
+  { terme: "Frais / F+O", definition: "Frais ou franco d'ouvrage : tout ce qui n'est pas un prix unitaire (installations de chantier, frais généraux…)." },
+];
+
 export default function AidePage() {
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
@@ -239,6 +264,24 @@ export default function AidePage() {
           </ul>
         </div>
       </div>
+      {/* Glossaire métier */}
+      <section className="mt-8">
+        <h2 className="mb-3 text-lg font-bold text-foreground">Glossaire métier</h2>
+        <p className="mb-4 text-sm text-muted">
+          Le vocabulaire des chantiers, tel qu&apos;il est utilisé dans l&apos;application.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {GLOSSAIRE.map((entree) => (
+            <div
+              key={entree.terme}
+              className="rounded-2xl border border-border/70 bg-surface p-4 shadow-sm"
+            >
+              <p className="text-sm font-bold text-foreground">{entree.terme}</p>
+              <p className="mt-1 text-sm text-muted">{entree.definition}</p>
+            </div>
+          ))}
+        </div>
+      </section>
     </main>
   );
 }

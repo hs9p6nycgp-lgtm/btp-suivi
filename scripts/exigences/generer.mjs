@@ -10,8 +10,8 @@
 //
 // Usage : node scripts/exigences/generer.mjs
 
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ICI = dirname(fileURLToPath(import.meta.url));
@@ -19,8 +19,35 @@ const RACINE = join(ICI, "..", "..");
 const SOURCE = join(RACINE, "CAHIER_DES_CHARGES.md");
 const SORTIE = join(RACINE, "src", "lib", "exigences.json");
 
+/** Liste les fichiers source (TypeScript / JavaScript) du projet. */
+function fichiersSource(dossier) {
+  const liste = [];
+  for (const entree of readdirSync(dossier)) {
+    const chemin = join(dossier, entree);
+    if (statSync(chemin).isDirectory()) {
+      liste.push(...fichiersSource(chemin));
+    } else if (/\.(ts|tsx|js|jsx|mjs)$/.test(entree)) {
+      liste.push(chemin);
+    }
+  }
+  return liste;
+}
+
+/** Recense les occurrences de chaque code d'exigence dans le code source. */
+function occurrencesDansLeCode() {
+  const occurrences = {};
+  for (const fichier of fichiersSource(join(RACINE, "src"))) {
+    const texte = readFileSync(fichier, "utf8");
+    for (const code of texte.match(/\b[A-Z]{3}-\d{2}\b/g) ?? []) {
+      occurrences[code] = (occurrences[code] ?? 0) + 1;
+    }
+  }
+  return occurrences;
+}
+
 const contenu = readFileSync(SOURCE, "utf8");
 const lignes = contenu.split("\n");
+const occurrences = occurrencesDansLeCode();
 
 const modules = [];
 let moduleCourant = null;
@@ -42,14 +69,19 @@ for (const ligne of lignes) {
       code: ligneTableau[1],
       intitule: ligneTableau[2].trim().replace(/\s+/g, " "),
       priorite: ligneTableau[3],
+      references: occurrences[ligneTableau[1]] ?? 0,
     });
   }
 }
 
 const total = modules.reduce((somme, module) => somme + module.exigences.length, 0);
 const parPriorite = { M: 0, S: 0, C: 0 };
+let reperees = 0;
 for (const module of modules) {
-  for (const exigence of module.exigences) parPriorite[exigence.priorite] += 1;
+  for (const exigence of module.exigences) {
+    parPriorite[exigence.priorite] += 1;
+    if (exigence.references > 0) reperees += 1;
+  }
 }
 
 mkdirSync(dirname(SORTIE), { recursive: true });
@@ -60,6 +92,7 @@ writeFileSync(
       genereDepuis: "CAHIER_DES_CHARGES.md",
       total,
       parPriorite,
+      reperees,
       modules,
     },
     null,
@@ -69,5 +102,6 @@ writeFileSync(
 );
 
 console.log(
-  `✅ ${modules.length} modules, ${total} exigences (M : ${parPriorite.M}, S : ${parPriorite.S}, C : ${parPriorite.C}) → ${SORTIE}`,
+  `✅ ${modules.length} modules, ${total} exigences (M : ${parPriorite.M}, S : ${parPriorite.S}, C : ${parPriorite.C}), ` +
+    `${reperees} repérées dans le code → ${SORTIE}`,
 );

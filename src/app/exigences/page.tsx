@@ -18,6 +18,8 @@ type Exigence = {
   code: string;
   intitule: string;
   priorite: "M" | "S" | "C";
+  /** Nombre d'occurrences du code dans le code source de l'application. */
+  references: number;
 };
 
 type Module = {
@@ -99,6 +101,15 @@ export default function ExigencesPage() {
           <p className="text-xs font-semibold uppercase tracking-wider text-muted">Secondaires (S)</p>
           <p className="mt-1 text-2xl font-bold text-foreground">{donnees.parPriorite.S}</p>
         </Card>
+        <Card padding="sm" className="border-l-4 border-l-success">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+            Repérées dans le code
+          </p>
+          <p className="mt-1 text-2xl font-bold text-foreground">
+            {donnees.reperees}
+            <span className="text-base font-medium text-muted"> / {donnees.total}</span>
+          </p>
+        </Card>
         <Card padding="sm" className="border-l-4 border-l-muted">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted">Complémentaires (C)</p>
           <p className="mt-1 text-2xl font-bold text-foreground">{donnees.parPriorite.C}</p>
@@ -179,6 +190,20 @@ export default function ExigencesPage() {
                       title={LIBELLE_PRIORITE[exigence.priorite]}
                     >
                       {exigence.priorite}
+                    </span>
+                    <span
+                      className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${
+                        exigence.references > 0
+                          ? "bg-success/15 text-success"
+                          : "bg-surface-2 text-muted"
+                      }`}
+                      title={
+                        exigence.references > 0
+                          ? `Code cité ${exigence.references} fois dans l'application`
+                          : "Code non cité dans le code source (l'exigence peut être traitée sans que son code soit écrit)"
+                      }
+                    >
+                      {exigence.references > 0 ? `référencée (${exigence.references})` : "sans référence"}
                     </span>
                   </li>
                 ))}

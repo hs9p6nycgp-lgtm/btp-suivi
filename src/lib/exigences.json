@@ -6,6 +6,7 @@
     "S": 19,
     "C": 9
   },
+  "reperees": 51,
   "modules": [
     {
       "nom": "Authentification et utilisateurs",
@@ -13,27 +14,32 @@
         {
           "code": "AUT-01",
           "intitule": "Connexion par e-mail ou téléphone et mot de passe",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 0
         },
         {
           "code": "AUT-02",
           "intitule": "Mot de passe oublié par e-mail ou SMS",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 0
         },
         {
           "code": "AUT-03",
           "intitule": "Gestion des rôles et des droits par chantier",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 0
         },
         {
           "code": "AUT-04",
           "intitule": "Double authentification pour les administrateurs",
-          "priorite": "S"
+          "priorite": "S",
+          "references": 0
         },
         {
           "code": "AUT-05",
           "intitule": "Journal des connexions et des actions (audit)",
-          "priorite": "S"
+          "priorite": "S",
+          "references": 0
         }
       ]
     },
@@ -43,27 +49,32 @@
         {
           "code": "CHA-01",
           "intitule": "Créer un chantier : nom, type (route / bâtiment), localisation GPS, maître d’ouvrage, montant du marché, dates, intervenants",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 11
         },
         {
           "code": "CHA-02",
           "intitule": "Découper le chantier : sections et PK (route) ou bâtiments, niveaux et lots (bâtiment)",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 8
         },
         {
           "code": "CHA-03",
           "intitule": "Joindre les documents : plans, marché, ordres de service, PV",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 4
         },
         {
           "code": "CHA-04",
           "intitule": "Statuts : en préparation, en cours, suspendu, réceptionné provisoirement, clôturé",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 2
         },
         {
           "code": "CHA-05",
           "intitule": "Dupliquer un chantier comme modèle",
-          "priorite": "C"
+          "priorite": "C",
+          "references": 0
         }
       ]
     },
@@ -73,32 +84,38 @@
         {
           "code": "MET-01",
           "intitule": "Importer un DQE depuis Excel (désignation, unité, quantité, prix unitaire)",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 0
         },
         {
           "code": "MET-02",
           "intitule": "Gérer une bibliothèque de prix unitaires (BPU) par entreprise",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 3
         },
         {
           "code": "MET-03",
           "intitule": "Calculateurs de métré intégrés : volume de couche (L × l × e), terrassements, béton, acier, maçonnerie, surfaces",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 3
         },
         {
           "code": "MET-04",
           "intitule": "Paramètres de calcul : coefficient de foisonnement, de compactage, de pertes, capacité des bennes",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 4
         },
         {
           "code": "MET-05",
           "intitule": "Calcul automatique du nombre de rotations ou de bennes",
-          "priorite": "S"
+          "priorite": "S",
+          "references": 2
         },
         {
           "code": "MET-06",
           "intitule": "Gestion des avenants (quantités et prix modifiés) avec historique",
-          "priorite": "S"
+          "priorite": "S",
+          "references": 2
         }
       ]
     },
@@ -108,32 +125,38 @@
         {
           "code": "JOU-01",
           "intitule": "Saisie journalière : météo, effectifs par corps de métier, engins présents et heures de marche",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 1
         },
         {
           "code": "JOU-02",
           "intitule": "Quantités réalisées par poste du DQE et par section / niveau",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 0
         },
         {
           "code": "JOU-03",
           "intitule": "Incidents : pannes, intempéries, accidents, arrêts, avec durée",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 0
         },
         {
           "code": "JOU-04",
           "intitule": "Photos horodatées et géolocalisées, avec annotation",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 0
         },
         {
           "code": "JOU-05",
           "intitule": "Validation du journal par le conducteur de travaux",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 1
         },
         {
           "code": "JOU-06",
           "intitule": "Saisie vocale des observations",
-          "priorite": "C"
+          "priorite": "C",
+          "references": 2
         }
       ]
     },
@@ -143,22 +166,26 @@
         {
           "code": "APP-01",
           "intitule": "Enregistrer une livraison : matériau, fournisseur, quantité, n° de bon, camion, photo du bon",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 2
         },
         {
           "code": "APP-02",
           "intitule": "Comparer quantités commandées, livrées et mises en œuvre",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 0
         },
         {
           "code": "APP-03",
           "intitule": "Stock théorique par matériau (latérite, ciment, sable, gravier, acier, agglos…)",
-          "priorite": "S"
+          "priorite": "S",
+          "references": 7
         },
         {
           "code": "APP-04",
           "intitule": "Alerte de stock bas et de surconsommation",
-          "priorite": "S"
+          "priorite": "S",
+          "references": 9
         }
       ]
     },
@@ -168,27 +195,32 @@
         {
           "code": "PLA-01",
           "intitule": "Créer le planning : tâches, durées, dépendances, jalons",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 2
         },
         {
           "code": "PLA-02",
           "intitule": "Diagramme de Gantt et diagramme PERT (réseau de tâches) avec calcul automatique du chemin critique, des dates au plus tôt / au plus tard et des marges",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 4
         },
         {
           "code": "PLA-03",
           "intitule": "Avancement physique par tâche, mis à jour à partir des quantités saisies",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 4
         },
         {
           "code": "PLA-04",
           "intitule": "Comparaison planning prévu / réel et calcul des retards",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 2
         },
         {
           "code": "PLA-05",
           "intitule": "Courbe en S (avancement cumulé prévu / réel)",
-          "priorite": "S"
+          "priorite": "S",
+          "references": 5
         }
       ]
     },
@@ -198,27 +230,32 @@
         {
           "code": "COU-01",
           "intitule": "Coût réalisé = quantités réalisées × prix du BPU",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 0
         },
         {
           "code": "COU-02",
           "intitule": "Dépenses réelles : matériaux, main-d’œuvre, location d’engins, sous-traitance, carburant",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 0
         },
         {
           "code": "COU-03",
           "intitule": "Écart budgétaire par poste et global",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 0
         },
         {
           "code": "COU-04",
           "intitule": "Méthode de la valeur acquise (coût prévu, coût réel, valeur acquise)",
-          "priorite": "S"
+          "priorite": "S",
+          "references": 5
         },
         {
           "code": "COU-05",
           "intitule": "Projection du coût final à terminaison",
-          "priorite": "C"
+          "priorite": "C",
+          "references": 2
         }
       ]
     },
@@ -228,22 +265,26 @@
         {
           "code": "QUA-01",
           "intitule": "Plans de contrôle par type d’ouvrage (épaisseur, dévers, compacité, slump, résistance du béton, implantation)",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 4
         },
         {
           "code": "QUA-02",
           "intitule": "Saisie des essais avec valeur mesurée, valeur exigée et tolérance : conformité calculée automatiquement",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 2
         },
         {
           "code": "QUA-03",
           "intitule": "Fiches de non-conformité : description, photos, responsable, action corrective, échéance, clôture",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 3
         },
         {
           "code": "QUA-04",
           "intitule": "Suivi des éprouvettes de béton (7, 14, 28 jours) avec rappels",
-          "priorite": "S"
+          "priorite": "S",
+          "references": 5
         }
       ]
     },
@@ -253,17 +294,20 @@
         {
           "code": "HSE-01",
           "intitule": "Déclaration d’incident ou d’accident avec photos",
-          "priorite": "S"
+          "priorite": "S",
+          "references": 5
         },
         {
           "code": "HSE-02",
           "intitule": "Check-list EPI et sécurité quotidienne",
-          "priorite": "C"
+          "priorite": "C",
+          "references": 4
         },
         {
           "code": "HSE-03",
           "intitule": "Indicateurs : nombre de jours sans accident, taux de fréquence",
-          "priorite": "C"
+          "priorite": "C",
+          "references": 8
         }
       ]
     },
@@ -273,27 +317,32 @@
         {
           "code": "REP-01",
           "intitule": "Tableau de bord par chantier et tableau de bord multi-chantiers",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 2
         },
         {
           "code": "REP-02",
           "intitule": "Rapport journalier, hebdomadaire et mensuel générés automatiquement en PDF",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 4
         },
         {
           "code": "REP-03",
           "intitule": "Export Excel de toutes les données",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 2
         },
         {
           "code": "REP-04",
           "intitule": "Envoi automatique des rapports par e-mail aux destinataires choisis",
-          "priorite": "S"
+          "priorite": "S",
+          "references": 9
         },
         {
           "code": "REP-05",
           "intitule": "Rapport personnalisé avec logo de l’entreprise",
-          "priorite": "S"
+          "priorite": "S",
+          "references": 8
         }
       ]
     },
@@ -303,17 +352,20 @@
         {
           "code": "NOT-01",
           "intitule": "Alertes en temps réel (application, e-mail) sur dépassement de seuil",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 2
         },
         {
           "code": "NOT-02",
           "intitule": "Commentaires et mentions (@nom) sur une tâche, une saisie ou une non-conformité",
-          "priorite": "S"
+          "priorite": "S",
+          "references": 0
         },
         {
           "code": "NOT-03",
           "intitule": "Notifications WhatsApp ou SMS",
-          "priorite": "C"
+          "priorite": "C",
+          "references": 0
         }
       ]
     },
@@ -323,47 +375,56 @@
         {
           "code": "REF-01",
           "intitule": "Base de données centralisée des matériaux (latérite, ciment, acier, sable, gravier, agglos, bitume…) et des matériels (engins, camions-bennes, citerne, compacteur) : unité et prix unitaire en FCFA HT",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 8
         },
         {
           "code": "REF-02",
           "intitule": "Mise à jour directe des prix dans l’application par un administrateur, sans intervention du développeur",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 0
         },
         {
           "code": "REF-03",
           "intitule": "Historique des prix : date de chaque modification, ancien et nouveau prix, auteur et motif",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 14
         },
         {
           "code": "REF-04",
           "intitule": "Source et date de validité de chaque prix (devis fournisseur, facture, mercuriale, observatoire des prix)",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 22
         },
         {
           "code": "REF-05",
           "intitule": "Import et export Excel / CSV pour mettre à jour un grand nombre de prix d’un coup",
-          "priorite": "S"
+          "priorite": "S",
+          "references": 14
         },
         {
           "code": "REF-06",
           "intitule": "Propagation d’une mise à jour aux DQE et BPU qui utilisent le prix, avec validation avant application",
-          "priorite": "S"
+          "priorite": "S",
+          "references": 7
         },
         {
           "code": "REF-07",
           "intitule": "Recherche et filtrage par catégorie, fournisseur, ville (Abidjan, Yamoussoukro, San-Pédro…) et date de mise à jour",
-          "priorite": "S"
+          "priorite": "S",
+          "references": 8
         },
         {
           "code": "REF-08",
           "intitule": "Prix par zone géographique, avec coefficient de transport",
-          "priorite": "C"
+          "priorite": "C",
+          "references": 8
         },
         {
           "code": "REF-09",
           "intitule": "Alerte lorsqu’un prix n’a pas été mis à jour depuis plus de 6 mois",
-          "priorite": "C"
+          "priorite": "C",
+          "references": 12
         }
       ]
     },
@@ -373,42 +434,50 @@
         {
           "code": "FOU-01",
           "intitule": "Fiche fournisseur : raison sociale, type (matériaux, loueur d’engins, transporteur, sous-traitant, laboratoire), adresse, ville, contacts, NIF et RCCM",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 4
         },
         {
           "code": "FOU-02",
           "intitule": "Conditions commerciales : délai de paiement, conditions de livraison, validité des prix, franco de port",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 3
         },
         {
           "code": "FOU-03",
           "intitule": "Catalogue par fournisseur, relié au référentiel de prix (REF-01) avec date du dernier devis",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 7
         },
         {
           "code": "FOU-04",
           "intitule": "Comparaison de plusieurs devis pour un même poste, avec choix motivé et trace de la décision",
-          "priorite": "M"
+          "priorite": "M",
+          "references": 14
         },
         {
           "code": "FOU-05",
           "intitule": "Historique des bons de commande et des livraisons par fournisseur (lien avec APP-01)",
-          "priorite": "S"
+          "priorite": "S",
+          "references": 5
         },
         {
           "code": "FOU-06",
           "intitule": "Évaluation des fournisseurs : respect des délais, conformité des livraisons, écarts de prix, note sur 5",
-          "priorite": "S"
+          "priorite": "S",
+          "references": 9
         },
         {
           "code": "FOU-07",
           "intitule": "Documents administratifs avec date d’échéance (attestation fiscale, assurance, agrément) et alerte 30 jours avant",
-          "priorite": "S"
+          "priorite": "S",
+          "references": 6
         },
         {
           "code": "FOU-08",
           "intitule": "Demande de devis par e-mail ou WhatsApp, et réponse saisie dans l’application",
-          "priorite": "C"
+          "priorite": "C",
+          "references": 6
         }
       ]
     }
