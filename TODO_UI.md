@@ -449,6 +449,16 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
   2. Vérifier qu'aucun autre hook n'est appelé après un retour anticipé dans ce fichier (contrôle effectué sur l'ensemble des pages : **ce fichier est le seul concerné**).
   3. Test de non-régression : la fiche affiche à nouveau marché, avancement, découpage, alertes, NC **et** le bloc « Planning du chantier » (durée projet, tâches, tâches en retard, charge par équipe).
   4. Redéployer le site en ligne après correction.
+- **Correction apportée (Session 3, 20/10 — commit `f14537f`)** : le bloc
+  `synthesePlanning` a été remonté au-dessus du `if (!chantier || loading)` ;
+  la logique de calcul est inchangée. Contrôles : TypeScript propre, **605 tests
+  verts**, test de bout en bout sur la vraie base **28/28**, et un scan de tous
+  les fichiers `.tsx` du projet qui confirme que **ce fichier était le seul**
+  concerné (les 3 autres alertes de mon scan se sont révélées être des `return`
+  placés à l'intérieur de callbacks — sans effet sur le nombre de hooks).
+  Le correctif est **déployé en ligne sur les deux sites Vercel**.
+  Reste à confirmer dans le navigateur : l'affichage complet de la fiche (marché,
+  avancement, découpage, alertes, NC et le bloc « Planning du chantier »).
 - **Priorité** : **haute — immédiat** (bloquant terrain).
 
 ---
