@@ -207,29 +207,9 @@ export default function ChantierDetailPage() {
     load();
   }, [chantierId, router]);
 
-  if (!chantier || loading) {
-    return (
-      <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
-        <div className="flex h-64 items-center justify-center">
-          <div className="h-9 w-9 animate-spin rounded-full border-[3px] border-border border-t-action" />
-        </div>
-      </main>
-    );
-  }
-
-  const s = STATUT_LABELS[statut] || STATUT_LABELS.en_preparation;
-  const jours = joursRestants(chantier.date_fin_prevue);
-  const echeance = etatEcheance(chantier.date_fin_prevue, chantier.statut);
-  const couleurEcheance =
-    echeance === "depasse" ? "rose" : echeance === "proche" ? "amber" : echeance === "normal" ? "emerald" : "slate";
-  const lineaire = sections.reduce((total, section) => total + (longueurSection(section.pk_debut, section.pk_fin) ?? 0), 0);
-  const avancementGlobal = avancementMoyenSections(sections);
-  const description = [...descriptionOuvrage(chantier), ...surfacesOuvrage(chantier)];
-  const niveaux = chantier.type === "batiment" ? niveauxDepuisChantier(chantier) : [];
-  const avancementNiveaux =
-    chantier.type === "batiment" ? avancementParNiveau(sections, niveaux) : [];
-
-  // Synthèse du planning : durée projet, chaîne critique, retards, charge
+  // Synthèse du planning : durée projet, chaîne critique, retards, charge.
+  // Calculé AVANT tout retour anticipé : React exige le même nombre de hooks
+  // à chaque rendu (sinon : « Rendered more hooks than during the previous render »).
   const synthesePlanning = useMemo(() => {
     if (taches.length === 0) return null;
     const tachesPlanning = taches.map((t) => ({
@@ -254,6 +234,28 @@ export default function ChantierDetailPage() {
       nbTaches: tachesPlanning.length,
     };
   }, [taches, dependances]);
+
+  if (!chantier || loading) {
+    return (
+      <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
+        <div className="flex h-64 items-center justify-center">
+          <div className="h-9 w-9 animate-spin rounded-full border-[3px] border-border border-t-action" />
+        </div>
+      </main>
+    );
+  }
+
+  const s = STATUT_LABELS[statut] || STATUT_LABELS.en_preparation;
+  const jours = joursRestants(chantier.date_fin_prevue);
+  const echeance = etatEcheance(chantier.date_fin_prevue, chantier.statut);
+  const couleurEcheance =
+    echeance === "depasse" ? "rose" : echeance === "proche" ? "amber" : echeance === "normal" ? "emerald" : "slate";
+  const lineaire = sections.reduce((total, section) => total + (longueurSection(section.pk_debut, section.pk_fin) ?? 0), 0);
+  const avancementGlobal = avancementMoyenSections(sections);
+  const description = [...descriptionOuvrage(chantier), ...surfacesOuvrage(chantier)];
+  const niveaux = chantier.type === "batiment" ? niveauxDepuisChantier(chantier) : [];
+  const avancementNiveaux =
+    chantier.type === "batiment" ? avancementParNiveau(sections, niveaux) : [];
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
