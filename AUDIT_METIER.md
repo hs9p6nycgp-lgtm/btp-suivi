@@ -750,6 +750,34 @@ Les migrations `0020` à `0027` sont appliquées. **Deux collisions de numérota
 
 ---
 
+# Partie 31 — La page « Couverture des exigences » : ce qu'elle montre, ce qu'elle cache
+
+Nouvelle page **/exigences** (« Couverture des exigences — ce que le cahier des charges demande, et où c'est traité dans l'application ») : les **13 modules**, les **68 exigences** (M : 40, S : 19, C : 9) et les **7 règles de gestion**, chacune avec ses références dans le code et, pour les règles, le(s) fichier(s) qui l'appliquent et le fait qu'elle soit couverte par un test.
+
+**Le point d'attention que j'ai trouvé en croisant cette page avec mes tests** : le générateur (`scripts/exigences/generer.mjs`) compte les occurrences du **code d'exigence** dans les fichiers source. Résultat : **17 exigences sont affichées sans référence** — dont **12 sont en réalité pleinement traitées** :
+
+| Exigence | Où c'est traité (à citer dans le code) | Vérifié par moi |
+|---|---|---|
+| MET-01 | `src/components/DqeImport.tsx` | import DQE de 3 postes ✓ |
+| JOU-02 | `src/lib/journal/quantites.ts` + fiche journal | « Réalisé 2 000 m² sur 8 400 m² » ✓ |
+| JOU-03 | fiche journal (section Incidents) | ✓ |
+| JOU-04 | fiche journal (photos + GPS) | ✓ |
+| APP-02 | `src/app/chantiers/[id]/livraisons/page.tsx` | tableau comparatif commandé/livré/mis en œuvre ✓ |
+| COU-01 | `src/lib/calculs/metre.ts` (valorisation) | 934 000 FCFA ✓ |
+| COU-02 | `src/app/chantiers/[id]/couts/page.tsx` | 170 000 FCFA ✓ |
+| COU-03 | idem | marge 764 000 FCFA ✓ |
+| CHA-05 | `src/app/chantiers/[id]/page.tsx` (« Créer un chantier similaire ») | ✓ |
+| REF-02 | `src/app/bpu/page.tsx` (ajout / modification de prix) | ✓ |
+| AUT-01 / AUT-02 | `src/app/login/page.tsx` | ✓ |
+
+Les 5 autres sont **réellement absentes ou partielles** : AUT-03 (rôles et droits par chantier — aujourd'hui un propriétaire par compte), AUT-04 (double authentification, priorité S), AUT-05 (journal des connexions et des actions, priorité S), NOT-02 (commentaires et mentions @nom, priorité S), NOT-03 (notifications WhatsApp ou SMS — il existe l'envoi d'un rapport par e-mail, pas de notification instantanée).
+
+**Le risque** : la page ne distingue pas « traité mais code non cité » de « non traité » — pour une soutenance, elle affiche des fonctions comme absentes alors qu'elles existent, et inversement elle ne signale pas ce qui manque vraiment (authentification à deux facteurs, journal d'audit, commentaires, notifications SMS).
+
+**Correctif demandé** : (1) citer le code d'exigence au point d'implémentation pour les 12 exigences ci-dessus (une ligne de commentaire suffit) ; (2) ajouter un **état explicite** dans les données (traité / partiel / à traiter) pour que la page dise la vérité ; (3) régénérer le fichier (`node scripts/exigences/generer.mjs`) après ces ajouts. Même remarque pour les règles : **RG-01, RG-03, RG-06 et RG-07 sont marquées « non testées »** alors que le calcul des bennes, l'arrondi FCFA sans décimale et les seuils paramétrables sont implémentés et testés — il suffit de citer la règle dans les fichiers de test concernés.
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 

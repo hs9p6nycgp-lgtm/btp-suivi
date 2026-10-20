@@ -11,9 +11,10 @@
     {
       "code": "RG-01",
       "texte": "une quantité réalisée ne peut être saisie que sur un poste",
-      "references": 1,
+      "references": 2,
       "fichiers": [
-        "src/app/chantiers/[id]/journaux/[journalId]/page.tsx"
+        "src/app/chantiers/[id]/journaux/[journalId]/page.tsx",
+        "src/app/exigences/page.tsx"
       ],
       "testee": false
     },
