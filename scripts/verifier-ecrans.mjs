@@ -16,6 +16,7 @@
 //   BTP_SITE        URL de l'application (défaut : http://localhost:3000)
 //   BTP_COMPTE_EMAIL / BTP_COMPTE_MDP   identifiants du compte de test
 //   BTP_CHANTIER_ID  chantier à utiliser pour les écrans qui en dépendent
+//   BTP_DEVIS_ID     devis enregistré à contrôler
 //
 // Le script ne modifie aucune donnée : il se connecte et parcourt les écrans.
 // Code de sortie : 0 = tous les écrans sont bons, 1 = au moins un écran en défaut.
@@ -27,6 +28,7 @@ const SITE = process.env.BTP_SITE ?? "http://localhost:3000";
 const EMAIL = process.env.BTP_COMPTE_EMAIL ?? "test-pc-20261018@example.com";
 const MDP = process.env.BTP_COMPTE_MDP ?? "TestPc2026_1018";
 const CHANTIER = process.env.BTP_CHANTIER_ID ?? "";
+const DEVIS = process.env.BTP_DEVIS_ID ?? "";
 const PORT = process.env.BTP_CDP_PORT ?? "9333";
 const DELAI = Number(process.env.BTP_DELAI ?? "3500");
 
@@ -48,6 +50,7 @@ const ECRANS = [
   ["Carnet de chantier", "/chantiers/{CHANTIER}/carnet", "CARNET"],
   ["Modélisation 3D", "/chantiers/{CHANTIER}/modelisation3d", "Modélisation"],
   ["Calcul de devis", "/calculateurs/devis", "Calcul de devis"],
+  ...(DEVIS ? [["Devis enregistré", "/calculateurs/devis/{DEVIS}", "Devis"]] : []),
   ["Calcul de murs", "/calculateurs/mur", "Calcul de murs"],
   ["Base de prix", "/bpu", "poste"],
   ["Référentiel de prix", "/referentiel", "Référentiel"],
@@ -192,7 +195,7 @@ try {
       continue;
     }
     erreursConsole.length = 0;
-    const url = `${SITE}${chemin.replace("{CHANTIER}", CHANTIER)}`;
+    const url = `${SITE}${chemin.replace("{CHANTIER}", CHANTIER).replace("{DEVIS}", DEVIS)}`;
     await naviguer(url);
     await pause(DELAI);
     let etat;

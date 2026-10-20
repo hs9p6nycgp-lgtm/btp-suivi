@@ -864,6 +864,32 @@ Le script ne modifie aucune donnée ; il se connecte, parcourt et **sort en code
 
 ---
 
+# Partie 35 — Les migrations en attente : ce qu'elles bloquent exactement
+
+Le contrôle de santé du projet (`node scripts/verifier-sante.mjs`, 11 contrôles) donne l'état du 20/10 : **9 contrôles sur 11 sont bons** (sécurité, isolation entre comptes, sites en ligne, icônes PWA, même build sur les deux sites). Les deux contrôles en échec sont liés à la même cause : **des migrations pas encore appliquées**.
+
+Le contrôle des requêtes (`node scripts/verifier-requetes.mjs`, 143 requêtes analysées) en liste **4 requêtes invalides**, toutes dues aux migrations en attente :
+
+| Requête | Conséquence visible pour l'utilisateur |
+|---|---|
+| `devis.select(…, remise_pct, tva_pct, conditions_paiement)` | **Les devis enregistrés disparaissent de l'écran** : la page bascule sur « devis non disponibles » (vérifié : le devis DEV-2026-019 n'est plus listé) → impossible de **reprendre un devis enregistré**. |
+| `journal_versions.select("*")` | L'historique des versions de journal (corrections tracées, RG-02) n'est pas enregistré. |
+| `situations_paiement.select("*")` (×2) | Les **situations de paiement ne s'enregistrent pas** (seul l'aperçu de calcul s'affiche). |
+
+**Le correctif est déjà prêt** : la Session 3 a préparé un script unique, idempotent et sans risque pour les trois migrations manquantes :
+
+```
+supabase/APPLIQUER_0029_0031.sql   →  0029 situations_paiement
+                                       0030 journal_versions
+                                       0031 devis.remise_pct / tva_pct / conditions_paiement
+```
+
+Il suffit de le coller une fois dans **Supabase → SQL Editor → New query → Run** (et, si l'autre lot n'a pas été passé, `supabase/APPLIQUER_0022_0028.sql`). Les deux fichiers sont réexécutables sans risque : ils ne suppriment aucune donnée.
+
+→ Tant que ces migrations ne sont pas appliquées, **trois fonctions livrées ne sont pas utilisables** (reprise d'un devis, traçabilité des corrections de journal, décomptes de paiement) et l'écran « devis enregistrés » paraît vide. Après application, `node scripts/verifier-sante.mjs` doit afficher **11 contrôles sur 11**.
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
