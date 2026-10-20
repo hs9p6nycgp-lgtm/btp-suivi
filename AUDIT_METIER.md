@@ -800,6 +800,20 @@ Le `useMemo` de la nouvelle synthèse du planning est appelé **après** le `ret
 
 **Portée** : c'est **l'écran principal de l'application** (la fiche chantier) ; il est cassé pour tout le monde, chef de chantier compris. Le commit fautif est `1890e5d` (« synthèse du planning sur la fiche ») — **il est poussé sur `origin/main`**, donc **le site en ligne est également touché** (déploiement automatique à la push).
 
+**Contrôle sur le site en ligne (20/10, `btp-suivi-7w2i.vercel.app`, compte de test)** :
+
+| Écran | État en ligne |
+|---|---|
+| Tableau de bord | ✅ fonctionne (0 erreur) |
+| Liste des chantiers | ✅ fonctionne |
+| **Fiche chantier** | ❌ **casse** — « **Minified React error #310** » (= « Rendered more hooks than during the previous render »), page réduite à la coquille (648 caractères) |
+| Rapports | ✅ fonctionne |
+| Qualité | ✅ fonctionne |
+| Planning | ✅ fonctionne |
+| Journal | ✅ fonctionne |
+
+→ **Une seule page est hors service en production** : la fiche chantier (le point d'entrée de tout chantier). Les autres écrans restent utilisables.
+
 **Correctif (3 lignes)** : remonter le bloc `useMemo` (`synthesePlanning`) **au-dessus** du `if (!chantier || loading)` — il ne dépend que de `taches` et `dependances` (deux `useState`), donc rien n'empêche de le déplacer. Vérifier ensuite qu'aucun autre hook n'est appelé après un retour anticipé dans ce fichier (j'ai contrôlé les autres pages : **c'est le seul fichier concerné**).
 
 *Contrôle de non-régression à faire après correction* : la fiche chantier doit afficher à nouveau la marché, l'avancement, le découpage, les alertes, la NC, et le nouveau bloc « Planning du chantier » (durée projet, tâches, tâches en retard, charge par équipe).
