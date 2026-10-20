@@ -63,7 +63,8 @@ export type DonneesRapportEmail = {
   marge: number;
   nbJournaux: number;
   nonConformitesOuvertes: number;
-  tauxConformite: number;
+  /** null quand aucun essai n'a ete realise : le taux n'est pas applicable. */
+  tauxConformite: number | null;
   delai: string;
 };
 
@@ -78,6 +79,11 @@ function nombreFr(valeur: number): string {
 
 function pourcent(valeur: number): string {
   return `${(Math.round(valeur * 10) / 10).toLocaleString("fr-FR")} %`;
+}
+
+/** Taux de conformite : « non applicable » quand aucun essai n'a ete fait. */
+export function libelleTauxConformite(valeur: number | null): string {
+  return valeur === null ? "non applicable (aucun essai réalisé)" : pourcent(valeur);
 }
 
 /**
@@ -97,7 +103,7 @@ export function corpsRapport(donnees: DonneesRapportEmail): string {
     "",
     `Journaux saisis : ${donnees.nbJournaux}`,
     `Non-conformités ouvertes : ${donnees.nonConformitesOuvertes}`,
-    `Taux de conformité des essais : ${pourcent(donnees.tauxConformite)}`,
+    `Taux de conformité des essais : ${libelleTauxConformite(donnees.tauxConformite)}`,
     `Situation par rapport aux délais : ${donnees.delai}`,
     "",
     "Le détail complet est joint au présent message.",
@@ -157,7 +163,7 @@ export function htmlRapport(
     ["Marge", `${nombreFr(donnees.marge)} FCFA`],
     ["Journaux", String(donnees.nbJournaux)],
     ["Non-conformités ouvertes", String(donnees.nonConformitesOuvertes)],
-    ["Taux de conformité", pourcent(donnees.tauxConformite)],
+    ["Taux de conformité", libelleTauxConformite(donnees.tauxConformite)],
   ]
     .map(
       ([libelle, valeur]) =>

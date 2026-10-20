@@ -151,7 +151,8 @@ export default function RapportsPage() {
     );
 
     const nbConformes = essais.filter((e: any) => e.conforme).length;
-    const tauxConformite = essais.length > 0 ? Math.round((nbConformes / essais.length) * 100) : 100;
+    // Aucun essai réalisé : le taux n'est pas « 100 % » mais non applicable.
+    const tauxConformite = essais.length > 0 ? Math.round((nbConformes / essais.length) * 100) : null;
     const avancement = totaux.montantMarche > 0 ? (totaux.montantRealise / totaux.montantMarche) * 100 : 0;
     const marge = totaux.montantRealise - totalDepenseReelle;
 
@@ -266,7 +267,7 @@ export default function RapportsPage() {
       marge: Number(reportData.marge) || 0,
       nbJournaux: Number(reportData.nbJournaux) || 0,
       nonConformitesOuvertes: Number(reportData.nonConformites?.ouvertes) || 0,
-      tauxConformite: Number(reportData.tauxConformite) || 0,
+      tauxConformite: reportData.tauxConformite === null ? null : Number(reportData.tauxConformite),
       delai: reportData.delai?.libelle ?? "—",
     };
   }
@@ -340,7 +341,7 @@ export default function RapportsPage() {
       { Indicateur: "Incidents", Valeur: reportData.journaux.nombreIncidents },
       { Indicateur: "Photos", Valeur: reportData.journaux.nombrePhotos },
       { Indicateur: "Non-conformités ouvertes", Valeur: reportData.nonConformites.ouvertes },
-      { Indicateur: "Taux de conformité des essais", Valeur: `${reportData.tauxConformite} %` },
+      { Indicateur: "Taux de conformité des essais", Valeur: reportData.tauxConformite === null ? "Non applicable" : `${reportData.tauxConformite} %` },
       { Indicateur: "Délai", Valeur: reportData.delai.libelle },
     ];
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(synthese), "Synthèse");
@@ -550,7 +551,9 @@ export default function RapportsPage() {
               </div>
               <div className="rounded-xl border border-border/70 bg-surface-2 p-3 text-center">
                 <p className="text-xs text-muted">Conformité des essais</p>
-                <p className="text-lg font-bold">{reportData.tauxConformite} %</p>
+                <p className="text-lg font-bold">
+                  {reportData.tauxConformite === null ? "—" : `${reportData.tauxConformite} %`}
+                </p>
               </div>
             </div>
             <p className="mt-3 text-xs text-muted">

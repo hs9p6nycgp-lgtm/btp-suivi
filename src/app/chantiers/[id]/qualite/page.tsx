@@ -361,7 +361,8 @@ export default function QualitePage() {
   const nbNC = nonConformites.filter((nc) => nc.statut !== "cloturee").length;
   const nbEssais = essais.length;
   const nbConformes = essais.filter((e) => e.conforme).length;
-  const tauxConformite = nbEssais > 0 ? Math.round((nbConformes / nbEssais) * 100) : 100;
+  // Aucun essai réalisé : le taux n'est pas « 100 % » mais non applicable.
+  const tauxConformite = nbEssais > 0 ? Math.round((nbConformes / nbEssais) * 100) : null;
 
   // Suivi des points de contrôle : chaque paramètre du plan et son état
   const suiviControles = useMemo(
@@ -415,7 +416,8 @@ export default function QualitePage() {
         />
         <StatCard
           title={langue === "fr" ? "Taux de conformité" : "Compliance rate"}
-          value={`${tauxConformite}%`}
+          value={tauxConformite === null ? "—" : `${tauxConformite}%`}
+          subtitle={tauxConformite === null ? (langue === "fr" ? "aucun essai réalisé" : "no test recorded") : undefined}
           icon={<BadgeCheck className="h-5 w-5" />}
           color="emerald"
         />
@@ -439,7 +441,19 @@ export default function QualitePage() {
           <h2 className="mb-4 text-lg font-bold text-foreground">
             {langue === "fr" ? "Taux de conformité" : "Compliance rate"}
           </h2>
-          <ProgressBar value={tauxConformite} color="success" label={langue === "fr" ? "Conformité des essais" : "Test compliance"} />
+          {tauxConformite === null ? (
+            <p className="rounded-xl border border-dashed border-border bg-surface-2/60 p-4 text-sm text-muted">
+              {langue === "fr"
+                ? "Non applicable : aucun essai de contrôle n'a encore été enregistré sur ce chantier."
+                : "Not applicable: no control test has been recorded on this site yet."}
+            </p>
+          ) : (
+            <ProgressBar
+              value={tauxConformite}
+              color="success"
+              label={langue === "fr" ? "Conformité des essais" : "Test compliance"}
+            />
+          )}
         </Card>
       </section>
 

@@ -132,7 +132,12 @@ export async function genererPdfRapport(
     ["Marge", fcfa(donnees.marge)],
     ["Journaux saisis", String(donnees.nbJournaux)],
     ["Non-conformités ouvertes", String(donnees.nonConformitesOuvertes)],
-    ["Taux de conformité des essais", textePdf(`${(Math.round(donnees.tauxConformite * 10) / 10).toLocaleString("fr-FR")} %`)],
+    [
+      "Taux de conformité des essais",
+      donnees.tauxConformite === null
+        ? "non applicable"
+        : textePdf(`${(Math.round(donnees.tauxConformite * 10) / 10).toLocaleString("fr-FR")} %`),
+    ],
   ];
   const largeurCarte = largeurUtile / 4 - 3;
   cartes.forEach(([libelle, valeur], i) => {

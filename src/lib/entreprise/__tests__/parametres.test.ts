@@ -6,6 +6,7 @@ import {
   erreurDestinataires,
   estEmailValide,
   htmlRapport,
+  libelleTauxConformite,
   lienMailto,
   nomFichierRapport,
   objetRapport,
@@ -29,6 +30,17 @@ const donnees: DonneesRapportEmail = {
 };
 
 describe("entreprise et envoi des rapports (REP-04, REP-05)", () => {
+  describe("taux de conformité", () => {
+    it("affiche le taux quand des essais ont été réalisés", () => {
+      assert.strictEqual(libelleTauxConformite(96.4), "96,4 %");
+    });
+
+    it("indique « non applicable » quand aucun essai n'a été réalisé", () => {
+      assert.strictEqual(libelleTauxConformite(null), "non applicable (aucun essai réalisé)");
+      const corps = corpsRapport({ ...donnees, tauxConformite: null });
+      assert.ok(corps.includes("non applicable"));
+    });
+  });
   describe("destinataires", () => {
     it("valide une adresse", () => {
       assert.strictEqual(estEmailValide("responsable@entreprise.ci"), true);
