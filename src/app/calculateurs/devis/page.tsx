@@ -16,14 +16,8 @@ import {
   validerDevis,
   type DevisEnregistre,
 } from "@/lib/devis/enregistrement";
-import {
-  appliquerParametres,
-  ecrireParametres,
-  lireParametres,
-  normaliserParametres,
-  PARAMETRES_DEFAUT,
-  type ParametresCalcul,
-} from "@/lib/devis/parametres";
+import { appliquerParametres, ecrireParametres, lireParametres, normaliserParametres, PARAMETRES_DEFAUT, type ParametresCalcul } from "@/lib/devis/parametres";
+import { etatValiditePrix } from "@/lib/referentiel/validite";
 import {
   dureePlanningGenere,
   liensChaine,
@@ -46,7 +40,16 @@ const Modele3DGenerique = dynamic(() => import("@/components/visualisation/Model
   loading: () => <Skeleton variant="rect" height="26rem" />,
 });
 
-type Bpu = { id: string; designation: string; unite: string; prix_unitaire: number };
+type Bpu = {
+  id: string;
+  designation: string;
+  unite: string;
+  prix_unitaire: number;
+  source?: string | null;
+  date_source?: string | null;
+  date_validite?: string | null;
+  statut?: string | null;
+};
 
 // Les 100 types de chantier (CHA-01), groupés par catégorie pour le sélecteur.
 const GROUPES_TYPES = groupesTypesDetailles();
@@ -139,7 +142,7 @@ export default function DevisAssistantPage() {
       const supabase = createClient();
       const { data } = await supabase
         .from("bpu_postes")
-        .select("id,designation,unite,prix_unitaire")
+        .select("id,designation,unite,prix_unitaire,source,date_source,date_validite,statut")
         .order("created_at", { ascending: false });
       setBpu((data ?? []) as Bpu[]);
     }
@@ -374,6 +377,11 @@ export default function DevisAssistantPage() {
   const modele3d = useMemo(() => modele3dDevis(template, inputsDiffere), [template, inputsDiffere]);
 
   const fcfa = (montant: number) => montant.toLocaleString(langue === "fr" ? "fr-FR" : "en-US");
+  const formaterDate = (valeur: string | null | undefined) => {
+    if (!valeur) return "";
+    const d = new Date(`${String(valeur).slice(0, 10)}T00:00:00`);
+    return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString("fr-FR");
+  };
 
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
@@ -538,6 +546,7 @@ export default function DevisAssistantPage() {
                 const q = line.quantite(inputs);
                 const options = matchOptions(line.keywords);
                 const chosen = selectedPrice(line.code);
+                const validiteChoisi = etatValiditePrix(chosen ?? {});
                 return (
                   <div key={line.code} className="rounded-xl border border-border p-4">
                     <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
@@ -563,11 +572,25 @@ export default function DevisAssistantPage() {
                         {options.map((b) => (
                           <option key={b.id} value={b.id}>
                             {b.designation} - {fcfa(Number(b.prix_unitaire))} FCFA/{b.unite}
+                            {b.statut === "a_verifier" ? " ⚠" : ""}
                           </option>
                         ))}
                       </select>
                     ) : (
                       <p className="text-xs text-muted">Pas de matériau associé (quantité uniquement).</p>
+                    )}
+                    {chosen && (
+                      <p
+                        className={`mt-1 text-xs ${
+                          validiteChoisi.etat === "sourcé" ? "text-muted" : "text-warning"
+                        }`}
+                      >
+                        {validiteChoisi.libelle}
+                        {validiteChoisi.source ? ` — Source : ${validiteChoisi.source}` : ""}
+                        {validiteChoisi.dateReference
+                          ? ` (${formaterDate(validiteChoisi.dateReference)})`
+                          : ""}
+                      </p>
                     )}
                     {options.length === 0 && line.keywords.length > 0 && (
                       <p className="mt-1 text-xs text-warning">
