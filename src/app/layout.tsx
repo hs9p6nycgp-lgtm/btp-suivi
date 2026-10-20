@@ -21,6 +21,14 @@ export const metadata: Metadata = {
     "Application de gestion, de suivi et de reporting des chantiers routiers et de bâtiment en Côte d'Ivoire : devis, BPU, journal de chantier, photos, qualité, planning et coûts.",
   applicationName: "BTP Suivi Pro",
   manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/logo.svg", type: "image/svg+xml" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
   keywords: [
     "BTP",
     "suivi de chantier",
