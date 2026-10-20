@@ -843,6 +843,25 @@ Pendant ce contrôle, j'ai rencontré un second symptôme, plus trompeur : la pa
 
 ---
 
+# Partie 34 — Un contrôle automatique des écrans, et ce qu'il révèle
+
+## 36. `scripts/verifier-ecrans.mjs` — contrôle fonctionnel de tous les écrans
+
+Pour compléter `verifier-sante.mjs` (base, sécurité, isolation, sites), j'ai ajouté au dépôt un **nouveau script de contrôle** qui parcourt l'application écran par écran et vérifie trois choses par page : pas d'écran d'erreur (« Une erreur est survenue »), le libellé attendu présent, et **aucune erreur JavaScript dans la console**.
+
+```
+node scripts/verifier-ecrans.mjs
+BTP_SITE=https://… BTP_COMPTE_EMAIL=… BTP_COMPTE_MDP=… BTP_CHANTIER_ID=<uuid> node scripts/verifier-ecrans.mjs
+```
+
+Le script ne modifie aucune donnée ; il se connecte, parcourt et **sort en code 1 si un écran est en défaut** — il peut donc servir de contrôle avant un déploiement.
+
+**Résultat du 20/10 (28 écrans, compte de test, chantier de démonstration)** : 25 écrans sans défaut ; **3 en défaut — la fiche chantier, la modélisation 3D et le calcul de devis** — les trois à cause du **même défaut** : sans WebGL, la vue 3D lève une exception et **la page entière est remplacée par l'écran d'erreur**. Le script le reproduit à volonté (il lance Chrome sans accélération graphique par défaut, comme un téléphone d'entrée de gamme) et propose `BTP_WEBGL=1` pour vérifier le reste de l'application avec le rendu 3D disponible.
+
+→ Cet outil rend le défaut **T-LOG-51** immédiatement visible et vérifiable à chaque livraison, et il évite qu'une régression de ce type n'atteigne le terrain sans être vue.
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
