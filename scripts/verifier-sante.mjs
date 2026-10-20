@@ -207,6 +207,43 @@ try {
   ajouter("Icones d'installation PWA (PNG 192/512)", false, "manifeste illisible");
 }
 
+// --- 4d) Les fichiers SQL de migration sont-ils syntaxiquement corrects ? ----
+// Un controle sans dependance : on repere les fautes les plus courantes qui
+// feraient echouer un collage dans le SQL Editor de Supabase.
+
+const fautesConnues = [
+  { motif: /add\s+column\s+if\s+not\s+null\b/i, quoi: "« add column if not null » (il faut « if not exists »)" },
+  { motif: /\bif\s+not\s+exist\s+/i, quoi: "« if not exist » (il manque le s de « exists »)" },
+  { motif: /\bcreate\s+table\s+if\s+not\s+exist\s+/i, quoi: "« create table if not exist » (il manque le s de « exists »)" },
+  { motif: /\bdrop\s+policy\s+if\s+exist\s+/i, quoi: "« drop policy if exist » (il manque le s de « exists »)" },
+  { motif: /\benable\s+row\s+level\s+securit\b/i, quoi: "« enable row level securit » (il manque le y de « security »)" },
+];
+const dossiersSql = ["supabase/migrations", "supabase"];
+const fichiersSql = [];
+for (const d of dossiersSql) {
+  if (!fs.existsSync(d)) continue;
+  for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+    if (e.isFile() && e.name.endsWith(".sql") && !fichiersSql.includes(path.join(d, e.name))) {
+      fichiersSql.push(path.join(d, e.name));
+    }
+  }
+}
+const fautes = [];
+for (const f of fichiersSql) {
+  fs.readFileSync(f, "utf8")
+    .split("\n")
+    .forEach((ligne, i) => {
+      for (const f2 of fautesConnues) {
+        if (f2.motif.test(ligne)) fautes.push(`${f}:${i + 1} — ${f2.quoi}`);
+      }
+    });
+}
+ajouter(
+  "Fichiers SQL de migration sans faute reperee",
+  fautes.length === 0,
+  fautes.length === 0 ? `${fichiersSql.length} fichiers verifies` : fautes.slice(0, 3).join(" ; "),
+);
+
 // --- Bilan --------------------------------------------------------------------
 
 const echecs = resultats.filter((r) => !r.ok);
