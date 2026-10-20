@@ -12,6 +12,7 @@ import {
   FileText,
   Film,
   LifeBuoy,
+  ListChecks,
   PenLine,
   Printer,
   Ruler,
@@ -79,6 +80,7 @@ const MODULES = [
   { href: "/alertes", icon: <Bell className="h-5 w-5" />, nom: "Centre d'alertes", desc: "Tout ce qui demande votre attention" },
   { href: "/compte", icon: <User className="h-5 w-5" />, nom: "Mon compte", desc: "Vos coordonnées et votre profil" },
   { href: "/demo", icon: <Film className="h-5 w-5" />, nom: "Démo 30 s", desc: "Trois vidéos pour présenter l'application" },
+  { href: "/exigences", icon: <ListChecks className="h-5 w-5" />, nom: "Exigences", desc: "La couverture du cahier des charges" },
 ];
 
 export default function AidePage() {

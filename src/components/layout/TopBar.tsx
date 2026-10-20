@@ -33,6 +33,7 @@ const TITRES_PAR_ROUTE: Array<{ motif: RegExp; cle?: string; fr: string; en?: st
   { motif: /^\/alertes/, cle: "nav.alertes", fr: "Alertes" },
   { motif: /^\/compte/, cle: "nav.compte", fr: "Mon compte" },
   { motif: /^\/demo/, cle: "nav.demo", fr: "Démo" },
+  { motif: /^\/exigences/, cle: "nav.exigences", fr: "Exigences" },
   { motif: /^\/referentiel/, cle: "nav.referentiel", fr: "Référentiel" },
   { motif: /^\/(login|mot-de-passe-oublie|reinitialiser-mot-de-passe)/, cle: "auth.connexion", fr: "Connexion" },
   { motif: /^\/offline/, fr: "Hors connexion", en: "Offline" },
