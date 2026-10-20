@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { detailAlerte, libelleTypeAlerte, type LangueAlerte } from "@/lib/alertes";
 import { cleMateriau } from "@/lib/stock/materiaux";
 import { alertesStock, type EntreeStock, type SeuilStock } from "@/lib/stock/stock";
+import { avancementMoyenSections } from "@/lib/chantiers/complet";
 import {
   construireNotifications,
   construireHistorique,
@@ -34,6 +35,14 @@ type SeuilRow = {
   seuil: number;
 };
 
+/** Section d'un chantier : sert au calcul de l'avancement global. */
+type SectionRow = {
+  chantier_id: string;
+  avancement_pct?: number | null;
+  pk_debut?: number | null;
+  pk_fin?: number | null;
+};
+
 function formaterNombre(valeur: number | string): string {
   const nombre = Number(valeur);
   if (!Number.isFinite(nombre)) return String(valeur);
@@ -51,7 +60,7 @@ export async function chargerNotifications(): Promise<Notification[]> {
     String(maintenant.getDate()).padStart(2, "0"),
   ].join("-");
 
-  const [alertes, nonConformites, chantiers, livraisons, seuils] = await Promise.all([
+  const [alertes, nonConformites, chantiers, livraisons, seuils, sections] = await Promise.all([
     supabase
       .from("alertes")
       .select("id, chantier_id, type, valeur, seuil, statut, date_alerte")
@@ -60,16 +69,34 @@ export async function chargerNotifications(): Promise<Notification[]> {
       .from("non_conformites")
       .select("id, chantier_id, description, gravite, statut, echeance, created_at")
       .in("statut", ["ouverte", "en_cours"]),
-    supabase
-      .from("chantiers")
-      .select("id, nom, date_fin_prevue, avancement_pct, statut"),
+    // La table « chantiers » ne porte pas de colonne d'avancement : l'avancement
+    // global vit dans les sections (c'est la source de vérité utilisée partout).
+    supabase.from("chantiers").select("id, nom, date_fin_prevue, statut"),
     supabase
       .from("livraisons")
       .select("chantier_id, materiau, quantite, quantite_mise_en_oeuvre"),
     supabase
       .from("seuils_stock_chantier")
       .select("chantier_id, materiau, seuil"),
+    supabase.from("sections_chantier").select("chantier_id, avancement_pct, pk_debut, pk_fin"),
   ]);
+
+  // Avancement global par chantier, recalculé comme sur la fiche chantier.
+  const avancementParChantier = new Map<string, number>();
+  const sectionsParChantier = new Map<string, SectionRow[]>();
+  for (const s of (sections.data ?? []) as SectionRow[]) {
+    const liste = sectionsParChantier.get(s.chantier_id) ?? [];
+    liste.push(s);
+    sectionsParChantier.set(s.chantier_id, liste);
+  }
+  for (const [chantierId, liste] of sectionsParChantier) {
+    const avancement = avancementMoyenSections(liste);
+    if (avancement !== null) avancementParChantier.set(chantierId, avancement);
+  }
+  const chantiersAvecAvancement = ((chantiers.data ?? []) as ChantierRow[]).map((c) => ({
+    ...c,
+    avancement_pct: avancementParChantier.get(c.id) ?? null,
+  }));
 
   // Stock bas : mêmes règles que la page « Livraisons » d'un chantier
   // (quantité livrée - quantité mise en œuvre, comparée au seuil).
@@ -99,7 +126,7 @@ export async function chargerNotifications(): Promise<Notification[]> {
   return construireNotifications({
     alertes: (alertes.data ?? []) as AlerteRow[],
     nonConformites: (nonConformites.data ?? []) as NonConformiteRow[],
-    chantiers: (chantiers.data ?? []) as ChantierRow[],
+    chantiers: chantiersAvecAvancement,
     aujourdHui,
     stocks,
   });

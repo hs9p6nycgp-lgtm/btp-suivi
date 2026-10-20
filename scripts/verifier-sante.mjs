@@ -99,7 +99,20 @@ ajouter(
     : "lignes visibles dans : " + fuites.join(", "),
 );
 
-// --- 3) Isolation : un compte voit-il les chantiers d'un autre ? --------------
+// --- 2b) Les requetes de l'application existent-elles en base ? ---------------
+// Une colonne absente fait echouer toute la requete (400) et vide le resultat
+// sans bruit : ce controle aligne le code et le schema reel.
+
+const requetes = await lancerScript("scripts/verifier-requetes.mjs");
+const nbRequetes = (requetes.sortie.match(/Requetes distinctes trouvees dans le code : (\d+)/) || [])[1] ?? "?";
+const nbInvalides = (requetes.sortie.match(/=== REQUETES INVALIDES \((\d+)\)/) || [])[1] ?? "?";
+ajouter(
+  "Requetes de l'application valides (colonnes presentes en base)",
+  requetes.code === 0,
+  requetes.code === 0
+    ? `${nbRequetes} requetes verifiees, aucune invalide`
+    : `${nbInvalides} requete(s) invalide(s) — voir scripts/verifier-requetes.mjs`,
+);
 
 const isolation = await lancerScript("scripts/verifier-isolation.mjs");
 const resumeIso = isolation.sortie.includes("Isolation VERIFIEE")
