@@ -127,6 +127,58 @@ for (const [nom, url] of sites) {
   ajouter(nom, code >= 200 && code < 400, `HTTP ${code}`);
 }
 
+// --- 4b) Les deux sites servent-ils la meme version ? ------------------------
+// Un decalage entre le site officiel et le site de secours est signale :
+// c'est ce qui arrive quand un deploiement automatique est en retard.
+
+const empreintes = [];
+for (const domaine of ["btp-suivi-7w2i.vercel.app", "btp-suivi-cd4w.vercel.app"]) {
+  try {
+    const html = await (await fetch(`https://${domaine}/login`)).text();
+    const chunks = [
+      ...new Set([...html.matchAll(/\/_next\/static\/immutable\/chunks\/([^"\\]+)/g)].map((m) => m[1])),
+    ].sort();
+    const css = (html.match(/\/_next\/static\/immutable\/chunks\/([^"\\]+\.css)/) || [])[1] ?? "";
+    empreintes.push({ domaine, chunks, css });
+  } catch {
+    empreintes.push({ domaine, chunks: [], css: "" });
+  }
+}
+if (empreintes.length === 2 && empreintes[0].chunks.length > 0 && empreintes[1].chunks.length > 0) {
+  const communs = empreintes[0].chunks.filter((c) => empreintes[1].chunks.includes(c));
+  const total = new Set([...empreintes[0].chunks, ...empreintes[1].chunks]).size;
+  // Chez Next.js, un fichier de build par site est normal : il contient
+  // l'identifiant du build. On tolere donc 1 a 2 fichiers differents, a
+  // condition que la feuille de style (empreinte du contenu) soit identique.
+  const differences = total - communs.length;
+  const memesStyles = Boolean(empreintes[0].css) && empreintes[0].css === empreintes[1].css;
+  ajouter(
+    "Les deux sites servent la meme version",
+    differences <= 2 && memesStyles,
+    `${communs.length}/${total} fichiers communs, styles ${memesStyles ? "identiques" : "differents"}`,
+  );
+}
+
+// --- 4c) Icones d'installation PWA -------------------------------------------
+
+try {
+  const manifest = await (await fetch("https://btp-suivi-7w2i.vercel.app/manifest.json")).json();
+  const icones = manifest.icons ?? [];
+  const png = icones.filter((i) => (i.sizes ?? "").includes("192") || (i.sizes ?? "").includes("512"));
+  let dispo = 0;
+  for (const i of png) {
+    const r = await fetch(`https://btp-suivi-7w2i.vercel.app${i.src}`, { method: "HEAD" });
+    if (r.ok) dispo += 1;
+  }
+  ajouter(
+    "Icones d'installation PWA (PNG 192/512)",
+    png.length >= 2 && dispo === png.length,
+    `${dispo}/${png.length} icones PNG declarees et servies`,
+  );
+} catch {
+  ajouter("Icones d'installation PWA (PNG 192/512)", false, "manifeste illisible");
+}
+
 // --- Bilan --------------------------------------------------------------------
 
 const echecs = resultats.filter((r) => !r.ok);
