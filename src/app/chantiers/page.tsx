@@ -10,6 +10,7 @@ import {
   Search,
   ShieldAlert,
   Table2,
+  TrendingUp,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -296,9 +297,15 @@ export default function ChantiersPage() {
             Gérez tous vos chantiers en cours et terminés.
           </p>
         </div>
-        <Button onClick={() => router.push("/chantiers/nouveau")} size="lg">
-          Nouveau chantier
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" onClick={() => router.push("/direction")} size="lg">
+            <TrendingUp className="h-4 w-4" />
+            Vue direction
+          </Button>
+          <Button onClick={() => router.push("/chantiers/nouveau")} size="lg">
+            Nouveau chantier
+          </Button>
+        </div>
       </div>
 
       {/* Chiffres clés du portefeuille */}
