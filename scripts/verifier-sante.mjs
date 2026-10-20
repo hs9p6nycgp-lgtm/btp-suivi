@@ -1,3 +1,18 @@
+
+/** Fetch avec reprises : le client HTTP de Node peut timeout de temps en temps. */
+async function fetchRobuste(url, options = {}, tentatives = 4) {
+  let err;
+  for (let i = 0; i < tentatives; i++) {
+    try {
+      return await fetch(url, { ...options, signal: AbortSignal.timeout(25000) });
+    } catch (e) {
+      err = e;
+      await new Promise((r) => setTimeout(r, 2000 * (i + 1)));
+    }
+  }
+  throw err;
+}
+
 // Verification globale de l'etat du projet : base de donnees, securite,
 // isolation des donnees et sites en ligne.
 //
@@ -83,7 +98,7 @@ tables.delete("objects");
 const fuites = [];
 let inaccessibles = 0;
 for (const t of [...tables].sort()) {
-  const r = await fetch(`${URL}/rest/v1/${t}?select=*&limit=1`, { headers: entetes });
+  const r = await fetchRobuste(`${URL}/rest/v1/${t}?select=*&limit=1`, { headers: entetes });
   if (!r.ok) {
     inaccessibles += 1;
     continue;
@@ -132,7 +147,7 @@ const sites = [
 for (const [nom, url] of sites) {
   let code = 0;
   try {
-    const r = await fetch(url, { redirect: "manual" });
+    const r = await fetchRobuste(url, { redirect: "manual" });
     code = r.status;
   } catch {
     code = 0;
@@ -147,7 +162,7 @@ for (const [nom, url] of sites) {
 const empreintes = [];
 for (const domaine of ["btp-suivi-7w2i.vercel.app", "btp-suivi-cd4w.vercel.app"]) {
   try {
-    const html = await (await fetch(`https://${domaine}/login`)).text();
+    const html = await (await fetchRobuste(`https://${domaine}/login`)).text();
     const chunks = [
       ...new Set([...html.matchAll(/\/_next\/static\/immutable\/chunks\/([^"\\]+)/g)].map((m) => m[1])),
     ].sort();
@@ -175,12 +190,12 @@ if (empreintes.length === 2 && empreintes[0].chunks.length > 0 && empreintes[1].
 // --- 4c) Icones d'installation PWA -------------------------------------------
 
 try {
-  const manifest = await (await fetch("https://btp-suivi-7w2i.vercel.app/manifest.json")).json();
+  const manifest = await (await fetchRobuste("https://btp-suivi-7w2i.vercel.app/manifest.json")).json();
   const icones = manifest.icons ?? [];
   const png = icones.filter((i) => (i.sizes ?? "").includes("192") || (i.sizes ?? "").includes("512"));
   let dispo = 0;
   for (const i of png) {
-    const r = await fetch(`https://btp-suivi-7w2i.vercel.app${i.src}`, { method: "HEAD" });
+    const r = await fetchRobuste(`https://btp-suivi-7w2i.vercel.app${i.src}`, { method: "HEAD" });
     if (r.ok) dispo += 1;
   }
   ajouter(

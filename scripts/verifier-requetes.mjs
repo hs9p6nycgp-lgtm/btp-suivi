@@ -1,3 +1,18 @@
+
+/** Fetch avec reprises : le client HTTP de Node peut timeout de temps en temps. */
+async function fetchRobuste(url, options = {}, tentatives = 4) {
+  let err;
+  for (let i = 0; i < tentatives; i++) {
+    try {
+      return await fetch(url, { ...options, signal: AbortSignal.timeout(25000) });
+    } catch (e) {
+      err = e;
+      await new Promise((r) => setTimeout(r, 2000 * (i + 1)));
+    }
+  }
+  throw err;
+}
+
 // Verifie que chaque requete de l'application (table + colonnes demandees)
 // correspond bien au schema reellement present en base.
 // Une colonne inexistante fait echouer la requete entiere (erreur 400) et
@@ -119,7 +134,7 @@ for (const f of fichiers) {
 const problemes = [];
 let verifiees = 0;
 for (const { table, cols, sources } of requetes.values()) {
-  const r = await fetch(`${URL}/rest/v1/${table}?select=${encodeURIComponent(cols.join(","))}&limit=0`, { headers: entetes });
+  const r = await fetchRobuste(`${URL}/rest/v1/${table}?select=${encodeURIComponent(cols.join(","))}&limit=0`, { headers: entetes });
   verifiees += 1;
   if (r.status !== 200) {
     const corps = await r.text();

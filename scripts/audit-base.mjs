@@ -1,3 +1,18 @@
+
+/** Fetch avec reprises : le client HTTP de Node peut timeout de temps en temps. */
+async function fetchRobuste(url, options = {}, tentatives = 4) {
+  let err;
+  for (let i = 0; i < tentatives; i++) {
+    try {
+      return await fetch(url, { ...options, signal: AbortSignal.timeout(25000) });
+    } catch (e) {
+      err = e;
+      await new Promise((r) => setTimeout(r, 2000 * (i + 1)));
+    }
+  }
+  throw err;
+}
+
 // Audit de la base distante : verifie que toutes les tables et colonnes
 // prevues par les migrations existent reellement dans le projet Supabase.
 // Lecture seule (utilise la cle publique, aucun ecrit).
@@ -67,13 +82,13 @@ const ignores = new Set(["buckets", "objects"]); // schemas storage : non verifi
 const manquantsT = [];
 for (const t of [...tables].sort()) {
   if (ignores.has(t)) continue;
-  const r = await fetch(`${URL}/rest/v1/${t}?select=*&limit=0`, { headers });
+  const r = await fetchRobuste(`${URL}/rest/v1/${t}?select=*&limit=0`, { headers });
   if (r.status !== 200) manquantsT.push(t);
 }
 
 const manquantsC = new Set();
 for (const { table, col } of colonnes) {
-  const r = await fetch(`${URL}/rest/v1/${table}?select=${col}&limit=0`, { headers });
+  const r = await fetchRobuste(`${URL}/rest/v1/${table}?select=${col}&limit=0`, { headers });
   if (r.status !== 200) manquantsC.add(`${table}.${col}`);
 }
 
