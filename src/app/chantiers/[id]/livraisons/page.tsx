@@ -119,6 +119,8 @@ export default function LivraisonsPage() {
             .select("materiau,seuil")
             .eq("chantier_id", chantierId),
         ]);
+        // RG-07 : les seuils d'alerte de stock sont paramétrables chantier
+        // par chantier (table `seuils_stock_chantier`, repli local si absente).
         if (livRes.error) throw livRes.error;
         const livraisons = (livRes.data ?? []) as Livraison[];
         const seuils: Record<string, number> = {};

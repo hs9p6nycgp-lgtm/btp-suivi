@@ -27,7 +27,16 @@ type Module = {
   exigences: Exigence[];
 };
 
+type Regle = {
+  code: string;
+  texte: string;
+  references: number;
+  fichiers: string[];
+  testee: boolean;
+};
+
 const donneesModules = donnees.modules as Module[];
+const donneesRegles = (donnees as { regles: Regle[] }).regles ?? [];
 
 // Point d'entrée de chaque module dans l'application.
 const LIENS: Record<string, { href: string; libelle: string }> = {
@@ -53,6 +62,7 @@ const LIBELLE_PRIORITE: Record<string, string> = {
 };
 
 export default function ExigencesPage() {
+  const [onglet, setOnglet] = useState<"exigences" | "regles">("exigences");
   const [recherche, setRecherche] = useState("");
   const [priorite, setPriorite] = useState<"toutes" | "M" | "S" | "C">("toutes");
 
@@ -78,6 +88,16 @@ export default function ExigencesPage() {
     0,
   );
 
+  const reglesVisibles = useMemo(() => {
+    const q = recherche.trim().toLowerCase();
+    return donneesRegles.filter(
+      (regle) =>
+        q === "" ||
+        regle.code.toLowerCase().includes(q) ||
+        regle.texte.toLowerCase().includes(q),
+    );
+  }, [recherche]);
+
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
       <PageHeader
@@ -87,6 +107,82 @@ export default function ExigencesPage() {
         icon={<ListChecks className="h-5 w-5" />}
       />
 
+      {/* Onglets */}
+      <div className="mb-4 inline-flex rounded-xl border border-border/80 bg-surface p-1">
+        <button
+          type="button"
+          onClick={() => setOnglet("exigences")}
+          className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
+            onglet === "exigences"
+              ? "bg-primary text-white shadow-sm"
+              : "text-muted hover:text-foreground"
+          }`}
+        >
+          Exigences ({donnees.total})
+        </button>
+        <button
+          type="button"
+          onClick={() => setOnglet("regles")}
+          className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
+            onglet === "regles"
+              ? "bg-primary text-white shadow-sm"
+              : "text-muted hover:text-foreground"
+          }`}
+        >
+          Règles de gestion ({donneesRegles.length})
+        </button>
+      </div>
+
+      {onglet === "regles" ? (
+        /* Règles de gestion : la règle, l'endroit du code qui l'applique, le test. */
+        <div className="space-y-3">
+          {reglesVisibles.map((regle) => (
+            <Card key={regle.code} padding="lg">
+              <div className="flex flex-wrap items-start gap-3">
+                <span className="w-16 shrink-0 rounded-md bg-surface-2 px-1.5 py-1 text-center text-[11px] font-bold text-primary">
+                  {regle.code}
+                </span>
+                <p className="min-w-0 flex-1 text-sm text-foreground">{regle.texte}</p>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
+                <span
+                  className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${
+                    regle.testee
+                      ? "bg-success/15 text-success"
+                      : regle.references > 0
+                        ? "bg-primary/10 text-primary"
+                        : "bg-surface-2 text-muted"
+                  }`}
+                >
+                  {regle.testee
+                    ? "règle testée"
+                    : regle.references > 0
+                      ? `citée ${regle.references} fois`
+                      : "non citée dans le code"}
+                </span>
+                {regle.fichiers.slice(0, 3).map((fichier) => (
+                  <code
+                    key={fichier}
+                    className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] text-muted"
+                  >
+                    {fichier}
+                  </code>
+                ))}
+                {regle.fichiers.length > 3 && (
+                  <span className="text-[10px] text-muted">+{regle.fichiers.length - 3}</span>
+                )}
+              </div>
+            </Card>
+          ))}
+          {reglesVisibles.length === 0 && (
+            <Card className="text-center">
+              <p className="font-semibold text-foreground">Aucune règle trouvée</p>
+              <p className="mt-1 text-sm text-muted">Essayez un autre code (RG-01…).</p>
+            </Card>
+          )}
+        </div>
+      ) : (
+        <>
       {/* Résumé */}
       <div className="mb-6 grid gap-3 sm:grid-cols-4">
         <Card padding="sm" className="border-l-4 border-l-primary">
@@ -228,6 +324,8 @@ export default function ExigencesPage() {
         générés depuis <code className="rounded bg-surface-2 px-1 py-0.5 text-xs">CAHIER_DES_CHARGES.md</code>{" "}
         par le script <code className="rounded bg-surface-2 px-1 py-0.5 text-xs">scripts/exigences/generer.mjs</code>.
       </p>
+        </>
+      )}
     </main>
   );
 }

@@ -7,6 +7,83 @@
     "C": 9
   },
   "reperees": 51,
+  "regles": [
+    {
+      "code": "RG-01",
+      "texte": "une quantité réalisée ne peut être saisie que sur un poste",
+      "references": 1,
+      "fichiers": [
+        "src/app/chantiers/[id]/journaux/[journalId]/page.tsx"
+      ],
+      "testee": false
+    },
+    {
+      "code": "RG-02",
+      "texte": "un journal validé par le conducteur de travaux n’est plus",
+      "references": 8,
+      "fichiers": [
+        "src/app/chantiers/[id]/journaux/[journalId]/page.tsx",
+        "src/lib/journal/__tests__/versions.test.ts",
+        "src/lib/journal/versions.ts"
+      ],
+      "testee": true
+    },
+    {
+      "code": "RG-03",
+      "texte": "le nombre de bennes est toujours arrondi à l’entier",
+      "references": 1,
+      "fichiers": [
+        "src/lib/calculs/metre.ts"
+      ],
+      "testee": false
+    },
+    {
+      "code": "RG-04",
+      "texte": "un contrôle qualité hors tolérance crée automatiquement une",
+      "references": 9,
+      "fichiers": [
+        "src/app/chantiers/[id]/qualite/page.tsx",
+        "src/lib/qualite/__tests__/conformite.test.ts",
+        "src/lib/qualite/__tests__/nonConformites.test.ts",
+        "src/lib/qualite/__tests__/plansControle.test.ts",
+        "src/lib/qualite/epreuves.ts",
+        "src/lib/qualite/nonConformites.ts",
+        "src/lib/qualite/plansControle.ts"
+      ],
+      "testee": true
+    },
+    {
+      "code": "RG-05",
+      "texte": "un chantier ne peut passer au statut « réceptionné » que si",
+      "references": 6,
+      "fichiers": [
+        "src/app/chantiers/[id]/page.tsx",
+        "src/lib/chantiers/__tests__/statuts.test.ts",
+        "src/lib/chantiers/reception.ts",
+        "src/lib/chantiers/statuts.ts"
+      ],
+      "testee": true
+    },
+    {
+      "code": "RG-06",
+      "texte": "les montants sont exprimés en FCFA, sans décimale ; les",
+      "references": 3,
+      "fichiers": [
+        "src/app/calculateurs/mur/page.tsx",
+        "src/lib/calculs/mur.ts"
+      ],
+      "testee": false
+    },
+    {
+      "code": "RG-07",
+      "texte": "tous les seuils d’alerte sont paramétrables par chantier.",
+      "references": 1,
+      "fichiers": [
+        "src/app/chantiers/[id]/livraisons/page.tsx"
+      ],
+      "testee": false
+    }
+  ],
   "modules": [
     {
       "nom": "Authentification et utilisateurs",
@@ -266,13 +343,13 @@
           "code": "QUA-01",
           "intitule": "Plans de contrôle par type d’ouvrage (épaisseur, dévers, compacité, slump, résistance du béton, implantation)",
           "priorite": "M",
-          "references": 4
+          "references": 6
         },
         {
           "code": "QUA-02",
           "intitule": "Saisie des essais avec valeur mesurée, valeur exigée et tolérance : conformité calculée automatiquement",
           "priorite": "M",
-          "references": 2
+          "references": 4
         },
         {
           "code": "QUA-03",

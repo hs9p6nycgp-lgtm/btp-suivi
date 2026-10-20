@@ -253,6 +253,8 @@ export default function JournalDetailPage() {
   async function addQuantite(e: React.FormEvent) {
     e.preventDefault();
     if (!editable) return;
+    // RG-01 : une quantité réalisée ne peut être saisie que sur un poste
+    // existant du DQE (la liste des postes est imposée par le sélecteur).
     const { error } = await offlineInsert("quantites_realisees", {
       chantier_id: chantierId, poste_dqe_id: qtePoste, quantite: Number(qteValeur) || 0,
       journal_id: journalId, section_id: qteSection || null,

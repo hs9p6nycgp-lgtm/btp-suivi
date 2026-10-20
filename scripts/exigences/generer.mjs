@@ -33,13 +33,16 @@ function fichiersSource(dossier) {
   return liste;
 }
 
-/** Recense les occurrences de chaque code d'exigence dans le code source. */
+/** Recense les occurrences de chaque code (exigence ou règle) dans le code source. */
 function occurrencesDansLeCode() {
   const occurrences = {};
   for (const fichier of fichiersSource(join(RACINE, "src"))) {
     const texte = readFileSync(fichier, "utf8");
-    for (const code of texte.match(/\b[A-Z]{3}-\d{2}\b/g) ?? []) {
-      occurrences[code] = (occurrences[code] ?? 0) + 1;
+    for (const code of texte.match(/\b[A-Z]{2,3}-\d{2}\b/g) ?? []) {
+      if (!occurrences[code]) occurrences[code] = { total: 0, fichiers: [] };
+      occurrences[code].total += 1;
+      const chemin = relative(RACINE, fichier);
+      if (!occurrences[code].fichiers.includes(chemin)) occurrences[code].fichiers.push(chemin);
     }
   }
   return occurrences;
@@ -65,13 +68,41 @@ for (const ligne of lignes) {
   // « | CHA-01   | Créer un chantier : … | M | »
   const ligneTableau = /^\|\s*([A-Z]{3}-\d{2})\s*\|(.+?)\|\s*([MSC])\s*\|\s*$/.exec(ligne);
   if (ligneTableau) {
+    const code = ligneTableau[1];
     moduleCourant.exigences.push({
-      code: ligneTableau[1],
+      code,
       intitule: ligneTableau[2].trim().replace(/\s+/g, " "),
       priorite: ligneTableau[3],
-      references: occurrences[ligneTableau[1]] ?? 0,
+      references: occurrences[code]?.total ?? 0,
     });
   }
+}
+
+// --- Règles de gestion (section 5 du cahier des charges) ---------------------
+//
+// « -   RG-01 : une quantité réalisée ne peut être saisie que sur un poste… »
+const regles = [];
+for (const ligne of lignes) {
+  const entete = /^-\s+(RG-\d{2})\s*:\s*(.+)$/.exec(ligne.trim());
+  if (!entete) continue;
+  const code = entete[1];
+  const texte = [entete[2].trim()];
+  // La règle peut se poursuivre sur les lignes suivantes (liste à puces).
+  let index = lignes.indexOf(ligne) + 1;
+  while (index < lignes.length) {
+    const suite = lignes[index].trim();
+    if (!suite || !suite.startsWith("-") || /^-\s+RG-\d{2}\s*:/.test(suite)) break;
+    texte.push(suite.replace(/^-\s+/, ""));
+    index += 1;
+  }
+  const fichiers = occurrences[code]?.fichiers ?? [];
+  regles.push({
+    code,
+    texte: texte.join(" ").replace(/\s+/g, " "),
+    references: occurrences[code]?.total ?? 0,
+    fichiers,
+    testee: fichiers.some((fichier) => fichier.includes("__tests__")),
+  });
 }
 
 const total = modules.reduce((somme, module) => somme + module.exigences.length, 0);
@@ -93,6 +124,7 @@ writeFileSync(
       total,
       parPriorite,
       reperees,
+      regles,
       modules,
     },
     null,
@@ -103,5 +135,5 @@ writeFileSync(
 
 console.log(
   `✅ ${modules.length} modules, ${total} exigences (M : ${parPriorite.M}, S : ${parPriorite.S}, C : ${parPriorite.C}), ` +
-    `${reperees} repérées dans le code → ${SORTIE}`,
+    `${reperees} repérées dans le code, ${regles.length} règles de gestion → ${SORTIE}`,
 );

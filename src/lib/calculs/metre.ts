@@ -9,6 +9,7 @@ export function volumeFoisonne(volumeEnPlace: number, coefficientFoisonnement: n
   return volumeEnPlace * coefficientFoisonnement;
 }
 
+/** RG-03 (règle de gestion) : le nombre de bennes est toujours arrondi à l'entier supérieur. */
 export function nombreBennes(volumeFoisonne: number, capaciteBenne: number): number {
   if (capaciteBenne <= 0) throw new Error("La capacite d'une benne doit etre > 0.");
   return Math.ceil(volumeFoisonne / capaciteBenne);
