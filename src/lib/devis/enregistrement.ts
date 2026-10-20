@@ -25,7 +25,49 @@ export type DevisEnregistre = {
   date_devis: string;
   chantier_id: string | null;
   total: number;
+  remise_pct?: number | null;
+  tva_pct?: number | null;
+  conditions_paiement?: string | null;
 };
+
+export type TotauxDevis = {
+  totalBrut: number;
+  remisePct: number;
+  remiseMontant: number;
+  totalHT: number;
+  tvaPct: number;
+  tvaMontant: number;
+  totalTTC: number;
+};
+
+/**
+ * Totaux d'un devis : brut, remise, HT, TVA et TTC (exigence MET-02).
+ * Les taux sont en pourcentage ; 0 signifie « non applicable ».
+ * Tous les montants sont arrondis au franc (FCFA sans decimale).
+ */
+export function calculerTotauxDevis(
+  lignes: { total: number }[],
+  remisePct: number | string | null | undefined = 0,
+  tvaPct: number | string | null | undefined = 0,
+): TotauxDevis {
+  const totalBrut = arrondirFcfa(
+    (lignes ?? []).reduce((s, l) => s + (Number(l.total) || 0), 0),
+  );
+  const tauxRemise = Math.max(0, Number(remisePct) || 0);
+  const tauxTva = Math.max(0, Number(tvaPct) || 0);
+  const remiseMontant = arrondirFcfa((totalBrut * tauxRemise) / 100);
+  const totalHT = arrondirFcfa(totalBrut - remiseMontant);
+  const tvaMontant = arrondirFcfa((totalHT * tauxTva) / 100);
+  return {
+    totalBrut,
+    remisePct: tauxRemise,
+    remiseMontant,
+    totalHT,
+    tvaPct: tauxTva,
+    tvaMontant,
+    totalTTC: arrondirFcfa(totalHT + tvaMontant),
+  };
+}
 
 function nombre(valeur: number | string | null | undefined): number {
   if (valeur === null || valeur === undefined) return 0;

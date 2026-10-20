@@ -9,7 +9,7 @@ import * as XLSX from "xlsx";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { formaterMontantFcfa } from "@/lib/devis/enregistrement";
+import { formaterMontantFcfa, calculerTotauxDevis } from "@/lib/devis/enregistrement";
 import {
   preparerPostesDqe,
   type PosteDqeExistant,
@@ -26,6 +26,9 @@ type Devis = {
   date_devis: string;
   notes: string | null;
   total: number;
+  remise_pct?: number | null;
+  tva_pct?: number | null;
+  conditions_paiement?: string | null;
   chantier_id: string | null;
 };
 
@@ -72,6 +75,9 @@ export default function DevisImprimablePage() {
   const [dateDevis, setDateDevis] = useState("");
   const [objet, setObjet] = useState("");
   const [notes, setNotes] = useState("");
+  const [remisePct, setRemisePct] = useState("0");
+  const [tvaPct, setTvaPct] = useState("0");
+  const [conditionsPaiement, setConditionsPaiement] = useState("");
   const [chantierId, setChantierId] = useState("");
 
   // Alimentation du DQE du chantier depuis le devis
@@ -110,6 +116,9 @@ export default function DevisImprimablePage() {
       setDateDevis((entete as Devis).date_devis ?? "");
       setObjet((entete as Devis).objet ?? "");
       setNotes((entete as Devis).notes ?? "");
+      setRemisePct(String((entete as Devis).remise_pct ?? 0));
+      setTvaPct(String((entete as Devis).tva_pct ?? 0));
+      setConditionsPaiement((entete as Devis).conditions_paiement ?? "");
       setChantierId((entete as Devis).chantier_id ?? "");
 
       const { data: listeChantiers } = await supabase
@@ -158,6 +167,14 @@ export default function DevisImprimablePage() {
         objet: objet.trim() || null,
         notes: notes.trim() || null,
         chantier_id: chantierId || null,
+        remise_pct: Number(remisePct) || 0,
+        tva_pct: Number(tvaPct) || 0,
+        conditions_paiement: conditionsPaiement.trim() || null,
+        total: calculerTotauxDevis(
+          lignes.map((l) => ({ total: Number(l.total) || 0 })),
+          Number(remisePct) || 0,
+          Number(tvaPct) || 0,
+        ).totalTTC,
       })
       .eq("id", devis.id);
     setSaving(false);
@@ -175,6 +192,9 @@ export default function DevisImprimablePage() {
             objet: objet.trim() || null,
             notes: notes.trim() || null,
             chantier_id: chantierId || null,
+            remise_pct: Number(remisePct) || 0,
+            tva_pct: Number(tvaPct) || 0,
+            conditions_paiement: conditionsPaiement.trim() || null,
           }
         : prev,
     );
@@ -243,6 +263,11 @@ export default function DevisImprimablePage() {
 
   function exporterExcel() {
     if (!devis) return;
+    const t = calculerTotauxDevis(
+      lignes.map((l) => ({ total: Number(l.total) || 0 })),
+      devis.remise_pct ?? 0,
+      devis.tva_pct ?? 0,
+    );
     const ws = XLSX.utils.json_to_sheet([
       ...lignes.map((l) => ({
         Désignation: l.designation,
@@ -252,12 +277,31 @@ export default function DevisImprimablePage() {
         "Total (FCFA)": Number(l.total),
       })),
       {
-        Désignation: "TOTAL",
-        "Total (FCFA)": Number(devis.total),
+        Désignation: "TOTAL BRUT",
+        "Total (FCFA)": t.totalBrut,
       },
     ]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Devis");
+
+    const totaux = XLSX.utils.json_to_sheet([
+      { Poste: "Devis", Valeur: devis.numero },
+      { Poste: "Client", Valeur: devis.client },
+      { Poste: "Date", Valeur: devis.date_devis },
+      { Poste: "Total brut (FCFA)", Valeur: t.totalBrut },
+      ...(t.remiseMontant > 0
+        ? [{ Poste: `Remise ${String(t.remisePct).replace(".", ",")} % (FCFA)`, Valeur: -t.remiseMontant }]
+        : []),
+      { Poste: "Total hors taxes (FCFA)", Valeur: t.totalHT },
+      ...(t.tvaMontant > 0
+        ? [{ Poste: `TVA ${String(t.tvaPct).replace(".", ",")} % (FCFA)`, Valeur: t.tvaMontant }]
+        : []),
+      { Poste: "Total TTC (FCFA)", Valeur: t.totalTTC },
+      ...(devis.conditions_paiement
+        ? [{ Poste: "Conditions de paiement", Valeur: devis.conditions_paiement }]
+        : []),
+    ]);
+    XLSX.utils.book_append_sheet(wb, totaux, "Totaux");
     XLSX.writeFile(wb, `devis_${devis.numero}_${devis.date_devis}.xlsx`);
   }
 
@@ -279,6 +323,13 @@ export default function DevisImprimablePage() {
       </div>
     );
   }
+
+  // Totaux : brut, remise, HT, TVA, TTC
+  const totaux = calculerTotauxDevis(
+    lignes.map((l) => ({ total: Number(l.total) || 0 })),
+    devis.remise_pct ?? 0,
+    devis.tva_pct ?? 0,
+  );
 
   return (
     <div className="min-h-screen bg-slate-100 py-6 print:bg-white print:py-0">
@@ -358,6 +409,39 @@ export default function DevisImprimablePage() {
                   className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
                   value={objet}
                   onChange={(e) => setObjet(e.target.value)}
+                />
+              </label>
+              <label className="block text-sm font-medium text-foreground">
+                Remise (%)
+                <input
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  value={remisePct}
+                  onChange={(e) => setRemisePct(e.target.value)}
+                />
+              </label>
+              <label className="block text-sm font-medium text-foreground">
+                TVA (%)
+                <input
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.25"
+                  value={tvaPct}
+                  onChange={(e) => setTvaPct(e.target.value)}
+                />
+              </label>
+              <label className="block text-sm font-medium text-foreground md:col-span-2">
+                Conditions de paiement
+                <input
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  placeholder="ex. : 30 % à la commande, solde à la réception"
+                  value={conditionsPaiement}
+                  onChange={(e) => setConditionsPaiement(e.target.value)}
                 />
               </label>
               <label className="block text-sm font-medium text-foreground md:col-span-2">
@@ -534,11 +618,50 @@ export default function DevisImprimablePage() {
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan={4} className="pt-3 text-right text-[12px] font-semibold uppercase tracking-wider text-slate-700">
-                Total du devis
+              <td colSpan={4} className="pt-2 text-right text-[11px] text-slate-600">
+                Total brut
+              </td>
+              <td className="pt-2 text-right text-[12px] tabular-nums">
+                {formaterMontantFcfa(totaux.totalBrut)}
+              </td>
+            </tr>
+            {totaux.remiseMontant > 0 && (
+              <tr>
+                <td colSpan={4} className="pt-1 text-right text-[11px] text-slate-600">
+                  Remise {String(totaux.remisePct).replace(".", ",")} %
+                </td>
+                <td className="pt-1 text-right text-[12px] tabular-nums">
+                  − {formaterMontantFcfa(totaux.remiseMontant)}
+                </td>
+              </tr>
+            )}
+            <tr>
+              <td colSpan={4} className="pt-1 text-right text-[11px] text-slate-600">
+                Total hors taxes
+              </td>
+              <td className="pt-1 text-right text-[12px] font-semibold tabular-nums">
+                {formaterMontantFcfa(totaux.totalHT)}
+              </td>
+            </tr>
+            {totaux.tvaMontant > 0 && (
+              <tr>
+                <td colSpan={4} className="pt-1 text-right text-[11px] text-slate-600">
+                  TVA {String(totaux.tvaPct).replace(".", ",")} %
+                </td>
+                <td className="pt-1 text-right text-[12px] tabular-nums">
+                  {formaterMontantFcfa(totaux.tvaMontant)}
+                </td>
+              </tr>
+            )}
+            <tr>
+              <td
+                colSpan={4}
+                className="pt-3 text-right text-[12px] font-semibold uppercase tracking-wider text-slate-700"
+              >
+                {totaux.tvaMontant > 0 ? "Total toutes taxes comprises" : "Total du devis"}
               </td>
               <td className="pt-3 text-right text-[15px] font-bold tabular-nums">
-                {formaterMontantFcfa(Number(devis.total))}
+                {formaterMontantFcfa(totaux.totalTTC)}
               </td>
             </tr>
           </tfoot>
@@ -557,6 +680,15 @@ export default function DevisImprimablePage() {
               Observations
             </h2>
             <p className="text-[12px] text-slate-700">{devis.notes}</p>
+          </div>
+        )}
+
+        {devis.conditions_paiement && (
+          <div className="mt-6">
+            <h2 className="mb-1 text-[12px] font-bold uppercase tracking-wider text-slate-700">
+              Conditions de paiement
+            </h2>
+            <p className="text-[12px] text-slate-700">{devis.conditions_paiement}</p>
           </div>
         )}
 

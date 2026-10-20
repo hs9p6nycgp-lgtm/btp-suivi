@@ -9,6 +9,7 @@ import { modele3dDevis } from "@/lib/devis/model3d";
 import { templatePourTypeDeChantier } from "@/lib/devis/types-projets";
 import {
   calculerLignes,
+  calculerTotauxDevis,
   formaterMontantFcfa,
   lignesDevisDepuisModele,
   numeroDevisAuto,
@@ -81,6 +82,9 @@ export default function DevisAssistantPage() {
   const [dateDevis, setDateDevis] = useState(() => new Date().toISOString().slice(0, 10));
   const [objet, setObjet] = useState("");
   const [chantierId, setChantierId] = useState("");
+  const [remisePct, setRemisePct] = useState("0");
+  const [tvaPct, setTvaPct] = useState("0");
+  const [conditionsPaiement, setConditionsPaiement] = useState("");
   const [chantiers, setChantiers] = useState<{ id: string; nom: string }[]>([]);
   const [devisEnregistres, setDevisEnregistres] = useState<DevisEnregistre[]>([]);
   const [devisDisponible, setDevisDisponible] = useState<boolean | null>(null);
@@ -121,7 +125,7 @@ export default function DevisAssistantPage() {
       if (!user) return;
       const [cRes, dRes] = await Promise.all([
         supabase.from("chantiers").select("id,nom").eq("proprietaire_id", user.id).order("nom"),
-        supabase.from("devis").select("id,numero,client,objet,date_devis,chantier_id,total").eq("proprietaire_id", user.id).order("date_devis", { ascending: false }),
+        supabase.from("devis").select("id,numero,client,objet,date_devis,chantier_id,total,remise_pct,tva_pct,conditions_paiement").eq("proprietaire_id", user.id).order("date_devis", { ascending: false }),
       ]);
       setChantiers((cRes.data ?? []) as { id: string; nom: string }[]);
       if (dRes.error) {
@@ -196,6 +200,7 @@ export default function DevisAssistantPage() {
   );
   const lignesDevis = calculerLignes(lignesDevisDepuisModele(template, inputs, prixParCode));
   const total = totalDevis(lignesDevis);
+  const totaux = calculerTotauxDevis(lignesDevis, remisePct, tvaPct);
 
   async function enregistrerDevis(e: React.FormEvent) {
     e.preventDefault();
@@ -227,7 +232,10 @@ export default function DevisAssistantPage() {
         objet: objet.trim() || template.nom,
         date_devis: dateDevis,
         notes: null,
-        total,
+        total: totaux.totalTTC,
+        remise_pct: totaux.remisePct,
+        tva_pct: totaux.tvaPct,
+        conditions_paiement: conditionsPaiement.trim() || null,
       })
       .select()
       .single();
@@ -609,9 +617,18 @@ export default function DevisAssistantPage() {
                   Total estimatif
                 </p>
                 <p className="text-xs text-white/70">Somme des postes BPU choisis pour ce projet.</p>
+                {(totaux.remiseMontant > 0 || totaux.tvaMontant > 0) && (
+                  <p className="mt-1 text-xs text-white/80">
+                    Remise {String(totaux.remisePct).replace(".", ",")} % (−{fcfa(totaux.remiseMontant)} FCFA)
+                    {totaux.tvaMontant > 0
+                      ? ` · TVA ${String(totaux.tvaPct).replace(".", ",")} % (${fcfa(totaux.tvaMontant)} FCFA)`
+                      : ""}
+                    {" · "}Total HT {fcfa(totaux.totalHT)} FCFA
+                  </p>
+                )}
               </div>
               <p className="text-2xl font-bold tabular-nums">
-                {fcfa(total)}
+                {fcfa(totaux.totalTTC)}
                 <span className="ml-1.5 text-sm font-semibold text-white/70">FCFA</span>
               </p>
             </div>
@@ -698,6 +715,42 @@ export default function DevisAssistantPage() {
                   placeholder={template.nom}
                   value={objet}
                   onChange={(e) => setObjet(e.target.value)}
+                />
+              </label>
+              <label className="block text-sm font-medium text-foreground">
+                Remise (%)
+                <input
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  value={remisePct}
+                  onChange={(e) => setRemisePct(e.target.value)}
+                />
+              </label>
+              <label className="block text-sm font-medium text-foreground">
+                TVA (%)
+                <input
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.25"
+                  value={tvaPct}
+                  onChange={(e) => setTvaPct(e.target.value)}
+                />
+                <span className="mt-1 block text-xs font-normal text-muted">
+                  0 = prix hors taxes
+                </span>
+              </label>
+              <label className="block text-sm font-medium text-foreground md:col-span-2">
+                Conditions de paiement
+                <input
+                  className="mt-1 w-full rounded-xl border border-border/80 bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none transition focus:border-primary-light focus:ring-4 focus:ring-primary/10"
+                  placeholder="ex. : 30 % à la commande, solde à la réception"
+                  value={conditionsPaiement}
+                  onChange={(e) => setConditionsPaiement(e.target.value)}
                 />
               </label>
               <div className="md:col-span-2">

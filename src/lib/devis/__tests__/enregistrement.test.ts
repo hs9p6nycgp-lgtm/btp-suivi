@@ -5,6 +5,7 @@ import {
   arrondirFcfa,
   calculerLigne,
   calculerLignes,
+  calculerTotauxDevis,
   formaterMontantFcfa,
   lignesDevisDepuisModele,
   numeroDevisAuto,
@@ -82,5 +83,32 @@ describe("enregistrement des devis (MET-02, MET-03)", () => {
     assert.equal(lignes[0].quantite, 10);
     assert.equal(lignes[0].prix_unitaire, 95000);
     assert.equal(lignes[1].prix_unitaire, 0);
+  });
+
+  it("calcule les totaux avec remise et TVA", () => {
+    const totaux = calculerTotauxDevis(
+      [{ total: 100000000 }, { total: 96192800 }],
+      5,
+      18.25,
+    );
+    assert.equal(totaux.totalBrut, 196192800);
+    assert.equal(totaux.remiseMontant, 9809640);
+    assert.equal(totaux.totalHT, 186383160);
+    assert.equal(totaux.tvaMontant, 34014927);
+    assert.equal(totaux.totalTTC, 220398087);
+  });
+
+  it("ignore une remise ou une TVA négative", () => {
+    const totaux = calculerTotauxDevis([{ total: 100000 }], -5, -10);
+    assert.equal(totaux.remiseMontant, 0);
+    assert.equal(totaux.tvaMontant, 0);
+    assert.equal(totaux.totalTTC, 100000);
+  });
+
+  it("traite l'absence de remise ni de TVA", () => {
+    const totaux = calculerTotauxDevis([{ total: 5000 }]);
+    assert.equal(totaux.totalBrut, 5000);
+    assert.equal(totaux.totalHT, 5000);
+    assert.equal(totaux.totalTTC, 5000);
   });
 });
