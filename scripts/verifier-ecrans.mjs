@@ -148,7 +148,7 @@ const envoyer = (method, params = {}) =>
 
 await Promise.all([envoyer("Page.enable"), envoyer("Runtime.enable"), envoyer("Network.enable")]);
 
-const evaluer = async (expression, delaiMax = Number(process.env.BTP_DELAI_MAX ?? "20000")) => {
+const evaluer = async (expression, delaiMax = Number(process.env.BTP_DELAI_MAX ?? "30000")) => {
   // Une page très lourde (rendu 3D logiciel) peut ne pas répondre : on ne
   // bloque jamais le contrôle plus de `delaiMax`.
   const r = await Promise.race([

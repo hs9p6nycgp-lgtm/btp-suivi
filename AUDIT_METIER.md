@@ -858,6 +858,8 @@ Le script ne modifie aucune donnée ; il se connecte, parcourt et **sort en code
 
 **Résultat du 20/10 (28 écrans, compte de test, chantier de démonstration)** : 25 écrans sans défaut ; **3 en défaut — la fiche chantier, la modélisation 3D et le calcul de devis** — les trois à cause du **même défaut** : sans WebGL, la vue 3D lève une exception et **la page entière est remplacée par l'écran d'erreur**. Le script le reproduit à volonté (il lance Chrome sans accélération graphique par défaut, comme un téléphone d'entrée de gamme) et propose `BTP_WEBGL=1` pour vérifier le reste de l'application avec le rendu 3D disponible.
 
+*Observation complémentaire* : avec le **rendu logiciel** (WebGL disponible mais sans carte graphique), les pages s'affichent — la fiche chantier passe à 4 355 caractères — mais la page **Planning dépasse 30 s** de rendu (diagramme de Gantt + 3D) : sur un appareil d'entrée de gamme, ces écrans seront lents. C'est un argument de plus pour alléger la 3D ou la charger à la demande.
+
 → Cet outil rend le défaut **T-LOG-51** immédiatement visible et vérifiable à chaque livraison, et il évite qu'une régression de ce type n'atteigne le terrain sans être vue.
 
 ---
