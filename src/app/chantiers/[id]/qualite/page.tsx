@@ -19,13 +19,14 @@ import {
   libelleStatutNC,
   validerSuiviNC,
 } from "@/lib/qualite/nonConformites";
+import { suiviPointsControle } from "@/lib/qualite/pointsControle";
 import { compresserImage } from "@/lib/photos/compression";
 import { enregistrerPhotoEnAttente } from "@/lib/photos/attente";
 import { doitMettreEnFile } from "@/lib/photos/regles";
 import { BUCKET_PHOTOS, urlsSignees } from "@/lib/photos/urls";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -362,6 +363,20 @@ export default function QualitePage() {
   const nbConformes = essais.filter((e) => e.conforme).length;
   const tauxConformite = nbEssais > 0 ? Math.round((nbConformes / nbEssais) * 100) : 100;
 
+  // Suivi des points de contrôle : chaque paramètre du plan et son état
+  const suiviControles = useMemo(
+    () =>
+      suiviPointsControle(
+        plans.map((p) => ({ parametre: nomParametre(p), unite: p.unite })),
+        essais.map((e) => ({
+          type_controle: e.type_controle,
+          conforme: e.conforme,
+          date_controle: e.date_controle,
+        })),
+      ),
+    [plans, essais],
+  );
+
   return (
     <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
       <PageHeader
@@ -437,6 +452,98 @@ export default function QualitePage() {
           onReload={load}
         />
       </section>
+
+      {/* Suivi des points de contrôle (plan de contrôle) */}
+      {suiviControles.nbParametres > 0 && (
+        <section className="anim-fade-up anim-delay-2 mb-6">
+          <Card padding="lg">
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
+                  <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-action to-action-strong" aria-hidden />
+                  {langue === "fr" ? "Points de contrôle" : "Control points"}
+                </h2>
+                <p className="mt-1 text-sm text-muted">
+                  {langue === "fr"
+                    ? "État de chaque paramètre du plan de contrôle d'après les essais saisis."
+                    : "Status of each control plan parameter, from the recorded tests."}
+                </p>
+              </div>
+              {suiviControles.jamaisControls > 0 && (
+                <Badge variant="warning">
+                  {langue === "fr"
+                    ? `${suiviControles.jamaisControls} jamais contrôlé(s)`
+                    : `${suiviControles.jamaisControls} never checked`}
+                </Badge>
+              )}
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border/80 bg-surface-2 text-left">
+                    <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted">
+                      {langue === "fr" ? "Paramètre" : "Parameter"}
+                    </th>
+                    <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">
+                      {langue === "fr" ? "Essais" : "Tests"}
+                    </th>
+                    <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">
+                      {langue === "fr" ? "Conformité" : "Compliance"}
+                    </th>
+                    <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">
+                      {langue === "fr" ? "Dernier essai" : "Last test"}
+                    </th>
+                    <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted">
+                      {langue === "fr" ? "État" : "Status"}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {suiviControles.parametres.map((parametre) => (
+                    <tr key={parametre.parametre} className="border-b border-border/60">
+                      <td className="px-3 py-2.5 font-medium text-foreground">
+                        {parametre.parametre}
+                        {parametre.unite ? ` (${parametre.unite})` : ""}
+                      </td>
+                      <td className="px-3 py-2.5 text-center tabular-nums">{parametre.nbEssais}</td>
+                      <td className="px-3 py-2.5 text-center tabular-nums">
+                        {parametre.tauxConformitePct === null
+                          ? "—"
+                          : `${String(parametre.tauxConformitePct).replace(".", ",")} %`}
+                      </td>
+                      <td className="px-3 py-2.5 text-center text-muted">
+                        {parametre.dernierEssai ? formaterDateNC(parametre.dernierEssai) : "—"}
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        {parametre.etat === "conforme" && (
+                          <Badge variant="success">
+                            {langue === "fr" ? "Conforme" : "Conforming"}
+                          </Badge>
+                        )}
+                        {parametre.etat === "non_conforme" && (
+                          <Badge variant="danger">
+                            {langue === "fr" ? "Non conforme" : "Non-conforming"}
+                          </Badge>
+                        )}
+                        {parametre.etat === "partiel" && (
+                          <Badge variant="warning">
+                            {langue === "fr" ? "Partiel" : "Partial"}
+                          </Badge>
+                        )}
+                        {parametre.etat === "jamais_controle" && (
+                          <Badge variant="default">
+                            {langue === "fr" ? "Jamais contrôlé" : "Never checked"}
+                          </Badge>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </section>
+      )}
 
       {/* Formulaire d'un nouvel essai */}
       <section className="anim-fade-up anim-delay-3 mb-6">

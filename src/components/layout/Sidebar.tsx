@@ -27,6 +27,7 @@ import {
   Download,
   Film,
   Printer,
+  TrendingUp,
 } from "lucide-react";
 import { getLangue, setLangue, t, Langue } from "@/lib/i18n";
 import SignOutButton from "@/components/SignOutButton";
@@ -47,6 +48,7 @@ const NAV_TOP_LEVEL: ItemNav[] = [
   { href: "/fournisseurs", cle: "nav.fournisseurs", icon: <Users className="h-5 w-5" /> },
   { href: "/export", cle: "nav.export", icon: <Download className="h-5 w-5" /> },
   { href: "/rapports", cle: "nav.rapports", icon: <Printer className="h-5 w-5" /> },
+  { href: "/direction", cle: "nav.direction", icon: <TrendingUp className="h-5 w-5" /> },
   { href: "/calculateurs/devis", cle: "nav.devis", icon: <Calculator className="h-5 w-5" /> },
   { href: "/calculateurs/mur", cle: "nav.mur", icon: <Ruler className="h-5 w-5" /> },
   { href: "/aide", cle: "nav.aide", icon: <CircleHelp className="h-5 w-5" /> },
