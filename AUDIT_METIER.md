@@ -820,6 +820,29 @@ Le `useMemo` de la nouvelle synthèse du planning est appelé **après** le `ret
 
 ---
 
+# Partie 33 — Le bloquant est levé, et un risque voisin est identifié
+
+## 34. Fiche chantier : correction appliquée et vérifiée ✅
+
+La session a corrigé le hook (`f14537f` — « useMemo de la synthèse du planning remonté avant le retour anticipé (T-UI-35) »). Vérifié dans l'application : la fiche s'affiche de nouveau et **tout est présent** :
+
+- marché, avancement, découpage, alertes (2) et non-conformités (1) ;
+- nouveau bloc **« Planning du chantier »** : **durée projet 57 j**, **12 tâches**, 0 tâche en retard, **chaîne critique 4** avec la chaîne exacte « Décapage et purge → Remblai d'apport → Couche de base latéritique → Revêtement bitumineux », **charge par équipe : 160 j** (les tâches créées par mes tests n'ont pas d'équipe affectée).
+
+**Contrôle sur le site en ligne** (après redéploiement) : la fiche chantier rend **3 608 caractères et 0 erreur** (contre 648 caractères et 2 erreurs React #310 avant la correction). **Le bloquant est levé, en local comme en production.**
+
+## 35. Risque résiduel : le cache du service worker n'est pas versionné — ⚠️ **À CORRIGER**
+
+Pendant ce contrôle, j'ai rencontré un second symptôme, plus trompeur : la page servait un **module obsolète** (`lucide-react … circle-x.mjs … module factory is not available`) alors que la source était déjà corrigée. Après purge du service worker et des caches, la page s'affiche normalement.
+
+**Cause** : `public/sw.js` utilise un **nom de cache fixe** (`const CACHE = "btp-suivi-v2"`). À chaque déploiement, les fichiers (chunks JS) de la version précédente **restent dans le cache** et peuvent être servis à la place des nouveaux → page blanche ou erreur « module factory is not available », jusqu'à ce que l'utilisateur recharge.
+
+**Conséquence terrain** : après chaque mise en production, les téléphones déjà installés l'application peuvent rester sur une version cassée. Le bandeau « Nouvelle version disponible — Recharger » (déjà livré) aide, mais **si la page est déjà cassée, l'utilisateur ne peut pas appuyer sur « Recharger »** (il ne voit que l'écran d'erreur) : il faut alors vider le cache depuis le navigateur, ce qu'un chef de chantier ne fera pas.
+
+**Correctif proposé** : versionner le nom du cache avec l'identifiant de build (par exemple `btp-suivi-v${BUILD_ID}`), afin qu'un nouveau déploiement purge automatiquement l'ancien cache ; et/ou passer les fichiers JS en stratégie « réseau d'abord ». À traiter par la Session 3 (déploiement / PWA).
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 
