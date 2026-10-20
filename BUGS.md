@@ -33,6 +33,7 @@ listés dans `TODO_LOGIQUE.md`.
 | BUG-019   | UI          | Accueil : « 1 chantiers » (pluriel) et dates des mini-courbes coupées | ✅ CORRIGÉ (Session 2, 18/10) — accord `${chantiers.length === 1 ? "chantier" : "chantiers"}`, dates format `18/10`, marge droite résolue. |
 | BUG-020   | UI          | Connexion : la coquille (menus) s'affiche avant connexion | ✅ CORRIGÉ (Session 1, commit `45ee2b8`, AppShell + routeAuth) |
 | BUG-021   | logique     | Création d'un chantier refusée par la politique RLS       | ✅ CORRIGÉ ET VÉRIFIÉ (19/10) — identifiant généré côté navigateur, insertion sans retour de ligne ; migration `0021` **appliquée en base et vérifiée** (insertion avec retour de ligne acceptée : HTTP 201). |
+| BUG-022   | logique     | Centre d'alertes sans aucun chantier (requête invalide) | ✅ CORRIGÉ ET VÉRIFIÉ (Session 3, 20/10) — la requête demandait `chantiers.avancement_pct`, colonne qui n'existe pas (l'avancement global vit dans les sections) : la requête échouait en 400 et la liste des chantiers revenait vide, donc aucun avis de retard ni d'échéance. L'avancement est désormais recalculé depuis les sections, comme sur la fiche chantier. Contrôle : 0 erreur de console et 0 requête en échec au navigateur, sur le site en ligne. |
 
 ---
 
