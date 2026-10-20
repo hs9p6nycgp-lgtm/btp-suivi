@@ -778,6 +778,34 @@ Les 5 autres sont **réellement absentes ou partielles** : AUT-03 (rôles et dro
 
 ---
 
+# Partie 32 — ⚠️ BLOQUANT : la fiche chantier ne s'affiche plus
+
+## 33. La fiche chantier plante (hook appelé après un `return` anticipé) — 🔴 **BLOQUANT, PRODUCTION TOUCHÉE**
+
+**Constat** : en ouvrant `/chantiers/<id>`, la page **ne rend plus rien** (648 caractères de texte : le menu et l'en-tête seulement). La console du navigateur donne :
+
+```
+React has detected a change in the order of Hooks called by ...
+Error: Rendered more hooks than during the previous render.
+```
+
+**Cause exacte** (`src/app/chantiers/[id]/page.tsx`) :
+
+| Ligne | Code |
+|---|---|
+| 210 | `if (!chantier \|\| loading) { return ( … squelette de chargement … ); }` |
+| 233 | `const synthesePlanning = useMemo(() => { … }, [taches, dependances]);` |
+
+Le `useMemo` de la nouvelle synthèse du planning est appelé **après** le `return` anticipé : au premier rendu (chargement) le hook n'existe pas, au second rendu (données arrivées) il est appelé → React lève l'erreur et **l'écran d'erreur prend la place de la fiche**. C'est la règle « les hooks doivent être appelés dans le même ordre à chaque rendu ».
+
+**Portée** : c'est **l'écran principal de l'application** (la fiche chantier) ; il est cassé pour tout le monde, chef de chantier compris. Le commit fautif est `1890e5d` (« synthèse du planning sur la fiche ») — **il est poussé sur `origin/main`**, donc **le site en ligne est également touché** (déploiement automatique à la push).
+
+**Correctif (3 lignes)** : remonter le bloc `useMemo` (`synthesePlanning`) **au-dessus** du `if (!chantier || loading)` — il ne dépend que de `taches` et `dependances` (deux `useState`), donc rien n'empêche de le déplacer. Vérifier ensuite qu'aucun autre hook n'est appelé après un retour anticipé dans ce fichier (j'ai contrôlé les autres pages : **c'est le seul fichier concerné**).
+
+*Contrôle de non-régression à faire après correction* : la fiche chantier doit afficher à nouveau la marché, l'avancement, le découpage, les alertes, la NC, et le nouveau bloc « Planning du chantier » (durée projet, tâches, tâches en retard, charge par équipe).
+
+---
+
 ## Données de test créées (à conserver ou nettoyer sur accord)
 
 

@@ -438,4 +438,19 @@ Tous les bugs d’affichage (BUG-001 à BUG-004) sont corrigés.
 
 ---
 
+## TODO-UI-032 — 🔴 BLOQUANT : la fiche chantier ne s'affiche plus (hook après un retour anticipé) (T-UI-35)
+
+- **Écran** : Fiche chantier (`/chantiers/<id>`) — `src/app/chantiers/[id]/page.tsx`.
+- **Constaté (test ingénieur du 20/10/2026)** : la page **ne rend plus rien** (648 caractères : menu et en-tête seuls). Console : « React has detected a change in the order of Hooks called by… » puis « **Error: Rendered more hooks than during the previous render** ».
+- **Cause exacte** : ligne 210 `if (!chantier || loading) { return ( … squelette … ); }` puis ligne 233 `const synthesePlanning = useMemo(() => { … }, [taches, dependances]);` — le hook est appelé **après** le retour anticipé : absent au premier rendu (chargement), présent au second (données arrivées) → React casse le rendu.
+- **Portée** : **l'écran principal de l'application** est cassé pour tout le monde. Le commit fautif `1890e5d` est **poussé sur `origin/main`** : **le site en ligne est touché** (déploiement automatique).
+- **À faire**
+  1. Remonter le `useMemo` (bloc `synthesePlanning`) **au-dessus** du `if (!chantier || loading)` — il ne dépend que de `taches` et `dependances`.
+  2. Vérifier qu'aucun autre hook n'est appelé après un retour anticipé dans ce fichier (contrôle effectué sur l'ensemble des pages : **ce fichier est le seul concerné**).
+  3. Test de non-régression : la fiche affiche à nouveau marché, avancement, découpage, alertes, NC **et** le bloc « Planning du chantier » (durée projet, tâches, tâches en retard, charge par équipe).
+  4. Redéployer le site en ligne après correction.
+- **Priorité** : **haute — immédiat** (bloquant terrain).
+
+---
+
 *Fin de TODO_UI.md.*
